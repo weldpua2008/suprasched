@@ -14,16 +14,18 @@ import (
 	"github.com/spf13/viper"
 	communicator "github.com/weldpua2008/suprasched/communicator"
 	config "github.com/weldpua2008/suprasched/config"
+    cluster "github.com/weldpua2008/suprasched/cluster"
 
 	job "github.com/weldpua2008/suprasched/job"
 	model "github.com/weldpua2008/suprasched/model"
 	// worker "github.com/weldpua2008/suprasched/worker"
-	// "time"
+	"time"
 	// "html/template"
 	"os"
 	"os/signal"
 	// "sync"
 	"syscall"
+    "github.com/mustafaturan/bus"
 )
 
 var (
@@ -50,6 +52,10 @@ func init() {
 	logrus.SetLevel(logrus.InfoLevel)
 }
 
+func print(e *bus.Event) {
+	fmt.Printf("\nEvent for %s: %+v\n\n", e.Topic, e)
+}
+
 // This represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "suprasched",
@@ -65,6 +71,7 @@ var rootCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel() // cancel when we are getting the kill signal or exit
 		jobs := make(chan *model.Job, 1)
+        clusters := make(chan *model.Cluster, 1)
 		// var wg sync.WaitGroup
 		// jobs := make(chan *model.Job, 1)
 		log.Infof("Starting suprasched\n")
@@ -98,6 +105,24 @@ var rootCmd = &cobra.Command{
 
 		log.Trace("Config file:", viper.ConfigFileUsed())
 
+        b:=config.Bus
+        handler := bus.Handler{Handle: print, Matcher: ".*"}
+        b.RegisterHandler("a unique key for the handler", &handler)
+
+        go func() {
+            // StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
+			if err := cluster.StartGenerateClusters(ctx, clusters, config.GetApiDelayForSection(
+                fmt.Sprintf(
+                    "%s.fetch.delay",
+                    config.CFG_PREFIX_CLUSTER,
+                ))); err != nil {
+				log.Tracef("StartGenerateClusters returned error %v", err)
+			}
+		}()
+
+
+
+
 		communicator_type := config.GetStringDefault(fmt.Sprintf("%s.fetch.communicator", config.JobsSection), "http")
 		comm, err_com := communicator.GetCommunicator(communicator_type)
 		if err_com == nil {
@@ -116,6 +141,17 @@ var rootCmd = &cobra.Command{
 		} else {
 			close(jobs)
 		}
+
+        //
+        // for w := 1; w <= numWorkers; w++ {
+		// 	wg.Add(1)
+		// 	go worker.StartWorker(w, jobs, &wg)
+		// }
+        //
+		// wg.Wait()
+		time.Sleep(150 * time.Millisecond)
+        time.Sleep(15000 * time.Millisecond)
+
 
 	},
 }

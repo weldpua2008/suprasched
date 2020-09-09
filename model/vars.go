@@ -16,6 +16,14 @@ const (
 	JOB_STATUS_ERROR       = "error"
 	JOB_STATUS_CANCELED    = "canceled"
 	JOB_STATUS_QUEUED      = "queued"
+
+	CLUSTER_STATUS_STARTING               = "starting"
+	CLUSTER_STATUS_BOOTSTRAPPING          = "bootstraping"
+	CLUSTER_STATUS_RUNNING                = "running"
+	CLUSTER_STATUS_WAITING                = "waiting"
+	CLUSTER_STATUS_TERMINATING            = "terminating"
+	CLUSTER_STATUS_TERMINATED             = "terminated"
+	CLUSTER_STATUS_TERMINATED_WITH_ERRORS = "terminated_with_errors"
 )
 
 func init() {

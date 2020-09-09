@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -12,21 +13,22 @@ type Cluster struct {
 	ClusterId      string // Identificator for Cluster
 	ClusterPool    string // Identificator for Cluster Pool
 	ClusterProfile string // Identificator for Cluster Profile
+	ClusterRegion  string // Identificator for Cluster Profile
 
-	ClusterConfig  map[string]interface{}
-	CreateAt       time.Time // When cluster was created
-	StartAt        time.Time // When cluster started
-    StopAt        time.Time // When cluster started
+	ClusterConfig map[string]interface{}
+	CreateAt      time.Time // When cluster was created
+	StartAt       time.Time // When cluster started
+	StopAt        time.Time // When cluster started
 
 	LastActivityAt time.Time // When cluster metadata last changed
 	Status         string    // Currentl status
 	// MaxAttempts    int       // Absoulute max num of attempts.
 	// MaxFails       int       // Absolute max number of failures.
 	// TTR            uint64    // Time-to-run in Millisecond
-	mu             sync.RWMutex
-	ExitCode       int // Exit code
-	ctx            context.Context
-	all            map[string]*Job
+	mu       sync.RWMutex
+	ExitCode int // Exit code
+	ctx      context.Context
+	all      map[string]*Job
 }
 
 // NewCluster returns a new Clustec.
@@ -86,6 +88,46 @@ func (c *Cluster) Record(jid string) (*Job, bool) {
 	return nil, false
 }
 
+// UpdateStatus.
+func (c *Cluster) UpdateStatus(status string) error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	c.Status = status
+
+	return nil
+}
+
+// UpdateStatus.
+func (c *Cluster) EventMetadata() map[string]string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return map[string]string{
+		"ClusterStatus":  c.Status,
+        "Status":  c.Status,
+		"ClusterPool":    c.ClusterPool,
+        "ClusterId":    c.ClusterId,
+		"ClusterProfile": c.ClusterProfile,
+		"ClusterRegion":  c.ClusterRegion,
+	}
+}
+
+// UseExternaleStatus compare with another cluster status.
+// returns true if the cluster need update the status
+func (c *Cluster) UseExternaleStatus(ext *Cluster) bool {
+	if ext.StoreKey() != c.StoreKey() {
+		c.mu.RLock()
+		defer c.mu.RUnlock()
+	}
+	if GetClusterStatusWeight(ext.Status) > GetClusterStatusWeight(c.Status) {
+		return true
+	} else if c.Status != ext.Status {
+		return true
+	}
+
+	return false
+}
+
 // ClusterStoreKey returns Cluster unique store key
 func ClusterStoreKey(ClusterId string, ClusterPool string, ClusterProfile string) string {
 	return fmt.Sprintf("%s:%s:%s", ClusterId, ClusterPool, ClusterProfile)
@@ -94,4 +136,27 @@ func ClusterStoreKey(ClusterId string, ClusterPool string, ClusterProfile string
 // StoreKey returns StoreKey
 func (c *Cluster) StoreKey() string {
 	return StoreKey(c.ClusterId, c.ClusterPool, c.ClusterProfile)
+}
+
+// GetClusterStatusWeight for Cluster Status
+func GetClusterStatusWeight(status string) int {
+
+	switch strings.ToLower(status) {
+
+	case CLUSTER_STATUS_STARTING:
+		return 1
+	case CLUSTER_STATUS_BOOTSTRAPPING:
+		return 2
+	case CLUSTER_STATUS_RUNNING:
+		return 3
+	case CLUSTER_STATUS_WAITING:
+		return 3
+	case CLUSTER_STATUS_TERMINATING:
+		return 4
+	case CLUSTER_STATUS_TERMINATED:
+		return 5
+	case CLUSTER_STATUS_TERMINATED_WITH_ERRORS:
+		return 5
+	}
+	return 0
 }

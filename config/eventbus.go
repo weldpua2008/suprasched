@@ -6,11 +6,25 @@ import (
 	"github.com/mustafaturan/monoton/sequencer"
 )
 
-// Bus is a ref to bus.Bus
-var Bus *bus.Bus
+const (
+	TOPIC_CLUSTER_CREATED                = "cluster.created"
+    TOPIC_CLUSTER_STARTING               = "cluster.starting"
+	TOPIC_CLUSTER_BOOTSTRAPPING          = "cluster.bootstraping"
+	TOPIC_CLUSTER_RUNNING                = "cluster.running"
+	TOPIC_CLUSTER_WAITING                = "cluster.waiting"
+	TOPIC_CLUSTER_TERMINATING            = "cluster.terminating"
+	TOPIC_CLUSTER_TERMINATED             = "cluster.terminated"
+	TOPIC_CLUSTER_TERMINATED_WITH_ERRORS = "cluster.terminated_with_errors"
 
-// Monoton is an instance of monoton.Monoton
-var Monoton monoton.Monoton
+)
+
+var (
+	// Bus is a ref to bus.Bus
+	Bus *bus.Bus
+
+	// Monoton is an instance of monoton.Monoton
+	Monoton monoton.Monoton
+)
 
 // Init inits the app config
 func InitEvenBus() {
@@ -32,8 +46,9 @@ func InitEvenBus() {
 	}
 
 	// maybe register topics in here
-	b.RegisterTopics("cluster.created", "cluster.waiting", "cluster.running",
-		"cluster.terminated", "job.pending",
+	b.RegisterTopics(TOPIC_CLUSTER_CREATED, TOPIC_CLUSTER_STARTING, TOPIC_CLUSTER_BOOTSTRAPPING,
+		TOPIC_CLUSTER_RUNNING, TOPIC_CLUSTER_WAITING, TOPIC_CLUSTER_TERMINATING,
+        TOPIC_CLUSTER_TERMINATED, TOPIC_CLUSTER_TERMINATED_WITH_ERRORS, "job.pending",
 		"job.created", "job.canceled", "job.running", "job.failed", "job.succeeded")
 
 	Bus = b

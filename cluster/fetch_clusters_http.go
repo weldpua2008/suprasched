@@ -70,8 +70,25 @@ func (f *FetchClustersHttp) Fetch() ([]*model.Cluster, error) {
 
 			for _, k := range []string{"ClusterStatus", "clusterStatus", "Cluster_Status", "Status", "status"} {
 				if _, ok := v[k]; ok {
-
 					cl.Status = v[k].(string)
+					break
+				}
+			}
+			for _, k := range []string{"clusterPool", "ClusterPool", "Pool", "pool"} {
+				if _, ok := v[k]; ok {
+					cl.ClusterPool = v[k].(string)
+					break
+				}
+			}
+			for _, k := range []string{"clusterProfile", "ClusterProfile", "AWSProfile", "AWS_Profile", "AWS_PROFILE"} {
+				if _, ok := v[k]; ok {
+					cl.ClusterProfile = v[k].(string)
+					break
+				}
+			}
+			for _, k := range []string{"ClusterRegion", "clusterRegion", "AWSRegion", "AWS_Region", "AWS_REGION"} {
+				if _, ok := v[k]; ok {
+					cl.ClusterRegion = v[k].(string)
 					break
 				}
 			}
@@ -94,8 +111,8 @@ func (f *FetchClustersHttp) Fetch() ([]*model.Cluster, error) {
 					}
 				}
 			}
-            // cl.StartAt = cl.CreateAt
-            for _, k := range []string{"StartAt", "startAt", "StartDate", "startDate"} {
+			// cl.StartAt = cl.CreateAt
+			for _, k := range []string{"StartAt", "startAt", "StartDate", "startDate"} {
 				if _, ok := v[k]; ok {
 					switch t := v[k].(type) {
 					case string:
