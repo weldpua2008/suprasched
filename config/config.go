@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	model "github.com/weldpua2008/suprasched/model"
 	"html/template"
 	"os"
 	"runtime"
@@ -23,6 +24,15 @@ const (
 	ProjectName = "suprasched"
 	// JobsFetchSection
 	JobsSection = "jobs"
+	//CFG_PREFIX_COMMUNICATOR defines parameter in config for Communicators
+	CFG_PREFIX_COMMUNICATOR     = "communicator"
+	CFG_PREFIX_CLUSTER          = "cluster"
+	CFG_COMMUNICATOR_PARAMS_KEY = "params"
+)
+
+var (
+	JobsRegistry    = model.NewRegistry()
+	ClusterRegistry = model.NewClusterRegistry()
 )
 
 // Config is top level Configuration structure
@@ -78,6 +88,7 @@ var (
 // Init configuration
 func init() {
 	cobra.OnInitialize(initConfig)
+	InitEvenBus()
 
 }
 
@@ -156,6 +167,14 @@ func GetStringMapStringTemplatedDefault(section string, param string, def map[st
 		c[k] = tplBytes.String()
 	}
 	return c
+}
+
+func ConvertMapStringToInterface(in map[string]string) map[string]interface{} {
+	out := make(map[string]interface{})
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
 }
 
 func GetStringMapStringTemplated(section string, param string) map[string]string {

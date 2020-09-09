@@ -19,16 +19,32 @@ func main() {
 
 	log := logrus.WithFields(logrus.Fields{"package": "main"})
 
-	cl := cluster.NewDescribeEMR()
-	params := make(map[string]interface{})
-	params["ClusterID"] = "j-3JTIEH8MDWQ21"
-	params["aws_profile"] = "bi-use1"
-	params["ctx"] = ctx
+	if false {
+		cl := cluster.NewDescribeEMR()
+		params := make(map[string]interface{})
+		params["ClusterID"] = "j-3JTIEH8MDWQ21"
+		params["aws_profile"] = "bi-use1"
+		params["ctx"] = ctx
 
-	clusterId, _ := cl.DescribeCluster(params)
-	log.Infof("%s", clusterId)
+		clusterId, _ := cl.DescribeCluster(params)
+		log.Infof("%s", clusterId)
+
+	}
 
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)
+	}
+	f, _ := cluster.NewFetchClustersHttp()
+	// params :=make(map[string]interface{})
+
+	cl, err := f.Fetch()
+	if err == nil {
+		for _, v := range cl {
+			log.Infof("%v", v)
+		}
+
+	} else {
+		log.Infof("%v, %v", cl, err)
+
 	}
 }

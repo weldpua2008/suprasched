@@ -1,26 +1,25 @@
 package cluster
-import (
-    "github.com/weldpua2008/suprasched/communicator"
-    "sync"
-    "context"
-    "fmt"
-    "time"
 
+import (
+	"context"
+	"fmt"
+	communicator "github.com/weldpua2008/suprasched/communicator"
+	"sync"
+	"time"
 )
 
-type DescribeHttpCluster struct {
+type DescribeClusterHttp struct {
 	ClusterDescriber
-	mu           sync.RWMutex
-    comm     communicator.Communicator
+	mu   sync.RWMutex
+	comm communicator.Communicator
 }
 
 // NewDescribeEMR prepare struct communicator for EMR
-func NewDescribeHttp(comm communicator.Communicator) *DescribeHttpCluster {
-	return &DescribeHttpCluster{ comm: comm	}
+func NewDescribeClusterHttp(comm communicator.Communicator) *DescribeClusterHttp {
+	return &DescribeClusterHttp{comm: comm}
 }
 
-
-func (d *DescribeHttpCluster) DescribeCluster(params map[string]interface{}) (string, error) {
+func (d *DescribeClusterHttp) DescribeCluster(params map[string]interface{}) (string, error) {
 	var ClusterId string
 	var ctx context.Context
 	var clusterCtx context.Context
@@ -47,28 +46,27 @@ func (d *DescribeHttpCluster) DescribeCluster(params map[string]interface{}) (st
 	}
 	clusterCtx, cancel = context.WithTimeout(ctx, time.Duration(ttr)*time.Second)
 	defer cancel() // cancel when we are getting the kill signal or exit
-    param:=make(map[string]interface{})
-    d.mu.Lock()
+	param := make(map[string]interface{})
+	d.mu.Lock()
 	defer d.mu.Unlock()
 
-    res, err:=d.comm.Fetch(clusterCtx, param)
-    result := "UNKNOWN"
-    for _, v := range res {
-        if v == nil {
-            continue
-        }
-        // if v, ok1 := v.(map[string]interface{}); ok1 {
-                for _, k := range []string{"ClusterStatus", "Cluster_Status", "Status", "status"} {
-                    if _, ok := v[k]; ok {
+	res, err := d.comm.Fetch(clusterCtx, param)
+	result := "UNKNOWN"
+	for _, v := range res {
+		if v == nil {
+			continue
+		}
+		// if v, ok1 := v.(map[string]interface{}); ok1 {
+		for _, k := range []string{"ClusterStatus", "Cluster_Status", "Status", "status"} {
+			if _, ok := v[k]; ok {
 
+				return v[k].(string), nil
+			}
 
-                        return v[k].(string), nil
-                    }
-
-                }
+		}
 
 		// }
-    }
+	}
 
 	// status := cl.Cluster.Status.State
 	// result := *status

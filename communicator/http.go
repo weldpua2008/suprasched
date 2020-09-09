@@ -3,6 +3,7 @@ package communicator
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"context"
 	"net/http"
@@ -40,10 +41,10 @@ func (s *RestCommunicator) Configure(params map[string]interface{}) error {
 	}
 	s.method = "POST"
 	if _, ok := params["method"]; ok {
-		s.method = params["method"].(string)
+		s.method = strings.ToUpper(params["method"].(string))
 	}
 	if _, ok := params["url"]; ok {
-		s.method = params["url"].(string)
+		s.url = params["url"].(string)
 	}
 	s.headers = map[string]string{
 		"Content-Type": "application/json",
@@ -57,6 +58,7 @@ func (s *RestCommunicator) Configure(params map[string]interface{}) error {
 		}
 
 	}
+	// log.Tracef("%v", s.method)
 	return nil
 }
 
@@ -112,6 +114,6 @@ func (s *RestCommunicator) Fetch(ctx context.Context, params map[string]interfac
 		result = append(result, rawResponse)
 	}
 
-	return  result, nil
+	return result, nil
 
 }

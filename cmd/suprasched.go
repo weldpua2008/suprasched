@@ -68,6 +68,7 @@ var rootCmd = &cobra.Command{
 		// var wg sync.WaitGroup
 		// jobs := make(chan *model.Job, 1)
 		log.Infof("Starting suprasched\n")
+		log.Infof("%v", config.GetStringMapStringTemplated("cluster", "param"))
 		go func() {
 			sig := <-sigs
 			log.Infof("Shutting down - got %v signal", sig)
@@ -98,7 +99,7 @@ var rootCmd = &cobra.Command{
 		log.Trace("Config file:", viper.ConfigFileUsed())
 
 		communicator_type := config.GetStringDefault(fmt.Sprintf("%s.fetch.communicator", config.JobsSection), "http")
-		err_com, comm := communicator.GetCommunicator(communicator_type)
+		comm, err_com := communicator.GetCommunicator(communicator_type)
 		if err_com == nil {
 			go func() {
 				log.Trace("StartFetchJobs ")

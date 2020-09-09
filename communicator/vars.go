@@ -5,5 +5,5 @@ import (
 )
 
 var (
-	log = logrus.WithFields(logrus.Fields{"package": "config"})
+	log = logrus.WithFields(logrus.Fields{"package": "communicator"})
 )

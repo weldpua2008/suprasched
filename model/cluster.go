@@ -2,22 +2,27 @@ package model
 
 import (
 	"context"
-	// "fmt"
+	"fmt"
 	"sync"
 	"time"
 )
 
 // Cluster public structure
 type Cluster struct {
-	ClusterId      string // Identificator for Job
+	ClusterId      string // Identificator for Cluster
+	ClusterPool    string // Identificator for Cluster Pool
+	ClusterProfile string // Identificator for Cluster Profile
+
 	ClusterConfig  map[string]interface{}
-	CreateAt       time.Time // When Job was created
-	StartAt        time.Time // When command started
-	LastActivityAt time.Time // When job metadata last changed
+	CreateAt       time.Time // When cluster was created
+	StartAt        time.Time // When cluster started
+    StopAt        time.Time // When cluster started
+
+	LastActivityAt time.Time // When cluster metadata last changed
 	Status         string    // Currentl status
-	MaxAttempts    int       // Absoulute max num of attempts.
-	MaxFails       int       // Absolute max number of failures.
-	TTR            uint64    // Time-to-run in Millisecond
+	// MaxAttempts    int       // Absoulute max num of attempts.
+	// MaxFails       int       // Absolute max number of failures.
+	// TTR            uint64    // Time-to-run in Millisecond
 	mu             sync.RWMutex
 	ExitCode       int // Exit code
 	ctx            context.Context
@@ -25,9 +30,10 @@ type Cluster struct {
 }
 
 // NewCluster returns a new Clustec.
-func NewCluster() *Cluster {
+func NewCluster(clusterId string) *Cluster {
 	return &Cluster{
-		all: make(map[string]*Job),
+		ClusterId: clusterId,
+		all:       make(map[string]*Job),
 	}
 }
 
@@ -47,7 +53,7 @@ func (c *Cluster) Add(rec *Job) bool {
 	return true
 }
 
-// Len returns length of registry.
+// Len returns length of Clusters on cluster.
 func (c *Cluster) Len() int {
 	c.mu.RLock()
 	t := len(c.all)
@@ -68,7 +74,7 @@ func (c *Cluster) Delete(id string) bool {
 	return true
 }
 
-// Record fetch job by Job ID.
+// Record fetch job by Cluster ID.
 // Follows comma ok idiom
 func (c *Cluster) Record(jid string) (*Job, bool) {
 	c.mu.RLock()
@@ -78,4 +84,14 @@ func (c *Cluster) Record(jid string) (*Job, bool) {
 	}
 
 	return nil, false
+}
+
+// ClusterStoreKey returns Cluster unique store key
+func ClusterStoreKey(ClusterId string, ClusterPool string, ClusterProfile string) string {
+	return fmt.Sprintf("%s:%s:%s", ClusterId, ClusterPool, ClusterProfile)
+}
+
+// StoreKey returns StoreKey
+func (c *Cluster) StoreKey() string {
+	return StoreKey(c.ClusterId, c.ClusterPool, c.ClusterProfile)
 }
