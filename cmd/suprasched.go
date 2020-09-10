@@ -12,9 +12,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	cluster "github.com/weldpua2008/suprasched/cluster"
 	communicator "github.com/weldpua2008/suprasched/communicator"
 	config "github.com/weldpua2008/suprasched/config"
-    cluster "github.com/weldpua2008/suprasched/cluster"
 
 	job "github.com/weldpua2008/suprasched/job"
 	model "github.com/weldpua2008/suprasched/model"
@@ -24,8 +24,8 @@ import (
 	"os"
 	"os/signal"
 	// "sync"
+	"github.com/mustafaturan/bus"
 	"syscall"
-    "github.com/mustafaturan/bus"
 )
 
 var (
@@ -71,7 +71,7 @@ var rootCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel() // cancel when we are getting the kill signal or exit
 		jobs := make(chan *model.Job, 1)
-        clusters := make(chan *model.Cluster, 1)
+		clusters := make(chan *model.Cluster, 1)
 		// var wg sync.WaitGroup
 		// jobs := make(chan *model.Job, 1)
 		log.Infof("Starting suprasched\n")
@@ -105,23 +105,22 @@ var rootCmd = &cobra.Command{
 
 		log.Trace("Config file:", viper.ConfigFileUsed())
 
-        b:=config.Bus
-        handler := bus.Handler{Handle: print, Matcher: ".*"}
-        b.RegisterHandler("a unique key for the handler", &handler)
+		b := config.Bus
+		handler := bus.Handler{Handle: print, Matcher: ".*"}
+        // handler := bus.Handler{Handle: print, Matcher: config.TOPIC_JOB_CREATED}
 
-        go func() {
-            // StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
+		b.RegisterHandler("a unique key for the handler", &handler)
+
+		go func() {
+			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
 			if err := cluster.StartGenerateClusters(ctx, clusters, config.GetApiDelayForSection(
-                fmt.Sprintf(
-                    "%s.fetch.delay",
-                    config.CFG_PREFIX_CLUSTER,
-                ))); err != nil {
+				fmt.Sprintf(
+					"%s.fetch.delay",
+					config.CFG_PREFIX_CLUSTER,
+				))); err != nil {
 				log.Tracef("StartGenerateClusters returned error %v", err)
 			}
 		}()
-
-
-
 
 		communicator_type := config.GetStringDefault(fmt.Sprintf("%s.fetch.communicator", config.JobsSection), "http")
 		comm, err_com := communicator.GetCommunicator(communicator_type)
@@ -142,16 +141,15 @@ var rootCmd = &cobra.Command{
 			close(jobs)
 		}
 
-        //
-        // for w := 1; w <= numWorkers; w++ {
+		//
+		// for w := 1; w <= numWorkers; w++ {
 		// 	wg.Add(1)
 		// 	go worker.StartWorker(w, jobs, &wg)
 		// }
-        //
+		//
 		// wg.Wait()
 		time.Sleep(150 * time.Millisecond)
-        time.Sleep(15000 * time.Millisecond)
-
+		time.Sleep(65000 * time.Millisecond)
 
 	},
 }

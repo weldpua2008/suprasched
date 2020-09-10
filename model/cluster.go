@@ -104,9 +104,9 @@ func (c *Cluster) EventMetadata() map[string]string {
 
 	return map[string]string{
 		"ClusterStatus":  c.Status,
-        "Status":  c.Status,
+		"Status":         c.Status,
 		"ClusterPool":    c.ClusterPool,
-        "ClusterId":    c.ClusterId,
+		"ClusterId":      c.ClusterId,
 		"ClusterProfile": c.ClusterProfile,
 		"ClusterRegion":  c.ClusterRegion,
 	}

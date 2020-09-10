@@ -50,6 +50,19 @@ func (j *Job) updatelastActivity() {
 	j.LastActivityAt = time.Now()
 }
 
+func (j *Job) EventMetadata() map[string]string {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+
+	return map[string]string{
+		"Id":  j.Id,
+		"Status":         j.Status,
+		"RunUID":    j.RunUID,
+		"ExtraRunUID":      j.ExtraRunUID,
+        "ClusterId": j.ClusterId,
+	}
+}
+
 // updateStatus job status
 func (j *Job) updateStatus(status string) error {
 	log.Trace(fmt.Sprintf("Job %s status %s -> %s", j.Id, j.Status, status))
@@ -99,9 +112,12 @@ func NewJob(id string) *Job {
 		CreateAt:       time.Now(),
 		StartAt:        time.Now(),
 		LastActivityAt: time.Now(),
-		Status:         JOB_STATUS_PENDING,
 		MaxFails:       1,
 		MaxAttempts:    1,
 		TTR:            0,
 	}
+}
+
+func NewEmptyJob() *Job {
+	return &Job{}
 }

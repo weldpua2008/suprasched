@@ -41,25 +41,24 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 				if err == nil {
 
 					for _, cls := range clusters_slice {
-                        var topic string
+						var topic string
 						if !config.ClusterRegistry.Add(cls) {
-							if rec,exist := config.ClusterRegistry.Record(cls.StoreKey());exist {
-                                if rec.UseExternaleStatus(cls) {
-    								topic =strings.ToLower(fmt.Sprintf("cluster.%v", cls.Status))
-    							}
+							if rec, exist := config.ClusterRegistry.Record(cls.StoreKey()); exist {
+								if rec.UseExternaleStatus(cls) {
+									topic = strings.ToLower(fmt.Sprintf("cluster.%v", cls.Status))
+								}
 
-                            }
-						}else {
-                            topic=config.TOPIC_CLUSTER_CREATED
-                        }
-                        if len(topic) > 0 {
-                            _, err := config.Bus.Emit(ctx, topic, cls.EventMetadata())
-                            if err != nil {
-                                log.Tracef("%v",err)
-                            }
+							}
+						} else {
+							topic = config.TOPIC_CLUSTER_CREATED
+						}
+						if len(topic) > 0 {
+							_, err := config.Bus.Emit(ctx, topic, cls.EventMetadata())
+							if err != nil {
+								log.Tracef("%v", err)
+							}
 
-                        }
-
+						}
 
 					}
 
@@ -71,7 +70,6 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 			}
 		}
 	}()
-
 
 	numSentClusters := <-doneNumClusters
 
