@@ -23,13 +23,13 @@ type Registry struct {
 func (r *Registry) Add(rec *Job) bool {
 
 	if rec == nil || rec.StoreKey() == "" {
-        // log.Tracef("False %v", rec)
+		// log.Tracef("False %v", rec)
 		return false
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, ok := r.all[rec.StoreKey()]; ok {
-        // log.Tracef("False already exist %v", rec)
+		// log.Tracef("False already exist %v", rec)
 
 		return false
 	}

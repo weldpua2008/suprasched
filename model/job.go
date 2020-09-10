@@ -55,11 +55,11 @@ func (j *Job) EventMetadata() map[string]string {
 	defer j.mu.RUnlock()
 
 	return map[string]string{
-		"Id":  j.Id,
-		"Status":         j.Status,
-		"RunUID":    j.RunUID,
-		"ExtraRunUID":      j.ExtraRunUID,
-        "ClusterId": j.ClusterId,
+		"Id":          j.Id,
+		"Status":      j.Status,
+		"RunUID":      j.RunUID,
+		"ExtraRunUID": j.ExtraRunUID,
+		"ClusterId":   j.ClusterId,
 	}
 }
 

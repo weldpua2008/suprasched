@@ -107,7 +107,7 @@ var rootCmd = &cobra.Command{
 
 		b := config.Bus
 		handler := bus.Handler{Handle: print, Matcher: ".*"}
-        // handler := bus.Handler{Handle: print, Matcher: config.TOPIC_JOB_CREATED}
+		// handler := bus.Handler{Handle: print, Matcher: config.TOPIC_JOB_CREATED}
 
 		b.RegisterHandler("a unique key for the handler", &handler)
 
@@ -149,7 +149,7 @@ var rootCmd = &cobra.Command{
 		//
 		// wg.Wait()
 		time.Sleep(150 * time.Millisecond)
-		time.Sleep(65000 * time.Millisecond)
+		time.Sleep(6500 * time.Millisecond)
 
 	},
 }

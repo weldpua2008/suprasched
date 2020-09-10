@@ -24,6 +24,9 @@ const (
 	CLUSTER_STATUS_TERMINATING            = "terminating"
 	CLUSTER_STATUS_TERMINATED             = "terminated"
 	CLUSTER_STATUS_TERMINATED_WITH_ERRORS = "terminated_with_errors"
+
+	CLUSTER_TYPE_ON_DEMAND = "on-demand"
+	CLUSTER_TYPE_EMR       = "EMR"
 )
 
 func init() {

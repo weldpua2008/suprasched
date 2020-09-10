@@ -13,7 +13,8 @@ type Cluster struct {
 	ClusterId      string // Identificator for Cluster
 	ClusterPool    string // Identificator for Cluster Pool
 	ClusterProfile string // Identificator for Cluster Profile
-	ClusterRegion  string // Identificator for Cluster Profile
+	ClusterRegion  string // Identificator for Cluster Region
+	ClusterType    string // Identificator for Cluster Type
 
 	ClusterConfig map[string]interface{}
 	CreateAt      time.Time // When cluster was created
@@ -34,8 +35,9 @@ type Cluster struct {
 // NewCluster returns a new Clustec.
 func NewCluster(clusterId string) *Cluster {
 	return &Cluster{
-		ClusterId: clusterId,
-		all:       make(map[string]*Job),
+		ClusterId:   clusterId,
+		all:         make(map[string]*Job),
+		ClusterType: CLUSTER_TYPE_EMR,
 	}
 }
 
@@ -97,7 +99,7 @@ func (c *Cluster) UpdateStatus(status string) error {
 	return nil
 }
 
-// UpdateStatus.
+// EventMetadata.
 func (c *Cluster) EventMetadata() map[string]string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -109,6 +111,7 @@ func (c *Cluster) EventMetadata() map[string]string {
 		"ClusterId":      c.ClusterId,
 		"ClusterProfile": c.ClusterProfile,
 		"ClusterRegion":  c.ClusterRegion,
+		"ClusterType":    c.ClusterType,
 	}
 }
 
