@@ -6,24 +6,23 @@ import (
 	"strings"
 
 	"context"
-	"net/http"
-	// "github.com/sirupsen/logrus"
-	// "strings"
-	"time"
-	// model "github.com/weldpua2008/suprasched/model"
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
+	"time"
 
 	config "github.com/weldpua2008/suprasched/config"
 )
 
+// RestCommunicator represents API communicator.
 type RestCommunicator struct {
 	Communicator
-	section string
-	param   string
-	method  string
-	url     string
-	headers map[string]string
+	section    string
+	param      string
+	method     string
+	url        string
+	headers    map[string]string
+	configured bool
 }
 
 // NewRestCommunicator prepare struct communicator for HTTP requests
@@ -31,8 +30,15 @@ func NewRestCommunicator() *RestCommunicator {
 	return &RestCommunicator{}
 }
 
-// Configure
+// Configured checks if RestCommunicator is configured.
+func (s *RestCommunicator) Configured() bool {
+	return s.configured
+}
+
+// Configure reads configuration propertoes from global configuration and
+// from argument.
 func (s *RestCommunicator) Configure(params map[string]interface{}) error {
+
 	if _, ok := params["section"]; ok {
 		s.section = params["section"].(string)
 	}
@@ -58,6 +64,7 @@ func (s *RestCommunicator) Configure(params map[string]interface{}) error {
 		}
 
 	}
+	s.configured = true
 	// log.Tracef("%v", s.method)
 	return nil
 }

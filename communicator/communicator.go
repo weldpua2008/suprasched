@@ -14,13 +14,15 @@ import (
 // any method may be called at the same time.
 type Communicator interface {
 	// Configured
-	// Configured() bool
+	Configured() bool
+
 	// Configure Communicator
 	Configure(map[string]interface{}) error
 	// Fetch metadata from remote storage
 	Fetch(context.Context, map[string]interface{}) ([]map[string]interface{}, error)
 }
 
+// GetCommunicator returns Communicator by type.
 func GetCommunicator(communicator_type string) (Communicator, error) {
 	switch communicator_type {
 	case "http", "HTTP":
@@ -30,9 +32,14 @@ func GetCommunicator(communicator_type string) (Communicator, error) {
 	}
 }
 
+// GetSectionCommunicator returns communicator from configuration file.
+// By default http communicator will be used.
+// Example YAML config for `section` that will return new `RestCommunicator`:
+//     section:
+//         communicator:
+//             type: "HTTP"
 func GetSectionCommunicator(section string) (Communicator, error) {
 	communicator_type := config.GetStringDefault(fmt.Sprintf("%s.%s.type", section, config.CFG_PREFIX_COMMUNICATOR), "http")
-	// log.Tracef("Getting communicator section %s param %s", section, config.CFG_PREFIX_COMMUNICATOR)
 	switch communicator_type {
 	case "http", "HTTP":
 		comm := NewRestCommunicator()
@@ -52,6 +59,6 @@ func GetSectionCommunicator(section string) (Communicator, error) {
 
 		return comm, nil
 	default:
-		return nil, fmt.Errorf("Can't find sutable communicator for %s.\n", communicator_type)
+		return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicator_type)
 	}
 }

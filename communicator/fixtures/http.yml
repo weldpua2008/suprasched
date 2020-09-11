@@ -1,0 +1,12 @@
+clientId: "clientId"
+version: "1.0"
+http:
+    communicator:
+        type: "http"
+http_capital:
+    communicator:
+        type: "HTTP"
+
+broken:
+    communicator:
+        type: "broken"

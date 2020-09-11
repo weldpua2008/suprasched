@@ -16,15 +16,17 @@ import (
 	communicator "github.com/weldpua2008/suprasched/communicator"
 	config "github.com/weldpua2008/suprasched/config"
 
+	handlers "github.com/weldpua2008/suprasched/handlers"
 	job "github.com/weldpua2008/suprasched/job"
 	model "github.com/weldpua2008/suprasched/model"
+
 	// worker "github.com/weldpua2008/suprasched/worker"
 	"time"
 	// "html/template"
 	"os"
 	"os/signal"
 	// "sync"
-	"github.com/mustafaturan/bus"
+	// "github.com/mustafaturan/bus"
 	"syscall"
 )
 
@@ -50,10 +52,6 @@ func init() {
 	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true, FullTimestamp: true})
 	// Only log the warning severity or above.
 	logrus.SetLevel(logrus.InfoLevel)
-}
-
-func print(e *bus.Event) {
-	fmt.Printf("\nEvent for %s: %+v\n\n", e.Topic, e)
 }
 
 // This represents the base command when called without any subcommands
@@ -105,11 +103,7 @@ var rootCmd = &cobra.Command{
 
 		log.Trace("Config file:", viper.ConfigFileUsed())
 
-		b := config.Bus
-		handler := bus.Handler{Handle: print, Matcher: ".*"}
-		// handler := bus.Handler{Handle: print, Matcher: config.TOPIC_JOB_CREATED}
-
-		b.RegisterHandler("a unique key for the handler", &handler)
+		handlers.Init()
 
 		go func() {
 			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
