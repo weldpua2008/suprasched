@@ -104,6 +104,7 @@ var rootCmd = &cobra.Command{
 		log.Trace("Config file:", viper.ConfigFileUsed())
 
 		handlers.Init()
+        defer handlers.Deregister()
 
 		go func() {
 			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error

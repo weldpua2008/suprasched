@@ -5,12 +5,17 @@ import (
 	config "github.com/weldpua2008/suprasched/config"
 )
 
-// Init registers all handlers
+// Init registers all handlers.
 func Init() {
 	Start("tracing", Trace, ".*")
-	defer Stop("tracing")
-
 	Start("cluster_termination", ClusterTermination, config.MATCHER_CLUSTER_TERMINATING)
+
+}
+
+// Deregister all handlers.
+func Deregister() {
+    defer Stop("tracing")
+
 	defer Stop("cluster_termination")
 
 }

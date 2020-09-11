@@ -48,7 +48,7 @@ func loadCfg(t *testing.T, CfgFile string) {
 	config.C = config.Config{}
 	config.CfgFile = CfgFile
 	viper.SetConfigFile(config.CfgFile)
-	t.Logf("Loaded: %v", config.CfgFile)
+	// t.Logf("Loaded: %v", config.CfgFile)
 	if err := viper.ReadInConfig(); err != nil {
 		t.Errorf("Can't read config: %v", err)
 	}
