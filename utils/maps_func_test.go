@@ -105,7 +105,7 @@ func TestGetFirstTimeFromMap(t *testing.T) {
 			result: time.Unix(now.Unix(), 0),
 			want:   true,
 		},
-        {
+		{
 			in: map[string]interface{}{
 				"search": int64(now.Unix()),
 				"wrong":  1,
@@ -115,7 +115,7 @@ func TestGetFirstTimeFromMap(t *testing.T) {
 			result: time.Unix(now.Unix(), 0),
 			want:   true,
 		},
-        {
+		{
 			in: map[string]interface{}{
 				"search": float64(now.Unix()),
 				"wrong":  1,

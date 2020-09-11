@@ -26,7 +26,7 @@ func GetCommunicator(communicator_type string) (Communicator, error) {
 	case "http", "HTTP":
 		return NewRestCommunicator(), nil
 	default:
-		return nil, fmt.Errorf("Can't find sutable communicator for %s.\n", communicator_type)
+		return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicator_type)
 	}
 }
 

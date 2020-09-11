@@ -33,9 +33,8 @@ func GetFirstTimeFromMap(v map[string]interface{}, keys []string) (time.Time, bo
 				}
 			case int:
 				return time.Unix(int64(t), 0), true
-            case int64:
+			case int64:
 				return time.Unix(t, 0), true
-
 
 			case float64:
 				return time.Unix(int64(int(t)), 0), true
