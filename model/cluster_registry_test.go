@@ -3,10 +3,10 @@ package model
 import (
 	"fmt"
 	"testing"
-	"time"
+	// "time"
 )
 
-func BenchmarkRegistryAdd(b *testing.B) {
+func BenchmarkClusterRegistryAdd(b *testing.B) {
 	r := NewClusterRegistry()
 
 	b.ResetTimer()
@@ -16,19 +16,19 @@ func BenchmarkRegistryAdd(b *testing.B) {
 	}
 }
 
-func BenchmarkRegistryCleanUp(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		r := NewClusterRegistry()
-		for ii := 0; ii < 100; ii++ {
-			cluster := NewCluster(fmt.Sprintf("cluster-%v", b.N))
-			r.Add(cluster)
-			r.Cleanup()
-		}
-	}
-}
+// func BenchmarkClusterRegistryCleanUp(b *testing.B) {
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		r := NewClusterRegistry()
+// 		for ii := 0; ii < 100; ii++ {
+// 			cluster := NewCluster(fmt.Sprintf("cluster-%v", b.N))
+// 			r.Add(cluster)
+// 			r.Cleanup()
+// 		}
+// 	}
+// }
 
-func TestRegistryAddNoDuplicateCluster(t *testing.T) {
+func TestClusterRegistryAddNoDuplicateCluster(t *testing.T) {
 	r := NewClusterRegistry()
 	for ii := 0; ii < 100; ii++ {
 		cluster := NewCluster(fmt.Sprintf("cluster-%v", ii))
@@ -45,7 +45,7 @@ func TestRegistryAddNoDuplicateCluster(t *testing.T) {
 	}
 }
 
-func TestRegistryLen(t *testing.T) {
+func TestClusterRegistryLen(t *testing.T) {
 	r := NewClusterRegistry()
 	num := 100
 	for ii := 0; ii < num; ii++ {
@@ -59,7 +59,7 @@ func TestRegistryLen(t *testing.T) {
 	}
 }
 
-func TestRegistryDelete(t *testing.T) {
+func TestClusterRegistryDelete(t *testing.T) {
 	r := NewClusterRegistry()
 	num := 100
 	for ii := 0; ii < num; ii++ {
@@ -80,39 +80,39 @@ func TestRegistryDelete(t *testing.T) {
 	}
 }
 
-func TestRegistryCleanup(t *testing.T) {
-	r := NewClusterRegistry()
-	num := 101
-	for ii := 0; ii < num; ii++ {
-		cluster := NewCluster(fmt.Sprintf("cluster-%v", ii))
-		cluster.TTR = 10000
-		// no cancelation flow on cleanup
-		// right now it won't execute something
-		cluster.Status = JOB_STATUS_CANCELED
-		if len(cluster.StoreKey()) == 0 {
-			t.Errorf("cluster.StoreKey size %v > 0", len(cluster.StoreKey()))
-		}
-		if r.Len() > 0 {
-			t.Errorf("Expect registry size %v == 0", r.Len())
-		}
-		if !r.Add(cluster) {
-			t.Errorf("Expect to add cluster")
-		}
-		if r.Len() == 0 {
-			t.Errorf("Expect registry size %v > 0", r.Len())
-		}
-		n := r.Len()
-
-		if (r.Cleanup() > 0) || (r.Len() != n) {
-			t.Errorf("Expect no cluster to be already deleted by Cleanup")
-		}
-		cluster.StartAt = time.Now().Add(time.Duration(-10001) * time.Millisecond)
-		if (r.Cleanup() == 0) || (r.Len() == n) {
-			t.Errorf("Expect Cluster to be deleted by Cleanup due to TTR")
-		}
-
-	}
-	if r.Len() != 0 {
-		t.Errorf("Expect %v got length %v", num, r.Len())
-	}
-}
+// func TestClusterRegistryCleanup(t *testing.T) {
+// 	r := NewClusterRegistry()
+// 	num := 101
+// 	for ii := 0; ii < num; ii++ {
+// 		cluster := NewCluster(fmt.Sprintf("cluster-%v", ii))
+// 		cluster.TTR = 10000
+// 		// no cancelation flow on cleanup
+// 		// right now it won't execute something
+// 		cluster.Status = JOB_STATUS_CANCELED
+// 		if len(cluster.StoreKey()) == 0 {
+// 			t.Errorf("cluster.StoreKey size %v > 0", len(cluster.StoreKey()))
+// 		}
+// 		if r.Len() > 0 {
+// 			t.Errorf("Expect registry size %v == 0", r.Len())
+// 		}
+// 		if !r.Add(cluster) {
+// 			t.Errorf("Expect to add cluster")
+// 		}
+// 		if r.Len() == 0 {
+// 			t.Errorf("Expect registry size %v > 0", r.Len())
+// 		}
+// 		n := r.Len()
+//
+// 		if (r.Cleanup() > 0) || (r.Len() != n) {
+// 			t.Errorf("Expect no cluster to be already deleted by Cleanup")
+// 		}
+// 		cluster.StartAt = time.Now().Add(time.Duration(-10001) * time.Millisecond)
+// 		if (r.Cleanup() == 0) || (r.Len() == n) {
+// 			t.Errorf("Expect Cluster to be deleted by Cleanup due to TTR")
+// 		}
+//
+// 	}
+// 	if r.Len() != 0 {
+// 		t.Errorf("Expect %v got length %v", num, r.Len())
+// 	}
+// }
