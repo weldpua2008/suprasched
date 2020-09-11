@@ -24,6 +24,8 @@ func GetFirstTimeFromMap(v map[string]interface{}, keys []string) (time.Time, bo
 		if _, ok := v[k]; ok {
 
 			switch t := v[k].(type) {
+			case time.Time:
+				return t, true
 			case string:
 				if i, err := strconv.Atoi(t); err == nil {
 					return time.Unix(int64(i), 0), true
@@ -31,6 +33,9 @@ func GetFirstTimeFromMap(v map[string]interface{}, keys []string) (time.Time, bo
 				}
 			case int:
 				return time.Unix(int64(t), 0), true
+            case int64:
+				return time.Unix(t, 0), true
+
 
 			case float64:
 				return time.Unix(int64(int(t)), 0), true

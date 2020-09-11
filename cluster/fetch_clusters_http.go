@@ -94,6 +94,9 @@ func (f *FetchClustersHttp) Fetch() ([]*model.Cluster, error) {
 						if value_map, ok1 := elem.(map[string]interface{}); ok1 {
 
 							j := model.NewEmptyJob()
+							if found_val, ok := utils.GetFirstTimeFromMap(v, []string{"StartAt", "startAt", "StartDate", "startDate"}); ok {
+								j.StartAt = found_val
+							}
 							for _, sub_key := range []string{"JobStatus", "jobStatus", "Job_Status", "Status", "status"} {
 								if _, ok := value_map[sub_key]; ok {
 									j.Status = value_map[sub_key].(string)
