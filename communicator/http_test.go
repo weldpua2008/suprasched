@@ -1,17 +1,14 @@
 package communicator
 
 import (
-	// "bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	// "github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	// "time"
 	config "github.com/weldpua2008/suprasched/config"
 )
 
@@ -22,8 +19,6 @@ type Response struct {
 
 func TestFetch(t *testing.T) {
 	config.LoadCfgForTests(t, "fixtures/fetch_http.yml")
-
-	// want := "{\"job_uid\":\"job-testing.(*common).Name-fm\",\"run_uid\":\"1\",\"extra_run_id\":\"1\",\"msg\":\"'S'\\n\"}"
 	var globalGot string
 	responses := []Response{
 		{
@@ -60,7 +55,6 @@ func TestFetch(t *testing.T) {
 			t.Errorf("ReadAll %s", err)
 		}
 		globalGot = string(fmt.Sprintf("%s", b))
-		// notifyStdoutSent <- true
 	}))
 	defer func() {
 		srv.Close()

@@ -22,9 +22,9 @@ import (
 const (
 	// ProjectName defines project name
 	ProjectName = "suprasched"
-	// JobsFetchSection
+	// JobsSection for the config
 	JobsSection = "jobs"
-	//CFG_PREFIX_COMMUNICATOR defines parameter in config for Communicators
+	//CFG_PREFIX_COMMUNICATOR defines parameter in the config for Communicators
 	CFG_PREFIX_COMMUNICATOR     = "communicator"
 	CFG_PREFIX_CLUSTER          = "cluster"
 	CFG_COMMUNICATOR_PARAMS_KEY = "params"

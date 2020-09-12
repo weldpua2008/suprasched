@@ -35,13 +35,6 @@ func GetCommunicator(communicator_type string) (Communicator, error) {
 	}
 
 	return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicator_type)
-
-	// switch communicator_type {
-	// case "http", "HTTP":
-	// 	return NewRestCommunicator(), nil
-	// default:
-	// 	return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicator_type)
-	// }
 }
 
 // GetSectionCommunicator returns communicator from configuration file.
