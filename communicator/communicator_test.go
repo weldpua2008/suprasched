@@ -106,10 +106,8 @@ func TestGetSectionCommunicator(t *testing.T) {
 		result, got := GetSectionCommunicator(tc.in)
 		if (tc.want == nil) && (tc.want != got) {
 			t.Errorf("want %v, got %v", tc.want, got)
-			if !result.Configured() {
+        } else if if (tc.want == nil) && (!result.Configured()) {
 				t.Errorf("want %v, got %v, res %v", true, result.Configured(), result)
-
-			}
 
 		} else {
 			if !errors.Is(got, tc.want) {

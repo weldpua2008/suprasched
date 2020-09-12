@@ -1,9 +1,10 @@
 package communicator
+
 import (
 	// "bytes"
-    "errors"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	// "github.com/spf13/viper"
 	"io/ioutil"
@@ -11,31 +12,30 @@ import (
 	"net/http/httptest"
 	"testing"
 	// "time"
-    config "github.com/weldpua2008/suprasched/config"
-
+	config "github.com/weldpua2008/suprasched/config"
 )
+
 type Response struct {
-    Number int    `json:"number"`
-    Str  string `json:"str"`
+	Number int    `json:"number"`
+	Str    string `json:"str"`
 }
 
-
 func TestFetch(t *testing.T) {
-    config.LoadCfgForTests(t, "fixtures/fetch_http.yml")
+	config.LoadCfgForTests(t, "fixtures/fetch_http.yml")
 
 	// want := "{\"job_uid\":\"job-testing.(*common).Name-fm\",\"run_uid\":\"1\",\"extra_run_id\":\"1\",\"msg\":\"'S'\\n\"}"
 	var globalGot string
 	responses := []Response{
 		{
-			Number:       1,
-			Str:   "Str",
+			Number: 1,
+			Str:    "Str",
 		},
 		{
-            Number:       2,
-			Str:   "Str1",
+			Number: 2,
+			Str:    "Str1",
 		},
 	}
-    // Response server.
+	// Response server.
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var c Response
 		if len(responses) > 1 {
@@ -66,81 +66,80 @@ func TestFetch(t *testing.T) {
 		srv.Close()
 	}()
 
-    cases := []struct {
-        section   string
-        params map[string]interface{}
-        want map[string]interface{}
-        wantErr error
-        wantFetchErr error
-    }{
-        {
-            section:   "get",
-            params: map[string]interface{}{
-                "method": "GET",
-                "url": srv.URL,
-            },
-            want: map[string]interface{}{
-                "Number": responses[0].Number,
-                "Str": responses[0].Str,
-            },
-            wantErr: nil,
-            wantFetchErr: nil,
-        },
-        {
-            section:   "get",
-            params: map[string]interface{}{
-                "method": "GET",
-                "url": srv.URL,
-            },
-            want: map[string]interface{}{
-                "Number": responses[1].Number,
-                "Str": responses[1].Str,
-            },
-            wantErr: nil,
-            wantFetchErr: nil,
-        },
+	cases := []struct {
+		section      string
+		params       map[string]interface{}
+		want         map[string]interface{}
+		wantErr      error
+		wantFetchErr error
+	}{
+		{
+			section: "get",
+			params: map[string]interface{}{
+				"method": "GET",
+				"url":    srv.URL,
+			},
+			want: map[string]interface{}{
+				"Number": responses[0].Number,
+				"Str":    responses[0].Str,
+			},
+			wantErr:      nil,
+			wantFetchErr: nil,
+		},
+		{
+			section: "get",
+			params: map[string]interface{}{
+				"method": "GET",
+				"url":    srv.URL,
+			},
+			want: map[string]interface{}{
+				"Number": responses[1].Number,
+				"Str":    responses[1].Str,
+			},
+			wantErr:      nil,
+			wantFetchErr: nil,
+		},
+	}
+	for _, tc := range cases {
+		result, got := GetSectionCommunicator(tc.section)
+		if (tc.wantErr == nil) && (tc.wantErr != got) {
+			t.Errorf("want %v, got %v", tc.wantErr, got)
+		} else if (tc.want == nil) && (!result.Configured()) {
+			t.Errorf("want %v, got %v, res %v", true, result.Configured(), result)
+		} else {
+			if !errors.Is(got, tc.wantErr) {
+				t.Errorf("want %v, got %v, res %v", tc.wantErr, got, result)
+			}
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel() // cancel when we are getting the kill signal or exit
+		sent_params := map[string]interface{}{
+			"a": "a",
+		}
+		if err := result.Configure(tc.params); err != nil {
+			t.Errorf("want %v, got %v, results %v", nil, err, result)
+		}
+		c, _ := result.(*RestCommunicator)
 
-    }
-    for _, tc := range cases {
-        result, got := GetSectionCommunicator(tc.section)
-        if (tc.wantErr == nil) && (tc.wantErr != got) {
-            t.Errorf("want %v, got %v", tc.wantErr, got)
-        } else if  (tc.want == nil) && (!result.Configured()) {
-    				t.Errorf("want %v, got %v, res %v", true, result.Configured(), result)
-        } else {
-            if !errors.Is(got, tc.wantErr) {
-                t.Errorf("want %v, got %v, res %v", tc.wantErr, got, result)
-            }
-        }
-        ctx, cancel := context.WithCancel(context.Background())
-        defer cancel() // cancel when we are getting the kill signal or exit
-        sent_params:=map[string]interface{}{
-            "a":"a",
-        }
-        if err:=result.Configure(tc.params); err != nil {
-            t.Errorf("want %v, got %v, results %v", nil, err, result)
-        }
-        c, _:= result.(*RestCommunicator)
+		if len(c.url) < 1 {
+			t.Errorf("want url len, got %v", result)
 
-        if len(c.url) < 1 {
-            t.Errorf("want url len, got %v",  result)
+		}
 
-        }
+		ret, getFetchErr := result.Fetch(ctx, sent_params)
+		if (tc.wantFetchErr == nil) && (tc.wantFetchErr != getFetchErr) {
+			t.Errorf("want %v, got %v", tc.wantFetchErr, getFetchErr)
+			// Be Aware that Keys are ToLower.
+		} else if (tc.wantFetchErr == nil) && (ret[0]["str"] != tc.want["Str"]) {
+			t.Errorf("want %v, got %v", tc.want["Str"], ret[0]["str"])
+		} else {
+			if !errors.Is(getFetchErr, tc.wantFetchErr) {
+				t.Errorf("want %v, got %v, res %v", tc.wantFetchErr, getFetchErr, result)
+			}
+		}
+		if len(globalGot) < 1 {
+			t.Errorf("want len > 0 , got %v, send params %v", globalGot, sent_params)
+		}
 
-        ret, getFetchErr:= result.Fetch(ctx,sent_params)
-        if (tc.wantFetchErr == nil) && (tc.wantFetchErr != getFetchErr) {
-            t.Errorf("want %v, got %v", tc.wantFetchErr, getFetchErr)
-        // Be Aware that Keys are ToLower.
-        } else if (tc.wantFetchErr == nil) && (ret[0]["str"] !=  tc.want["Str"] ) {
-            t.Errorf("want %v, got %v", tc.want["Str"], ret[0]["str"])
-        } else {
-            if !errors.Is(getFetchErr, tc.wantFetchErr) {
-                t.Errorf("want %v, got %v, res %v", tc.wantFetchErr, getFetchErr, result)
-            }
-        }
-        if len(globalGot) <1 {
-            t.Errorf("want len > 0 , got %v, send params %v", globalGot, sent_params)
-        }
-
-    }
+	}
 }

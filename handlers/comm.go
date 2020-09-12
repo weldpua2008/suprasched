@@ -14,7 +14,7 @@ func Init() {
 
 // Deregister all handlers.
 func Deregister() {
-    defer Stop("tracing")
+	defer Stop("tracing")
 
 	defer Stop("cluster_termination")
 

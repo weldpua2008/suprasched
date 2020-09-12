@@ -5,6 +5,7 @@ import (
 
 	"testing"
 )
+
 func LoadCfgForTests(t *testing.T, CfgFile string) {
 	tmp := C
 	defer func() {

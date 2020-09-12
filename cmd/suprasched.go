@@ -73,7 +73,6 @@ var rootCmd = &cobra.Command{
 		// var wg sync.WaitGroup
 		// jobs := make(chan *model.Job, 1)
 		log.Infof("Starting suprasched\n")
-		log.Infof("%v", config.GetStringMapStringTemplated("cluster", "param"))
 		go func() {
 			sig := <-sigs
 			log.Infof("Shutting down - got %v signal", sig)
@@ -104,7 +103,7 @@ var rootCmd = &cobra.Command{
 		log.Trace("Config file:", viper.ConfigFileUsed())
 
 		handlers.Init()
-        defer handlers.Deregister()
+		defer handlers.Deregister()
 
 		go func() {
 			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
