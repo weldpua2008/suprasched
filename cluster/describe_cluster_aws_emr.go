@@ -24,6 +24,18 @@ func NewDescribeEMR() *DescribeEMR {
 	}
 }
 
+func (c *DescribeEMR) getCachedAwsSession(key string) (*session.Session, error) {
+
+    c.mu.RLock()
+	defer c.mu.Unlock()
+
+	if val, ok := c.aws_sessions[key]; ok {
+		return val, nil
+	}
+    return nil, fmt.Errorf("Session %v is not in cache",key)
+}
+
+
 // getAwsSession
 func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Session, error) {
 	var Profile string
@@ -41,12 +53,16 @@ func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Ses
 		}
 	}
 	session_key := fmt.Sprintf("%v%v", Profile, Region)
+
+    if val, err:=c.getCachedAwsSession(session_key); err == nil {
+        return val, nil
+    }
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if val, ok := c.aws_sessions[session_key]; ok {
-		return val, nil
-	}
+	// if val, ok := c.aws_sessions[session_key]; ok {
+	// 	return val, nil
+	// }
 
 	sess, err := session.NewSessionWithOptions(session.Options{
 		// Specify profile to load for the session's config
