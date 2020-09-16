@@ -106,9 +106,9 @@ var rootCmd = &cobra.Command{
 
 		go func() {
 			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
-			if err := cluster.StartGenerateClusters(ctx, clusters, config.GetApiDelayForSection(
+			if err := cluster.StartGenerateClusters(ctx, clusters, config.GetTimeDuration(
 				fmt.Sprintf(
-					"%s.fetch.delay",
+					"%s.fetch",
 					config.CFG_PREFIX_CLUSTER,
 				))); err != nil {
 				log.Tracef("StartGenerateClusters returned error %v", err)
@@ -121,9 +121,9 @@ var rootCmd = &cobra.Command{
 			go func() {
 				log.Trace("StartFetchJobs ")
 				if err := job.StartFetchJobs(
-					ctx, comm, jobs, config.GetApiDelayForSection(
+					ctx, comm, jobs, config.GetTimeDuration(
 						fmt.Sprintf(
-							"%s.fetch.delay",
+							"%s.fetch",
 							config.JobsSection,
 						)),
 				); err != nil {

@@ -30,6 +30,7 @@ const (
 	CFG_PREFIX_CLUSTER          = "cluster"
 	CFG_PREFIX_FETCHER          = "fetch"
 	CFG_COMMUNICATOR_PARAMS_KEY = "params"
+	CFG_INTERVAL_PARAMETER      = "interval"
 )
 
 var (
@@ -161,14 +162,14 @@ func GetStringMapStringTemplatedDefault(section string, param string, def map[st
 	for k, v := range params {
 
 		var tplBytes bytes.Buffer
-        // WARNING: will panic:
-        // tpl := template.Must(template.New("params").Parse(v))
-        // we can preserve failed templated string
-        c[k] = v
+		// WARNING: will panic:
+		// tpl := template.Must(template.New("params").Parse(v))
+		// we can preserve failed templated string
+		c[k] = v
 		tpl, err1 := template.New("params").Parse(v)
-        if err1!=nil {
-            continue
-        }
+		if err1 != nil {
+			continue
+		}
 		err := tpl.Execute(&tplBytes, C)
 		if err != nil {
 			log.Tracef("params executing template: %s", err)
@@ -200,17 +201,17 @@ func GetStringDefault(section string, def string) string {
 	return def
 }
 
-// GetApiDelayForSection return api call delay in seconds for the section
-func GetApiDelayForSection(section string) (interval time.Duration) {
-	def := "api_delay_sec"
-	delay := int64(viper.GetInt(section))
-	if delay < 1 {
-		delay = int64(viper.GetInt(def))
-		if delay < 1 {
-			delay = 1
+// GetTimeDuration return api call delay in seconds for the section
+func GetTimeDuration(section string) (interval time.Duration) {
+	var comp time.Duration
+
+	for _, k := range []string{fmt.Sprintf("%v.%v", section, CFG_INTERVAL_PARAMETER),
+		section, CFG_INTERVAL_PARAMETER} {
+
+		delay := viper.GetDuration(k)
+		if delay > comp {
+			return delay
 		}
 	}
-	interval = time.Duration(delay) * time.Second
-
-	return interval
+	return 1 * time.Second
 }

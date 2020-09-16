@@ -5,3 +5,11 @@ TestGetStringMapStringTemplatedDefault:
         a: "a"
         c: 1
         clientid: "{{.ClientId}}"
+interval: "100s"
+TestGetTimeDuration:
+    one:
+        interval: "15s"
+    two:
+        interval: "15h"
+    three:
+        x: 1
