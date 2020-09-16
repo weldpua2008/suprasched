@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func LoadCfgForTests(t *testing.T, CfgFile string) {
+func LoadCfgForTests(t *testing.T, CfgFile string) (Config) {
 	tmp := C
 	defer func() {
 		C = tmp
@@ -30,5 +30,5 @@ func LoadCfgForTests(t *testing.T, CfgFile string) {
 	if C.ConfigVersion == string("") {
 		t.Errorf("Expected C.ConfigVersion not empty got %v\n", C)
 	}
-
+    return C
 }

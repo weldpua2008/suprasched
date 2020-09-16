@@ -15,6 +15,6 @@ var Constructors = map[string]TypeSpec{}
 
 // String constants representing each communicator type.
 const (
-    // ConstructorsTypeRest represents HTTP communicator 
+	// ConstructorsTypeRest represents HTTP communicator
 	ConstructorsTypeRest = "HTTP"
 )

@@ -9,7 +9,7 @@ type ClusterDescriber interface {
 	DescribeCluster(map[string]interface{}) (string, error)
 }
 
-// ClustersFetcher fetch Cluster list
+// ClustersFetcher fetch Cluster's list
 type ClustersFetcher interface {
 	Fetch() ([]*model.Cluster, error)
 }

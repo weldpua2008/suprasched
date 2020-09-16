@@ -26,7 +26,9 @@ const (
 	JobsSection = "jobs"
 	//CFG_PREFIX_COMMUNICATOR defines parameter in the config for Communicators
 	CFG_PREFIX_COMMUNICATOR     = "communicator"
+	CFG_PREFIX_COMMUNICATORS    = "communicators"
 	CFG_PREFIX_CLUSTER          = "cluster"
+	CFG_PREFIX_FETCHER          = "fetch"
 	CFG_COMMUNICATOR_PARAMS_KEY = "params"
 )
 
@@ -121,16 +123,52 @@ func initConfig() {
 
 }
 
+// GetSliceStringMapStringTemplatedDefault returns slice of [sting]sting maps templated & enriched by default.
+func GetSliceStringMapStringTemplatedDefault(section string, param string, def map[string]string) []map[string]string {
+	ret := make([]map[string]string, 0)
+	sections_values := viper.GetStringMap(fmt.Sprintf("%s.%s", section, param))
+	for _, section_value := range sections_values {
+		if section_value == nil {
+			continue
+		}
+		if params, ok := section_value.(map[string]interface{}); ok {
+			c := make(map[string]string)
+			for k, v := range def {
+				c[k] = v
+			}
+			for k, v := range params {
+				var tplBytes bytes.Buffer
+				tpl := template.Must(template.New("params").Parse(fmt.Sprintf("%v", v)))
+				if err := tpl.Execute(&tplBytes, C); err != nil {
+					log.Tracef("params executing template for %v got %s", v, err)
+					continue
+				}
+				c[k] = tplBytes.String()
+			}
+			ret = append(ret, c)
+		}
+
+	}
+	return ret
+}
+
 func GetStringMapStringTemplatedDefault(section string, param string, def map[string]string) map[string]string {
-	// log.Tracef("Calling GetParamsFromSection(%s,%s)",section, param)
 	c := make(map[string]string)
 	for k, v := range def {
 		c[k] = v
 	}
 	params := viper.GetStringMapString(fmt.Sprintf("%s.%s", section, param))
 	for k, v := range params {
+
 		var tplBytes bytes.Buffer
-		tpl := template.Must(template.New("params").Parse(v))
+        // WARNING: will panic:
+        // tpl := template.Must(template.New("params").Parse(v))
+        // we can preserve failed templated string
+        c[k] = v
+		tpl, err1 := template.New("params").Parse(v)
+        if err1!=nil {
+            continue
+        }
 		err := tpl.Execute(&tplBytes, C)
 		if err != nil {
 			log.Tracef("params executing template: %s", err)

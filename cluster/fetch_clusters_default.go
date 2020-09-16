@@ -12,25 +12,55 @@ import (
 	"time"
 )
 
-type FetchClustersHttp struct {
-	ClustersFetcher
-	mu   sync.RWMutex
-	comm communicator.Communicator
-}
-
-// NewFetchEMR prepare struct communicator for EMR
-func NewFetchClustersHttp() (*FetchClustersHttp, error) {
-
-	if comm, err := communicator.GetSectionCommunicator(fmt.Sprintf("%s.fetch", config.CFG_PREFIX_CLUSTER)); err == nil {
-		// log.Tracef("Getting GetSectionCommunicator %s", config.CFG_PREFIX_CLUSTER)
-
-		return &FetchClustersHttp{comm: comm}, nil
-	} else {
-		return nil, fmt.Errorf("Can't initialize FetchClusters '%s': %v", config.CFG_PREFIX_CLUSTER, err)
+func init() {
+	FetcherConstructors[ConstructorsFetcherTypeRest] = FetcherTypeSpec{
+		instance:    NewFetchClusterHttp,
+		constructor: NewFetchClustersDefault,
+		Summary: `
+FetchClustersDefault is the default implementation of ClustersFetcher and is
+used by Default.`,
+		Description: `
+It supports the following params:
+- ` + "`ClusterId`" + ` Cluster Identificator
+- ` + "`ClusterPool`" + ` To differentiate clusters by Pools
+- ` + "`ClusterProfile`" + ` To differentiate clusters by Accounts.`,
 	}
 }
 
-func (f *FetchClustersHttp) Fetch() ([]*model.Cluster, error) {
+type FetchClustersDefault struct {
+	ClustersFetcher
+	mu    sync.RWMutex
+	comm  communicator.Communicator
+	comms []communicator.Communicator
+	t     string
+}
+
+// NewFetchClustersDefault prepare struct FetchClustersDefault
+func NewFetchClustersDefault(section string) (ClustersFetcher, error) {
+	comms, err := communicator.GetCommunicatorsFromSection(section)
+	if err == nil {
+		return &FetchClustersDefault{comms: comms, t: "FetchClustersDefault"}, nil
+	} else {
+		comm, err := communicator.GetSectionCommunicator(section)
+		if err == nil {
+			comms := make([]communicator.Communicator, 0)
+			comms = append(comms, comm)
+			return &FetchClustersDefault{comm: comm, comms: comms, t: "FetchClustersDefault"}, nil
+
+		}
+	}
+	return nil, fmt.Errorf("Can't initialize FetchClusters '%s': %v", config.CFG_PREFIX_CLUSTER, err)
+
+}
+
+// NewFetchClustersDefault prepare struct FetchClustersDefault
+func NewFetchClusterHttp() ClustersFetcher {
+
+	return &FetchClustersDefault{}
+
+}
+
+func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 	var results []*model.Cluster
 
 	var ctx context.Context
@@ -45,9 +75,11 @@ func (f *FetchClustersHttp) Fetch() ([]*model.Cluster, error) {
 	params := make(map[string]interface{})
 	// f.mu.Lock()
 	// defer f.mu.Unlock()
-
-	res, err := f.comm.Fetch(fetchCtx, params)
-	if err == nil {
+	for _, comm := range f.comms {
+		res, err := comm.Fetch(fetchCtx, params)
+		if err != nil {
+			return nil, fmt.Errorf("Can't fetch more clusters: %v", err)
+		}
 		for _, v := range res {
 			if v == nil {
 				continue
@@ -180,7 +212,7 @@ func (f *FetchClustersHttp) Fetch() ([]*model.Cluster, error) {
 			}
 			results = append(results, cl)
 		}
-		return results, nil
 	}
-	return results, fmt.Errorf("Can't fetch more clusters: %v", err)
+	return results, nil
+
 }

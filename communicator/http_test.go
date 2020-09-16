@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	config "github.com/weldpua2008/suprasched/config"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	config "github.com/weldpua2008/suprasched/config"
 )
 
 type Response struct {

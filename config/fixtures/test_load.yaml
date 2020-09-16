@@ -1,2 +1,7 @@
 clientId: "clientId"
 version: "1.0"
+TestGetStringMapStringTemplatedDefault:
+    param:
+        a: "a"
+        c: 1
+        clientid: "{{.ClientId}}"

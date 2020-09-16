@@ -56,3 +56,43 @@ func GetSectionCommunicator(section string) (Communicator, error) {
 	}
 	return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicator_type)
 }
+
+// GetCommunicatorsFromSection returns multiple communicators from configuration file.
+// By default http communicator will be used.
+// Example YAML config for `section` that will return new `RestCommunicator`:
+//     section:
+//         communicators:
+//             my_communicator:
+//                 type: "HTTP"
+//             -:
+//                 type: "HTTP"
+func GetCommunicatorsFromSection(section string) ([]Communicator, error) {
+	def := make(map[string]string)
+	comms := config.GetSliceStringMapStringTemplatedDefault(section, config.CFG_PREFIX_COMMUNICATORS, def)
+	res := make([]Communicator, 0)
+	for _, comm := range comms {
+		if comm == nil {
+			continue
+		}
+		communicator_type := "http"
+		if comm_type, ok := comm["type"]; ok {
+			communicator_type = comm_type
+		}
+		k := strings.ToUpper(communicator_type)
+		if type_struct, ok := Constructors[k]; ok {
+			// if comm, err := type_struct.constructor(section); err == nil {
+			communicator_instance := type_struct.instance()
+			if err1 := communicator_instance.Configure(config.ConvertMapStringToInterface(comm)); err1 != nil {
+				log.Tracef("Can't configure %v communicator, got %v", communicator_type, comm)
+				return nil, err1
+			}
+			res = append(res, communicator_instance)
+
+		}
+
+	}
+	if len(res) > 0 {
+		return res, nil
+	}
+	return nil, fmt.Errorf("%w in section %s.\n", ErrNoSuitableCommunicator, section)
+}
