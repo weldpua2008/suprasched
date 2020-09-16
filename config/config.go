@@ -201,7 +201,10 @@ func GetStringDefault(section string, def string) string {
 	return def
 }
 
-// GetTimeDuration return api call delay in seconds for the section
+// GetTimeDuration return delay for the section with default of 1 second.
+// Example config:
+// section:
+//     interval: 5s
 func GetTimeDuration(section string) (interval time.Duration) {
 	var comp time.Duration
 
