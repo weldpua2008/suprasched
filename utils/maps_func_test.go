@@ -127,13 +127,13 @@ func TestGetFirstTimeFromMap(t *testing.T) {
 		},
 	}
 
-	for _, tc := range cases {
+	for n, tc := range cases {
 		result, got := GetFirstTimeFromMap(tc.in, tc.keys)
 		if tc.want != got {
 			t.Errorf("want %v, got %v", tc.want, got)
 		}
 		if tc.result != result {
-			t.Errorf("want %v, got %v", tc.result, result)
+			t.Errorf("want %v result %v, got result %v, tc.in %v", n, tc.result, result, tc.in)
 		}
 	}
 }

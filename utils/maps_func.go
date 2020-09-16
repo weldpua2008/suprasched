@@ -3,6 +3,7 @@ package utils
 import (
 	"strconv"
 	"time"
+    cast "github.com/spf13/cast"
 )
 
 func GetFirstStringFromMap(v map[string]interface{}, keys []string) (string, bool) {
@@ -22,6 +23,10 @@ func GetFirstStringFromMap(v map[string]interface{}, keys []string) (string, boo
 func GetFirstTimeFromMap(v map[string]interface{}, keys []string) (time.Time, bool) {
 	for _, k := range keys {
 		if _, ok := v[k]; ok {
+            if val, err:= cast.ToTimeE(v[k]); err == nil {
+                return val, true
+            }
+
 
 			switch t := v[k].(type) {
 			case time.Time:

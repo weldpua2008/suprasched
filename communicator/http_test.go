@@ -123,7 +123,7 @@ func TestFetch(t *testing.T) {
 		ret, getFetchErr := result.Fetch(ctx, sent_params)
 		if (tc.wantFetchErr == nil) && (tc.wantFetchErr != getFetchErr) {
 			t.Errorf("want %v, got %v", tc.wantFetchErr, getFetchErr)
-			// Be Aware that Keys are ToLower.
+		// WARNING: Keys are always in Lower case.
 		} else if (tc.wantFetchErr == nil) && (ret[0]["str"] != tc.want["Str"]) {
 			t.Errorf("want %v, got %v", tc.want["Str"], ret[0]["str"])
 		} else {
