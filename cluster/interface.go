@@ -5,8 +5,8 @@ import (
 )
 
 // ClusterDescriber fetch metadata for specific cluster
-type ClusterDescriber interface {
-	DescribeCluster(map[string]interface{}) (string, error)
+type ClustersDescriber interface {
+	ClusterStatus(map[string]interface{}) (string, error)
 }
 
 // ClustersFetcher fetch Cluster's list

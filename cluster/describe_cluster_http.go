@@ -4,22 +4,58 @@ import (
 	"context"
 	"fmt"
 	communicator "github.com/weldpua2008/suprasched/communicator"
+	config "github.com/weldpua2008/suprasched/config"
+
 	"sync"
 	"time"
 )
 
+func init() {
+	DescriberConstructors[ConstructorsDescriberTypeRest] = DescriberTypeSpec{
+		instance:    NewDescribeClusterHttp,
+		constructor: NewDescribeClusterHttpBySection,
+		Summary: `
+DescribeEMR is an implementation of ClustersDescriber for Amazon EMR clusters.`,
+		Description: `
+It supports the following params:
+- ` + "`ClusterId`" + ` Cluster Identificator
+- ` + "`ClusterPool`" + ` To differentiate clusters by Pools
+- ` + "`ClusterProfile`" + ` To differentiate clusters by Accounts.`,
+	}
+}
+
 type DescribeClusterHttp struct {
-	ClusterDescriber
-	mu   sync.RWMutex
-	comm communicator.Communicator
+	ClustersDescriber
+	mu    sync.RWMutex
+	comm  communicator.Communicator
+	comms []communicator.Communicator
+	t     string
 }
 
 // NewDescribeEMR prepare struct communicator for EMR
-func NewDescribeClusterHttp(comm communicator.Communicator) *DescribeClusterHttp {
-	return &DescribeClusterHttp{comm: comm}
+func NewDescribeClusterHttp() ClustersDescriber {
+	return &DescribeClusterHttp{}
 }
 
-func (d *DescribeClusterHttp) DescribeCluster(params map[string]interface{}) (string, error) {
+// NewDescribeClustersDefault prepare struct DescribeClustersDefault
+func NewDescribeClusterHttpBySection(section string) (ClustersDescriber, error) {
+	comms, err := communicator.GetCommunicatorsFromSection(section)
+	if err == nil {
+		return &DescribeClusterHttp{comms: comms, t: "DescribeClusterHttp"}, nil
+	} else {
+		comm, err := communicator.GetSectionCommunicator(section)
+		if err == nil {
+			comms := make([]communicator.Communicator, 0)
+			comms = append(comms, comm)
+			return &DescribeClusterHttp{comm: comm, comms: comms, t: "DescribeClusterHttp"}, nil
+
+		}
+	}
+	return nil, fmt.Errorf("Can't initialize DescribeClusterHttp '%s': %v", config.CFG_PREFIX_CLUSTER, err)
+
+}
+
+func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (string, error) {
 	var ClusterId string
 	var ctx context.Context
 	var clusterCtx context.Context

@@ -1,9 +1,9 @@
 package utils
 
 import (
+	cast "github.com/spf13/cast"
 	"strconv"
 	"time"
-    cast "github.com/spf13/cast"
 )
 
 func GetFirstStringFromMap(v map[string]interface{}, keys []string) (string, bool) {
@@ -23,10 +23,9 @@ func GetFirstStringFromMap(v map[string]interface{}, keys []string) (string, boo
 func GetFirstTimeFromMap(v map[string]interface{}, keys []string) (time.Time, bool) {
 	for _, k := range keys {
 		if _, ok := v[k]; ok {
-            if val, err:= cast.ToTimeE(v[k]); err == nil {
-                return val, true
-            }
-
+			if val, err := cast.ToTimeE(v[k]); err == nil {
+				return val, true
+			}
 
 			switch t := v[k].(type) {
 			case time.Time:
@@ -34,13 +33,11 @@ func GetFirstTimeFromMap(v map[string]interface{}, keys []string) (time.Time, bo
 			case string:
 				if i, err := strconv.Atoi(t); err == nil {
 					return time.Unix(int64(i), 0), true
-
 				}
 			case int:
 				return time.Unix(int64(t), 0), true
 			case int64:
 				return time.Unix(t, 0), true
-
 			case float64:
 				return time.Unix(int64(int(t)), 0), true
 			}

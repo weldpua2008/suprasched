@@ -6,6 +6,7 @@ import (
 )
 
 var (
-	log                          = logrus.WithFields(logrus.Fields{"package": "cluster"})
-	ErrNoSuitableClustersFetcher = errors.New("No suitable ClustersFetcher found")
+	log                            = logrus.WithFields(logrus.Fields{"package": "cluster"})
+	ErrNoSuitableClustersFetcher   = errors.New("No suitable ClustersFetcher found")
+	ErrNoSuitableClustersDescriber = errors.New("No suitable ClustersDescriber found")
 )

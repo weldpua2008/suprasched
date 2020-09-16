@@ -16,6 +16,46 @@ func BenchmarkClusterRegistryAdd(b *testing.B) {
 	}
 }
 
+func BenchmarkClusterRegistryAddByType(b *testing.B) {
+	r := NewClusterRegistry()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		cluster := NewCluster(fmt.Sprintf("cluster-%v", b.N))
+		cluster.ClusterType = "ClusterType"
+		r.Add(cluster)
+
+		if len(r.byType[cluster.ClusterType]) != i {
+			b.Errorf("Expect r.byType[%v] to add cluster", cluster.ClusterType)
+
+		}
+	}
+}
+
+func BenchmarkClusterRegistryDeleteByType(b *testing.B) {
+	r := NewClusterRegistry()
+
+	ClusterType := "ClusterType"
+	for i := 0; i < b.N; i++ {
+		cluster := NewCluster(fmt.Sprintf("cluster-%v", b.N))
+		cluster.ClusterType = ClusterType
+		r.Add(cluster)
+
+		if len(r.byType[cluster.ClusterType]) != i {
+			b.Errorf("Expect r.byType[%v] to add cluster", cluster.ClusterType)
+
+		}
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		r.Delete(fmt.Sprintf("cluster-%v", b.N))
+		if len(r.byType[ClusterType]) == b.N {
+			b.Errorf("Expect r.byType[%v] to delete cluster", ClusterType)
+
+		}
+	}
+}
+
 // func BenchmarkClusterRegistryCleanUp(b *testing.B) {
 // 	b.ResetTimer()
 // 	for i := 0; i < b.N; i++ {

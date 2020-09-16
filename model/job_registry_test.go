@@ -20,7 +20,7 @@ func BenchmarkRegistryCleanUp(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		r := NewRegistry()
-		for ii := 0; ii < 100; ii++ {
+		for ii := 0; ii < 10; ii++ {
 			job := NewJob(fmt.Sprintf("job-%v", b.N))
 			r.Add(job)
 			r.Cleanup()

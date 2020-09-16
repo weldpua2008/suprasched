@@ -8,14 +8,16 @@ import (
 // NewClusterRegistry returns a new ClusterRegistry.
 func NewClusterRegistry() *ClusterRegistry {
 	return &ClusterRegistry{
-		all: make(map[string]*Cluster),
+		all:    make(map[string]*Cluster),
+		byType: make(map[string][]*Cluster),
 	}
 }
 
 // ClusterRegistry holds all Cluster Records.
 type ClusterRegistry struct {
-	all map[string]*Cluster
-	mu  sync.RWMutex
+	all    map[string]*Cluster
+	mu     sync.RWMutex
+	byType map[string][]*Cluster
 }
 
 // Add a cluster.
@@ -27,6 +29,7 @@ func (r *ClusterRegistry) Add(rec *Cluster) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, ok := r.all[rec.StoreKey()]; ok {
+		r.byType[rec.ClusterType] = append(r.byType[rec.ClusterType], rec)
 		return false
 	}
 
@@ -47,11 +50,24 @@ func (r *ClusterRegistry) Len() int {
 func (r *ClusterRegistry) Delete(id string) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, ok := r.all[id]
+	rec, ok := r.all[id]
 	if !ok {
 		return false
 	}
 	delete(r.all, id)
+	idx := -1
+	for i, _ := range r.byType[rec.ClusterType] {
+		if r.byType[rec.ClusterType][idx] == rec {
+			idx = i
+			break
+		}
+	}
+	if idx > -1 {
+		copy(r.byType[rec.ClusterType][idx:], r.byType[rec.ClusterType][idx+1:])
+		r.byType[rec.ClusterType] = r.byType[rec.ClusterType][:len(r.byType[rec.ClusterType])-1]
+
+	}
+
 	return true
 }
 
@@ -135,6 +151,28 @@ func (r *ClusterRegistry) Delete(id string) bool {
 // 	// 	delete(r.all, k)
 // 	// }
 // 	return failed
+// }
+
+// func (r *ClusterRegistry) Filter(ClusterType string) ([]*Cluster, bool) {
+//     res := make([]*Cluster,0)
+// 	r.mu.RLock()
+// 	defer r.mu.RUnlock()
+//     	for k, _ := range r.all {
+//     		if i > n {
+//     			slice = append(slice, k)
+//     		} else {
+//     			slice[i] = k
+//
+//     		}
+//     		i++
+//     	}
+//
+//
+// 	if rec, ok := r.all[jid]; ok {
+// 		return rec, true
+// 	}
+//
+// 	return nil, false
 // }
 
 // Record fetch cluster by Cluster ID.

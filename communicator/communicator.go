@@ -74,7 +74,7 @@ func GetCommunicatorsFromSection(section string) ([]Communicator, error) {
 		if comm == nil {
 			continue
 		}
-		communicator_type := "http"
+		communicator_type := ConstructorsTypeRest
 		if comm_type, ok := comm["type"]; ok {
 			communicator_type = comm_type
 		}

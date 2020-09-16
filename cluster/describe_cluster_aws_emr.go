@@ -10,18 +10,44 @@ import (
 	"time"
 )
 
+func init() {
+	DescriberConstructors[ConstructorsDescriberTypeAwsEMR] = DescriberTypeSpec{
+		instance:    NewDescriberEMR,
+		constructor: NewDescriberEMRFromSection,
+		Summary: `
+DescribeEMR is an implementation of ClustersDescriber for Amazon EMR clusters.`,
+		Description: `
+It supports the following params:
+- ` + "`ClusterId`" + ` Cluster Identificator
+- ` + "`ClusterPool`" + ` To differentiate clusters by Pools
+- ` + "`ClusterProfile`" + ` To differentiate clusters by Accounts.`,
+	}
+}
+
 type DescribeEMR struct {
-	ClusterDescriber
+	ClustersDescriber
 	aws_sessions map[string]*session.Session
 	mu           sync.RWMutex
+	t            string
 }
 
 // NewDescribeEMR prepare struct communicator for EMR
-func NewDescribeEMR() *DescribeEMR {
+func NewDescriberEMR() ClustersDescriber {
 	s := make(map[string]*session.Session)
 	return &DescribeEMR{
 		aws_sessions: s,
+		t:            "DescribeEMR",
 	}
+}
+
+// NewFetchClustersDefault prepare struct FetchClustersDefault
+func NewDescriberEMRFromSection(section string) (ClustersDescriber, error) {
+	s := make(map[string]*session.Session)
+	return &DescribeEMR{
+		aws_sessions: s,
+		t:            "DescribeEMR",
+	}, nil
+
 }
 
 func (c *DescribeEMR) getCachedAwsSession(key string) (*session.Session, error) {
@@ -81,7 +107,7 @@ func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Ses
 }
 
 // DescribeCluster
-func (c *DescribeEMR) DescribeCluster(params map[string]interface{}) (string, error) {
+func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, error) {
 	var ClusterId string
 	var ctx context.Context
 	var clusterCtx context.Context

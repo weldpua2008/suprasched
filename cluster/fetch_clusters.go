@@ -19,7 +19,6 @@ func GetSectionClustersFetcher(section string) (ClustersFetcher, error) {
 	k := strings.ToUpper(fetcher_type)
 	if type_struct, ok := FetcherConstructors[k]; ok {
 		if comm, err := type_struct.constructor(fmt.Sprintf("%s.%s", section, config.CFG_PREFIX_FETCHER)); err == nil {
-			// log.Infof("ClustersFetcher %v", comm)
 			return comm, nil
 		} else {
 			return nil, err
@@ -36,7 +35,6 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 
 	fetchers := make([]ClustersFetcher, 0)
 	fetchers = append(fetchers, single_fetcher)
-	// comms, err:=communicator.GetCommunicatorsFromSection(fmt.Sprintf("%s.fetch", config.CFG_PREFIX_CLUSTER))
 	if err != nil || fetchers == nil || len(fetchers) == 0 {
 		close(clusters)
 		return fmt.Errorf("Failed to start StartGenerateClusters %v", err)
@@ -71,7 +69,6 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 									if rec.UseExternaleStatus(cls) {
 										topic = strings.ToLower(fmt.Sprintf("cluster.%v", cls.Status))
 									}
-
 								}
 							} else {
 								topic = config.TOPIC_CLUSTER_CREATED
@@ -81,9 +78,7 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 								if err != nil {
 									log.Tracef("%v", err)
 								}
-
 							}
-
 						}
 
 					} else {

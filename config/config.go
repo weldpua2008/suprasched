@@ -29,6 +29,7 @@ const (
 	CFG_PREFIX_COMMUNICATORS    = "communicators"
 	CFG_PREFIX_CLUSTER          = "cluster"
 	CFG_PREFIX_FETCHER          = "fetch"
+	CFG_PREFIX_DESCRIBERS       = "describe"
 	CFG_COMMUNICATOR_PARAMS_KEY = "params"
 	CFG_INTERVAL_PARAMETER      = "interval"
 )
