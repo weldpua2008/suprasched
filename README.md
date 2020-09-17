@@ -90,4 +90,7 @@ $ go clean -testcache
 
 ```bash
 $ go test -bench= -test.v  ./...
+
+$ go test  -bench=. -benchmem -v  ./...
+
 ```

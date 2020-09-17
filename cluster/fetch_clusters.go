@@ -77,6 +77,7 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 									if !exist {
 										continue
 									}
+									j += 1
 								}
 							} else if rec.IsInTransition() {
 								continue

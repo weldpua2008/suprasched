@@ -3,29 +3,34 @@ package model
 import (
 	"context"
 	"fmt"
+	utils "github.com/weldpua2008/suprasched/utils"
+	"strings"
 	"sync"
 	"time"
 )
 
 // Job public structure
 type Job struct {
-	Id             string    // Identificator for Job
-	RunUID         string    // Running indentification
-	ExtraRunUID    string    // Extra indentification
-	Priority       int64     // Priority for a Job
-	CreateAt       time.Time // When Job was created
-	StartAt        time.Time // When command started
-	LastActivityAt time.Time // When job metadata last changed
-	Status         string    // Currentl status
-	MaxAttempts    int       // Absoulute max num of attempts.
-	MaxFails       int       // Absolute max number of failures.
-	TTR            uint64    // Time-to-run in Millisecond
-	ClusterId      string    // Identificator for ClusterId
-	ClusterConfig  map[string]interface{}
-	mu             sync.RWMutex
-	exitError      error
-	ExitCode       int // Exit code
-	ctx            context.Context
+	Id                      string    // Identificator for Job
+	RunUID                  string    // Running indentification
+	ExtraRunUID             string    // Extra indentification
+	Priority                int64     // Priority for a Job
+	CreateAt                time.Time // When Job was created
+	StartAt                 time.Time // When command started
+	LastActivityAt          time.Time // When job metadata last changed
+	Status                  string    // Currentl status
+	MaxAttempts             int       // Absoulute max num of attempts.
+	MaxFails                int       // Absolute max number of failures.
+	TTR                     uint64    // Time-to-run in Millisecond
+	ClusterId               string    // Identificator for ClusterId
+	ClusterStoreKey         string    // Cluster UUID for Registry
+	PreviousClusterStoreKey string    // Previous Cluster UUID
+	ClusterConfig           map[string]interface{}
+	mu                      sync.RWMutex
+	exitError               error
+	ExitCode                int // Exit code
+	ctx                     context.Context
+	inTransition            bool // wether Job in some transaction
 }
 
 // StoreKey returns Job unique store key
@@ -48,6 +53,47 @@ func (j *Job) GetStatus() string {
 // updatelastActivity for the Job
 func (j *Job) updatelastActivity() {
 	j.LastActivityAt = time.Now()
+}
+
+func (j *Job) IsInTransition() bool {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	if j.inTransition {
+		return true
+	}
+	return false
+}
+func (j *Job) PutInTransition() bool {
+	j.mu.Lock()
+	defer j.mu.Unlock()
+	if !j.inTransition {
+		j.inTransition = true
+		return true
+	}
+	return false
+}
+func (j *Job) FinishTransition() bool {
+	j.mu.Lock()
+	defer j.mu.Unlock()
+	if j.inTransition {
+		j.inTransition = false
+		return true
+	}
+	return false
+}
+
+// UpdateStatus compare with cluster status string and updates.
+// returns true if the cluster need update the status
+func (j *Job) UpdateStatus(ext string) bool {
+	j.mu.Lock()
+	defer j.mu.Unlock()
+
+	if strings.ToLower(j.Status) != strings.ToLower(ext) {
+		j.Status = ext
+		return true
+	}
+
+	return false
 }
 
 func (j *Job) EventMetadata() map[string]string {
@@ -84,6 +130,35 @@ func IsTerminalStatus(status string) bool {
 	return false
 }
 
+func (j *Job) GetParams() map[string]interface{} {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+
+	params := map[string]interface{}{
+		"Id":          j.Id,
+		"Status":      j.Status,
+		"RunUID":      j.RunUID,
+		"ExtraRunUID": j.ExtraRunUID,
+		"ClusterId":   j.ClusterId,
+	}
+	return params
+}
+
+func (j *Job) ChangeClusterStoreKey(in string) {
+	j.mu.Lock()
+	defer j.mu.Unlock()
+	if j.ClusterStoreKey != in {
+		j.PreviousClusterStoreKey = j.ClusterStoreKey
+		j.ClusterStoreKey = in
+	}
+}
+
+func (j *Job) GetClusterStoreKey(in string) string {
+	j.mu.RLock()
+	defer j.mu.RUnlock()
+	return j.ClusterStoreKey
+}
+
 func (j *Job) Cancel() error {
 	j.mu.Lock()
 	defer j.mu.Unlock()
@@ -93,11 +168,6 @@ func (j *Job) Cancel() error {
 			log.Tracef("failed to change job %s status '%s' -> '%s'", j.Id, j.Status, JOB_STATUS_CANCELED)
 		}
 		j.updatelastActivity()
-		// stage := "jobs.cancel"
-		// params := j.GetAPIParams(stage)
-		// if err, result := DoApiCall(j.ctx, params, stage); err != nil {
-		// 	log.Tracef("failed to update api, got: %s and %s", result, err)
-		// }
 
 	} else {
 		log.Trace(fmt.Sprintf("Job %s in terminal '%s' status ", j.Id, j.Status))
@@ -120,4 +190,32 @@ func NewJob(id string) *Job {
 
 func NewEmptyJob() *Job {
 	return &Job{}
+}
+func NewJobFromMap(v map[string]interface{}) *Job {
+	j := NewJob("")
+	if found_val, ok := utils.GetFirstTimeFromMap(v, []string{"StartAt", "startAt", "StartDate", "startDate"}); ok {
+		j.StartAt = found_val
+	}
+
+	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobStatus", "jobStatus", "Job_Status", "Status", "status"}); ok {
+		j.Status = found_val
+	}
+	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobId", "jobId", "Job_ID", "Job_Id", "job_Id", "job_id"}); ok {
+		j.Id = found_val
+	}
+	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterId", "clusterId", "Cluster_Id", "Cluster_ID", "Cluster", "cluster", "clusterid"}); ok {
+		j.ClusterId = found_val
+	}
+
+	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobRunId", "jobRunId", "Job_RUN_ID", "Job_Run_Id", "job_run_id", "run_id",
+		"run_uid", "RunId", "RunUID"}); ok {
+		j.RunUID = found_val
+	}
+
+	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobExtraRunId", "jobExtraRunId", "JOB_EXTRA_RUN_ID", "Job_Extra_Run_Id", "job_extra_run_id", "extra_run_id",
+		"job_extra_run_uid", "extra_run_uid"}); ok {
+		j.ExtraRunUID = found_val
+	}
+
+	return j
 }

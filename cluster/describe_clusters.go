@@ -67,12 +67,12 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 	}()
 
 	go func() {
-		j := 0
+		cntr := 0
 		for {
 			select {
 			case <-ctx.Done():
 				close(clusters)
-				doneNumClusters <- j
+				doneNumClusters <- cntr
 				log.Debug("Clusters description finished [ SUCCESSFULLY ]")
 				return
 			case <-tickerGenerateClusters.C:
@@ -100,7 +100,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 								if !rec.PutInTransition() {
 									continue
 								}
-
+								cntr += 1
 								topic = strings.ToLower(fmt.Sprintf("cluster.%v", cluster_status))
 								_, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())
 								if err != nil {

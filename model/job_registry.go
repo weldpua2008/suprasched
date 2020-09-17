@@ -141,6 +141,19 @@ func (r *Registry) GracefullShutdown() bool {
 	return failed
 }
 
+// All returns all jobs from Registry.
+func (r *Registry) All() []*Job {
+
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	slicecopy := make([]*Job, 0, len(r.all))
+	for _, j := range r.all {
+		slicecopy = append(slicecopy, j)
+	}
+	// slicecopy := append(make([]*Job, 0, len( r.all)), r.all...)
+	return slicecopy
+}
+
 // Record fetch job by Job ID.
 // Follows comma ok idiom
 func (r *Registry) Record(jid string) (*Job, bool) {

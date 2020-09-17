@@ -23,7 +23,9 @@ const (
 	// ProjectName defines project name
 	ProjectName = "suprasched"
 	// CFG_PREFIX_JOB for the config
-	CFG_PREFIX_JOB = "jobs"
+	CFG_PREFIX_JOBS         = "jobs"
+	CFG_PREFIX_JOBS_FETCHER = "fetch"
+
 	//CFG_PREFIX_COMMUNICATOR defines parameter in the config for Communicators
 	CFG_PREFIX_COMMUNICATOR            = "communicator"
 	CFG_PREFIX_COMMUNICATORS           = "communicators"

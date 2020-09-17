@@ -181,7 +181,7 @@ func (r *ClusterRegistry) Filter(cluster_types []string) []*Cluster {
 //     	}
 //
 //
-// 	if rec, ok := r.all[jid]; ok {
+// 	if rec, ok := r.all[clusterId]; ok {
 // 		return rec, true
 // 	}
 //
@@ -190,10 +190,10 @@ func (r *ClusterRegistry) Filter(cluster_types []string) []*Cluster {
 
 // Record fetch cluster by Cluster ID.
 // Follows comma ok idiom
-func (r *ClusterRegistry) Record(jid string) (*Cluster, bool) {
+func (r *ClusterRegistry) Record(clusterId string) (*Cluster, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	if rec, ok := r.all[jid]; ok {
+	if rec, ok := r.all[clusterId]; ok {
 		return rec, true
 	}
 

@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cluster "github.com/weldpua2008/suprasched/cluster"
-	communicator "github.com/weldpua2008/suprasched/communicator"
+	// communicator "github.com/weldpua2008/suprasched/communicator"
 	config "github.com/weldpua2008/suprasched/config"
 
 	handlers "github.com/weldpua2008/suprasched/handlers"
@@ -116,25 +116,16 @@ var rootCmd = &cobra.Command{
 			}
 		}()
 
-		communicator_type := config.GetStringDefault(fmt.Sprintf("%s.fetch.communicator", config.CFG_PREFIX_JOB), "http")
-		comm, err_com := communicator.GetCommunicator(communicator_type)
-		if err_com == nil {
-			go func() {
-				log.Trace("StartFetchJobs ")
-				if err := job.StartFetchJobs(
-					ctx, comm, jobs, config.GetTimeDuration(
-						fmt.Sprintf(
-							"%s.%s",
-							config.CFG_PREFIX_JOB,
-							config.CFG_PREFIX_FETCHER,
-						)),
-				); err != nil {
-					log.Tracef("StartFetchJobs returned error %v", err)
-				}
-			}()
-		} else {
-			close(jobs)
-		}
+		go func() {
+			if err := job.StartFetchJobs(ctx, jobs, config.GetTimeDuration(
+				fmt.Sprintf(
+					"%s.%s",
+					config.CFG_PREFIX_JOBS,
+					config.CFG_PREFIX_JOBS_FETCHER,
+				))); err != nil {
+				log.Tracef("StartFetchJobs returned error %v", err)
+			}
+		}()
 
 		go func() {
 			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
@@ -184,8 +175,16 @@ var rootCmd = &cobra.Command{
 		// }
 		//
 		// wg.Wait()
-		time.Sleep(150 * time.Millisecond)
-		time.Sleep(65000 * time.Millisecond)
+		// time.Sleep(150 * time.Millisecond)
+		// time.Sleep(65000 * time.Millisecond)
+		timeoutCtx, _ := context.WithTimeout(ctx, 5000*time.Second)
+
+		select {
+		case <-timeoutCtx.Done():
+			if ctx.Err() != nil {
+				log.Tracef("Context cancelled")
+			}
+		}
 
 	},
 }

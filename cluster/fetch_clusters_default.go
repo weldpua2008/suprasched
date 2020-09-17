@@ -73,8 +73,8 @@ func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 	fetchCtx, cancel = context.WithTimeout(ctx, time.Duration(ttr)*time.Second)
 	defer cancel() // cancel when we are getting the kill signal or exit
 	params := make(map[string]interface{})
-	// f.mu.Lock()
-	// defer f.mu.Unlock()
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	for _, comm := range f.comms {
 		res, err := comm.Fetch(fetchCtx, params)
 		if err != nil {
@@ -131,42 +131,12 @@ func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 					for _, elem := range value_of_slice {
 						if value_map, ok1 := elem.(map[string]interface{}); ok1 {
 
-							j := model.NewEmptyJob()
-							if found_val, ok := utils.GetFirstTimeFromMap(v, []string{"StartAt", "startAt", "StartDate", "startDate"}); ok {
-								j.StartAt = found_val
-							}
-							for _, sub_key := range []string{"JobStatus", "jobStatus", "Job_Status", "Status", "status"} {
-								if _, ok := value_map[sub_key]; ok {
-									j.Status = value_map[sub_key].(string)
-									break
-								}
-							}
-
-							for _, sub_key := range []string{"JobId", "jobId", "Job_ID", "Job_Id", "job_Id", "job_id"} {
-								if _, ok := value_map[sub_key]; ok {
-									j.Id = value_map[sub_key].(string)
-									break
-								}
-							}
-
-							for _, sub_key := range []string{"JobRunId", "jobRunId", "Job_RUN_ID", "Job_Run_Id", "job_run_id", "run_id",
-								"run_uid", "RunId", "RunUID"} {
-								if _, ok := value_map[sub_key]; ok {
-									j.RunUID = value_map[sub_key].(string)
-									break
-								}
-							}
-							for _, sub_key := range []string{"JobExtraRunId", "jobExtraRunId", "JOB_EXTRA_RUN_ID", "Job_Extra_Run_Id", "job_extra_run_id", "extra_run_id",
-								"job_extra_run_uid", "extra_run_uid"} {
-								if _, ok := value_map[sub_key]; ok {
-									j.ExtraRunUID = value_map[sub_key].(string)
-									break
-								}
-							}
+							j := model.NewJobFromMap(value_map)
 							j.ClusterId = cl.ClusterId
 							if len(j.Id) < 1 {
 								continue
 							}
+							j.ChangeClusterStoreKey(cl.StoreKey())
 							var topic string
 							if config.JobsRegistry.Add(j) {
 								topic = config.TOPIC_JOB_CREATED
