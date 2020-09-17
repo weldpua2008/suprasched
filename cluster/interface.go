@@ -7,6 +7,7 @@ import (
 // ClusterDescriber fetch metadata for specific cluster
 type ClustersDescriber interface {
 	ClusterStatus(map[string]interface{}) (string, error)
+	SupportedClusters() []*model.Cluster
 }
 
 // ClustersFetcher fetch Cluster's list

@@ -70,6 +70,7 @@ var rootCmd = &cobra.Command{
 		defer cancel() // cancel when we are getting the kill signal or exit
 		jobs := make(chan *model.Job, 1)
 		clusters := make(chan *model.Cluster, 1)
+		describers := make(chan *model.Cluster, 1)
 		// var wg sync.WaitGroup
 		// jobs := make(chan *model.Job, 1)
 		log.Infof("Starting suprasched\n")
@@ -115,7 +116,7 @@ var rootCmd = &cobra.Command{
 			}
 		}()
 
-		communicator_type := config.GetStringDefault(fmt.Sprintf("%s.fetch.communicator", config.JobsSection), "http")
+		communicator_type := config.GetStringDefault(fmt.Sprintf("%s.fetch.communicator", config.CFG_PREFIX_JOB), "http")
 		comm, err_com := communicator.GetCommunicator(communicator_type)
 		if err_com == nil {
 			go func() {
@@ -123,8 +124,9 @@ var rootCmd = &cobra.Command{
 				if err := job.StartFetchJobs(
 					ctx, comm, jobs, config.GetTimeDuration(
 						fmt.Sprintf(
-							"%s.fetch",
-							config.JobsSection,
+							"%s.%s",
+							config.CFG_PREFIX_JOB,
+							config.CFG_PREFIX_FETCHER,
 						)),
 				); err != nil {
 					log.Tracef("StartFetchJobs returned error %v", err)
@@ -133,6 +135,19 @@ var rootCmd = &cobra.Command{
 		} else {
 			close(jobs)
 		}
+
+		go func() {
+			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
+			if err := cluster.StartUpdateClustersMetadata(ctx, describers, config.GetTimeDuration(
+				fmt.Sprintf(
+					"%s.%s",
+					config.CFG_PREFIX_CLUSTER,
+					config.CFG_PREFIX_DESCRIBERS,
+				))); err != nil {
+				log.Tracef("StartUpdateClustersMetadata returned error %v", err)
+			}
+		}()
+
 		// ctx, cancel := context.WithCancel(context.Background())
 		// defer cancel()
 		//

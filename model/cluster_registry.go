@@ -71,6 +71,19 @@ func (r *ClusterRegistry) Delete(id string) bool {
 	return true
 }
 
+// Filter a cluster by cluster types.
+func (r *ClusterRegistry) Filter(cluster_types []string) []*Cluster {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	ret := make([]*Cluster, 0)
+	for _, clustertype := range cluster_types {
+		if val, ok := r.byType[clustertype]; ok {
+			ret = append(ret, val...)
+		}
+	}
+	return ret
+}
+
 // // Cleanup process for the registry with batch only locked.
 // // Return number of cleaned clusters.
 // func (r *ClusterRegistry) Cleanup() (num int) {

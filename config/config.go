@@ -22,11 +22,13 @@ import (
 const (
 	// ProjectName defines project name
 	ProjectName = "suprasched"
-	// JobsSection for the config
-	JobsSection = "jobs"
+	// CFG_PREFIX_JOB for the config
+	CFG_PREFIX_JOB = "jobs"
 	//CFG_PREFIX_COMMUNICATOR defines parameter in the config for Communicators
-	CFG_PREFIX_COMMUNICATOR     = "communicator"
-	CFG_PREFIX_COMMUNICATORS    = "communicators"
+	CFG_PREFIX_COMMUNICATOR            = "communicator"
+	CFG_PREFIX_COMMUNICATORS           = "communicators"
+	CFG_PREFIX_CLUSTER_SUPPORTED_TYPES = "supported"
+
 	CFG_PREFIX_CLUSTER          = "cluster"
 	CFG_PREFIX_FETCHER          = "fetch"
 	CFG_PREFIX_DESCRIBERS       = "describe"
@@ -197,6 +199,14 @@ func GetStringMapStringTemplated(section string, param string) map[string]string
 // GetStringDefault return section string or default
 func GetStringDefault(section string, def string) string {
 	if val := viper.GetString(section); len(val) > 0 {
+		return val
+	}
+	return def
+}
+
+// GetStringDefault return section []strings or default
+func GetGetStringSliceDefault(section string, def []string) []string {
+	if val := viper.GetStringSlice(section); val != nil && len(val) > 0 {
 		return val
 	}
 	return def

@@ -1,12 +1,12 @@
 package cluster
 
 import (
-	// "context"
+	"context"
 	"fmt"
 	config "github.com/weldpua2008/suprasched/config"
-	// model "github.com/weldpua2008/suprasched/model"
+	model "github.com/weldpua2008/suprasched/model"
 	"strings"
-	// "time"
+	"time"
 )
 
 // GetSectionClustersFetcher returns ClustersFetcher from configuration file.
@@ -50,70 +50,71 @@ func GetSectionClustersDescriber(section string) ([]ClustersDescriber, error) {
 	return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableClustersDescriber, section)
 }
 
-// // StartUpdateClustersMetadata goroutine for getting clusters from API with internal
-// // exists on kill
-// func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error {
-// 	describers_instances, err := GetSectionClustersDescriber(config.CFG_PREFIX_CLUSTER)
-// 	if err != nil || describers_instances == nil || len(describers_instances) == 0 {
-// 		close(clusters)
-// 		return fmt.Errorf("Failed to start StartGenerateClusters %v", err)
-// 	}
-//
-// 	doneNumClusters := make(chan int, 1)
-// 	log.Infof("Starting fetching Clusters with delay %v", interval)
-// 	tickerGenerateClusters := time.NewTicker(interval)
-// 	defer func() {
-// 		tickerGenerateClusters.Stop()
-// 	}()
-//
-// 	go func() {
-// 		j := 0
-// 		for {
-// 			select {
-// 			case <-ctx.Done():
-// 				close(clusters)
-// 				doneNumClusters <- j
-// 				log.Debug("Clusters fetch finished [ SUCCESSFULLY ]")
-// 				return
-// 			case <-tickerGenerateClusters.C:
-// 				for _, describer := range describers_instances {
-//                     params := config.GetStringMapStringTemplatedDefault()
-// 					clusters_slice, err := describer.ClusterStatus(params)
-// 					if err == nil {
-//
-// 						for _, cls := range clusters_slice {
-// 							var topic string
-// 							if !config.ClusterRegistry.Add(cls) {
-// 								if rec, exist := config.ClusterRegistry.Record(cls.StoreKey()); exist {
-// 									if rec.UseExternaleStatus(cls) {
-// 										topic = strings.ToLower(fmt.Sprintf("cluster.%v", cls.Status))
-// 									}
-// 								}
-// 							} else {
-// 								topic = config.TOPIC_CLUSTER_CREATED
-// 							}
-// 							if len(topic) > 0 {
-// 								_, err := config.Bus.Emit(ctx, topic, cls.EventMetadata())
-// 								if err != nil {
-// 									log.Tracef("%v", err)
-// 								}
-// 							}
-// 						}
-//
-// 					} else {
-// 						log.Tracef("Fetch cluster metadata '%v', but failed with %v", clusters_slice, err)
-//
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}()
-//
-// 	numSentClusters := <-doneNumClusters
-//
-// 	log.Infof("Fetched %v clusters", numSentClusters)
-// 	return nil
-// }
+// StartUpdateClustersMetadata goroutine for getting clusters from API with internal
+// exists on kill
+func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error {
+	describers_instances, err := GetSectionClustersDescriber(config.CFG_PREFIX_CLUSTER)
+	if err != nil || describers_instances == nil || len(describers_instances) == 0 {
+		close(clusters)
+		return fmt.Errorf("Failed to start StartUpdateClustersMetadata %v", err)
+	}
+
+	doneNumClusters := make(chan int, 1)
+	log.Infof("Starting update Clusters with delay %v", interval)
+	tickerGenerateClusters := time.NewTicker(interval)
+	defer func() {
+		tickerGenerateClusters.Stop()
+	}()
+
+	go func() {
+		j := 0
+		for {
+			select {
+			case <-ctx.Done():
+				close(clusters)
+				doneNumClusters <- j
+				log.Debug("Clusters description finished [ SUCCESSFULLY ]")
+				return
+			case <-tickerGenerateClusters.C:
+				for _, describer := range describers_instances {
+
+					supported_cluster := describer.SupportedClusters()
+					for _, claster := range supported_cluster {
+
+						params := claster.GetParams()
+
+						cluster_status, err := describer.ClusterStatus(params)
+						if err == nil {
+
+							var topic string
+							rec, ok := config.ClusterRegistry.Record(claster.StoreKey())
+							if !ok {
+								continue
+							}
+
+							if rec.UpdateStatus(cluster_status) {
+								topic = strings.ToLower(fmt.Sprintf("cluster.%v", cluster_status))
+								_, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())
+								if err != nil {
+									log.Tracef("%v", err)
+								}
+
+							}
+						} else {
+							log.Tracef("Failed to describe cluster status '%v', but failed with %v", cluster_status, err)
+
+						}
+					}
+				}
+			}
+		}
+	}()
+
+	numSentClusters := <-doneNumClusters
+
+	log.Infof("Described %v clusters", numSentClusters)
+	return nil
+}
 
 // // GracefullShutdown cancel all running clusters
 // // returns error in case any job failed to cancel

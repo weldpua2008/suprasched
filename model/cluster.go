@@ -41,6 +41,20 @@ func NewCluster(clusterId string) *Cluster {
 	}
 }
 
+func (c *Cluster) GetParams() map[string]interface{} {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	params := make(map[string]interface{})
+	params["ClusterId"] = c.ClusterId
+	params["ClusterPool"] = c.ClusterPool
+	params["ClusterProfile"] = c.ClusterProfile
+	params["ClusterRegion"] = c.ClusterRegion
+	params["ClusterType"] = c.ClusterType
+	params["Status"] = c.Status
+	return params
+}
+
 // Add a job.
 // Returns false on duplicate or invalid job id.
 func (c *Cluster) Add(rec *Job) bool {
@@ -90,15 +104,6 @@ func (c *Cluster) Record(jid string) (*Job, bool) {
 	return nil, false
 }
 
-// UpdateStatus.
-func (c *Cluster) UpdateStatus(status string) error {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	c.Status = status
-
-	return nil
-}
-
 // EventMetadata.
 func (c *Cluster) EventMetadata() map[string]string {
 	c.mu.RLock()
@@ -125,6 +130,38 @@ func (c *Cluster) UseExternaleStatus(ext *Cluster) bool {
 	if GetClusterStatusWeight(ext.Status) > GetClusterStatusWeight(c.Status) {
 		return true
 	} else if c.Status != ext.Status {
+		return true
+	}
+
+	return false
+}
+
+// UseExternaleStatusString compare with cluster status string.
+// returns true if the cluster need update the status
+func (c *Cluster) UseExternaleStatusString(ext string) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
+		return true
+	} else if c.Status != ext {
+		return true
+	}
+
+	return false
+}
+
+// UpdateStatus compare with cluster status string and updates.
+// returns true if the cluster need update the status
+func (c *Cluster) UpdateStatus(ext string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
+		c.Status = ext
+		return true
+	} else if c.Status != ext {
+		c.Status = ext
 		return true
 	}
 

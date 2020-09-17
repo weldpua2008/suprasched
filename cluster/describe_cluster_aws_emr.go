@@ -6,6 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/emr"
+	config "github.com/weldpua2008/suprasched/config"
+	model "github.com/weldpua2008/suprasched/model"
 	"sync"
 	"time"
 )
@@ -29,6 +31,7 @@ type DescribeEMR struct {
 	aws_sessions map[string]*session.Session
 	mu           sync.RWMutex
 	t            string
+	section      string
 }
 
 // NewDescribeEMR prepare struct communicator for EMR
@@ -46,6 +49,7 @@ func NewDescriberEMRFromSection(section string) (ClustersDescriber, error) {
 	return &DescribeEMR{
 		aws_sessions: s,
 		t:            "DescribeEMR",
+		section:      section,
 	}, nil
 
 }
@@ -53,7 +57,7 @@ func NewDescriberEMRFromSection(section string) (ClustersDescriber, error) {
 func (c *DescribeEMR) getCachedAwsSession(key string) (*session.Session, error) {
 
 	c.mu.RLock()
-	defer c.mu.Unlock()
+	defer c.mu.RUnlock()
 
 	if val, ok := c.aws_sessions[key]; ok {
 		return val, nil
@@ -61,17 +65,23 @@ func (c *DescribeEMR) getCachedAwsSession(key string) (*session.Session, error) 
 	return nil, fmt.Errorf("Session %v is not in cache", key)
 }
 
+func (c *DescribeEMR) SupportedClusters() []*model.Cluster {
+	def := []string{ConstructorsDescriberTypeAwsEMR}
+	cluster_types := config.GetGetStringSliceDefault(fmt.Sprintf("%v.%v", c.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES), def)
+	return config.ClusterRegistry.Filter(cluster_types)
+}
+
 // getAwsSession
 func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Session, error) {
 	var Profile string
 	Region := "us-east-1"
-	for _, k := range []string{"AWS_PROFILE", "PROFILE", "aws_profile", "profile", "Profile"} {
+	for _, k := range []string{"AWS_PROFILE", "PROFILE", "aws_profile", "profile", "Profile", "ClusterProfile"} {
 		if _, ok := params[k]; ok {
 			Profile = params[k].(string)
 			break
 		}
 	}
-	for _, k := range []string{"Region", "AWS_Region", "AWS_REGION", "aws_region", "region"} {
+	for _, k := range []string{"Region", "AWS_Region", "AWS_REGION", "aws_region", "region", "ClusterRegion"} {
 		if _, ok := params[k]; ok {
 			Region = params[k].(string)
 			break
@@ -120,6 +130,9 @@ func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, erro
 			ClusterId = params[k].(string)
 			break
 		}
+	}
+	if len(ClusterId) < 1 {
+		return "", ErrEmptyClusterId
 	}
 	for _, k := range []string{"context", "ctx"} {
 		if _, ok := params[k]; ok {

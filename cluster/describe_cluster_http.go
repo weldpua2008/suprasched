@@ -5,6 +5,7 @@ import (
 	"fmt"
 	communicator "github.com/weldpua2008/suprasched/communicator"
 	config "github.com/weldpua2008/suprasched/config"
+	model "github.com/weldpua2008/suprasched/model"
 
 	"sync"
 	"time"
@@ -26,10 +27,11 @@ It supports the following params:
 
 type DescribeClusterHttp struct {
 	ClustersDescriber
-	mu    sync.RWMutex
-	comm  communicator.Communicator
-	comms []communicator.Communicator
-	t     string
+	section string
+	mu      sync.RWMutex
+	comm    communicator.Communicator
+	comms   []communicator.Communicator
+	t       string
 }
 
 // NewDescribeEMR prepare struct communicator for EMR
@@ -41,18 +43,24 @@ func NewDescribeClusterHttp() ClustersDescriber {
 func NewDescribeClusterHttpBySection(section string) (ClustersDescriber, error) {
 	comms, err := communicator.GetCommunicatorsFromSection(section)
 	if err == nil {
-		return &DescribeClusterHttp{comms: comms, t: "DescribeClusterHttp"}, nil
+		return &DescribeClusterHttp{comms: comms, t: "DescribeClusterHttp", section: section}, nil
 	} else {
 		comm, err := communicator.GetSectionCommunicator(section)
 		if err == nil {
 			comms := make([]communicator.Communicator, 0)
 			comms = append(comms, comm)
-			return &DescribeClusterHttp{comm: comm, comms: comms, t: "DescribeClusterHttp"}, nil
+			return &DescribeClusterHttp{comm: comm, comms: comms, t: "DescribeClusterHttp", section: section}, nil
 
 		}
 	}
 	return nil, fmt.Errorf("Can't initialize DescribeClusterHttp '%s': %v", config.CFG_PREFIX_CLUSTER, err)
 
+}
+
+func (d *DescribeClusterHttp) SupportedClusters() []*model.Cluster {
+	def := []string{ConstructorsFetcherTypeRest}
+	cluster_types := config.GetGetStringSliceDefault(fmt.Sprintf("%v.%v", d.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES), def)
+	return config.ClusterRegistry.Filter(cluster_types)
 }
 
 func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (string, error) {
@@ -68,6 +76,9 @@ func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (stri
 			ClusterId = params[k].(string)
 			break
 		}
+	}
+	if len(ClusterId) < 1 {
+		return "", ErrEmptyClusterId
 	}
 	for _, k := range []string{"context", "ctx"} {
 		if _, ok := params[k]; ok {
@@ -85,23 +96,25 @@ func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (stri
 	param := make(map[string]interface{})
 	d.mu.Lock()
 	defer d.mu.Unlock()
-
-	res, err := d.comm.Fetch(clusterCtx, param)
 	result := "UNKNOWN"
-	for _, v := range res {
-		if v == nil {
+	for _, comm := range d.comms {
+
+		res, err := comm.Fetch(clusterCtx, param)
+		if err != nil {
+			log.Tracef("Can't Describe %v", err)
 			continue
 		}
-		// if v, ok1 := v.(map[string]interface{}); ok1 {
-		for _, k := range []string{"ClusterStatus", "Cluster_Status", "Status", "status"} {
-			if _, ok := v[k]; ok {
 
-				return v[k].(string), nil
+		for _, v := range res {
+			if v == nil {
+				continue
 			}
-
+			for _, k := range []string{"ClusterStatus", "Cluster_Status", "Status", "status"} {
+				if _, ok := v[k]; ok {
+					return v[k].(string), nil
+				}
+			}
 		}
-
-		// }
 	}
 
 	// status := cl.Cluster.Status.State
@@ -115,5 +128,5 @@ func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (stri
 	// 	result = "TERMINATED"
 	// }
 
-	return result, fmt.Errorf("Can't find ClusterId: %s %v", ClusterId, err)
+	return result, fmt.Errorf("Can't find ClusterId: %s", ClusterId)
 }
