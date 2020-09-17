@@ -94,13 +94,13 @@ func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 
 			if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterStatus", "clusterStatus", "Cluster_Status", "Status", "status"}); ok {
 				cl.Status = found_val
-                switch cl.Status {
-                case "NOTREADY":
-                    cl.Status = model.CLUSTER_STATUS_STARTING
-                case "READY":
-                    cl.Status =  model.CLUSTER_STATUS_RUNNING
-                }
-			} 
+				switch cl.Status {
+				case "NOTREADY":
+					cl.Status = model.CLUSTER_STATUS_STARTING
+				case "READY":
+					cl.Status = model.CLUSTER_STATUS_RUNNING
+				}
+			}
 			if found_val, ok := utils.GetFirstStringFromMap(v, []string{"clusterPool", "ClusterPool", "Pool", "pool"}); ok {
 				cl.ClusterPool = found_val
 			}

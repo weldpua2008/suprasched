@@ -111,15 +111,15 @@ func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (stri
 			}
 			for _, k := range []string{"ClusterStatus", "Cluster_Status", "Status", "status"} {
 				if _, ok := v[k]; ok {
-					status:=v[k].(string)
-                    switch status {
-                    case "NOTREADY":
-                    	return model.CLUSTER_STATUS_STARTING, nil
-                    case "READY":
-                        return  model.CLUSTER_STATUS_RUNNING, nil
-                    default:
-                    	return status, nil
-                    }
+					status := v[k].(string)
+					switch status {
+					case "NOTREADY":
+						return model.CLUSTER_STATUS_STARTING, nil
+					case "READY":
+						return model.CLUSTER_STATUS_RUNNING, nil
+					default:
+						return status, nil
+					}
 
 				}
 			}

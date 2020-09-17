@@ -26,11 +26,11 @@ type Cluster struct {
 	// MaxAttempts    int       // Absoulute max num of attempts.
 	// MaxFails       int       // Absolute max number of failures.
 	// TTR            uint64    // Time-to-run in Millisecond
-	mu       sync.RWMutex
-	ExitCode int // Exit code
-	ctx      context.Context
-	all      map[string]*Job
-    inTransition bool // if cluster is modified
+	mu           sync.RWMutex
+	ExitCode     int // Exit code
+	ctx          context.Context
+	all          map[string]*Job
+	inTransition bool // if cluster is modified
 }
 
 // NewCluster returns a new Clustec.
@@ -127,13 +127,13 @@ func (c *Cluster) UseExternaleStatus(ext *Cluster) bool {
 	if ext.StoreKey() != c.StoreKey() {
 		c.mu.RLock()
 		defer c.mu.RUnlock()
-        ext.mu.RLock()
-        defer ext.mu.RUnlock()
+		ext.mu.RLock()
+		defer ext.mu.RUnlock()
 
 	}
 	if GetClusterStatusWeight(ext.Status) > GetClusterStatusWeight(c.Status) {
 		return true
-        } else if strings.ToLower(c.Status) != strings.ToLower(ext.Status) {
+	} else if strings.ToLower(c.Status) != strings.ToLower(ext.Status) {
 		return true
 	}
 
@@ -155,34 +155,32 @@ func (c *Cluster) UseExternaleStatusString(ext string) bool {
 }
 
 func (c *Cluster) IsInTransition() bool {
-    c.mu.RLock()
-    defer c.mu.RUnlock()
-    if c.inTransition {
-        return true
-    }
-    return false
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.inTransition {
+		return true
+	}
+	return false
 }
-
 
 func (c *Cluster) PutInTransition() bool {
-    c.mu.Lock()
-    defer c.mu.Unlock()
-    if !c.inTransition {
-        c.inTransition = true
-        return true
-    }
-    return false
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if !c.inTransition {
+		c.inTransition = true
+		return true
+	}
+	return false
 }
 func (c *Cluster) FinishTransition() bool {
-    c.mu.Lock()
-    defer c.mu.Unlock()
-    if c.inTransition {
-        c.inTransition = false
-        return true
-    }
-    return false
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.inTransition {
+		c.inTransition = false
+		return true
+	}
+	return false
 }
-
 
 // UpdateStatus compare with cluster status string and updates.
 // returns true if the cluster need update the status
@@ -193,7 +191,7 @@ func (c *Cluster) UpdateStatus(ext string) bool {
 	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
 		c.Status = ext
 		return true
-        } else if strings.ToLower(c.Status) != strings.ToLower(ext) {
+	} else if strings.ToLower(c.Status) != strings.ToLower(ext) {
 
 		c.Status = ext
 		return true
@@ -205,17 +203,17 @@ func (c *Cluster) UpdateStatus(ext string) bool {
 func (c *Cluster) UpdateStatusInTransition(ext string) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-    if ! c.inTransition {
-	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
-		c.Status = ext
-        c.inTransition = true
-		return true
-	} else if c.Status != ext {
-		c.Status = ext
-        c.inTransition = true
-		return true
+	if !c.inTransition {
+		if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
+			c.Status = ext
+			c.inTransition = true
+			return true
+		} else if c.Status != ext {
+			c.Status = ext
+			c.inTransition = true
+			return true
+		}
 	}
-}
 
 	return false
 }

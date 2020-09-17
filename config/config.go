@@ -44,9 +44,9 @@ var (
 // Config is top level Configuration structure
 type Config struct {
 	// Indentification for the process
-	ClientId string `mapstructure:"clientId"`
-    ClusterId string
-    ClusterPool string
+	ClientId    string `mapstructure:"clientId"`
+	ClusterId   string
+	ClusterPool string
 	// delay between API calls to prevent Denial-of-service
 	CallAPIDelaySec int `mapstructure:"api_delay_sec"`
 	// Config version
@@ -144,10 +144,10 @@ func GetSliceStringMapStringTemplatedDefault(section string, param string, def m
 			}
 			for k, v := range params {
 				var tplBytes bytes.Buffer
-                tpl, err1 := template.New("params").Parse(fmt.Sprintf("%v", v))
-                if err1 != nil {
-        			continue
-        		}
+				tpl, err1 := template.New("params").Parse(fmt.Sprintf("%v", v))
+				if err1 != nil {
+					continue
+				}
 
 				// tpl := template.Must(template.New("params").Parse(fmt.Sprintf("%v", v)))
 				if err := tpl.Execute(&tplBytes, C); err != nil {
