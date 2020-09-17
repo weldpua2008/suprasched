@@ -185,7 +185,7 @@ var rootCmd = &cobra.Command{
 		//
 		// wg.Wait()
 		time.Sleep(150 * time.Millisecond)
-		time.Sleep(6500 * time.Millisecond)
+		time.Sleep(65000 * time.Millisecond)
 
 	},
 }
