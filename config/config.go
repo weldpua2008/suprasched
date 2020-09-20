@@ -257,7 +257,7 @@ func GetStringMapStringTemplated(section string, param string) map[string]string
 	return GetStringMapStringTemplatedDefault(section, param, c)
 }
 
-// GetStringDefault return section string or default
+// GetStringDefault return section string or default.
 func GetStringDefault(section string, def string) string {
 	if val := viper.GetString(section); len(val) > 0 {
 		return val
@@ -265,13 +265,22 @@ func GetStringDefault(section string, def string) string {
 	return def
 }
 
-// GetStringDefault return section []strings or default
+// GetStringDefault return section []strings or default.
 func GetGetStringSliceDefault(section string, def []string) []string {
 	if val := viper.GetStringSlice(section); val != nil && len(val) > 0 {
 		return val
 	}
 	return def
 }
+
+// GetIntSlice returns []int or default.
+func GetIntSlice(section string, param string, def []int) []int {
+    if val := viper.GetIntSlice(fmt.Sprintf("%v.%v", section, param)); val != nil && len(val) > 0 {
+		return val
+	}
+	return def
+}
+
 
 // GetTimeDuration return delay for the section with default of 1 second.
 // Example config:
@@ -289,4 +298,21 @@ func GetTimeDuration(section string) (interval time.Duration) {
 		}
 	}
 	return 1 * time.Second
+}
+
+// GetTimeDuration return delay for the section with default of 1 second.
+// Example config:
+// section:
+//     interval: 5s
+func GetTimeDurationDefault(section string, param string, def time.Duration) (interval time.Duration) {
+	var comp time.Duration
+
+	for _, k := range []string{fmt.Sprintf("%v.%v.%v", section ,param,  CFG_INTERVAL_PARAMETER),
+        fmt.Sprintf("%v.%v", section ,param), section, CFG_INTERVAL_PARAMETER} {
+		delay := viper.GetDuration(k)
+		if delay > comp && delay.Milliseconds() > 0 {
+			return delay
+		}
+	}
+	return def
 }

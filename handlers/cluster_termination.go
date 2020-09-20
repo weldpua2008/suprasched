@@ -36,11 +36,6 @@ func ClusterTermination(e *bus.Event) {
                         var cfg_params map[string]interface{}
                         cfg_params = config.ConvertMapStringToInterface(
                             config.GetStringMapStringTemplatedFromMap(section, config.CFG_COMMUNICATOR_PARAMS_KEY, from))
-
-                        // if err := comm.Configure(cfg_params); err != nil {
-                        //     log.Tracef("Can't Configure communicator with %v because %v ", cfg_params, err)
-                        // }
-
                         res, err := comm.Fetch(fetchCtx, params)
                 		if err != nil {
                             log.Tracef("Can't change status %v for %v because %v ", res, rec.ClusterId, err)

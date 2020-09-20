@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/aws/aws-sdk-go v1.34.18
+	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/mustafaturan/bus v1.0.2
 	github.com/mustafaturan/monoton v1.0.0

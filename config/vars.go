@@ -11,6 +11,21 @@ const (
 	CFG_PREFIX_COMMUNICATORS           = "communicators"
 	CFG_PREFIX_CLUSTER_SUPPORTED_TYPES = "supported"
 
+    // HTTP Communicator tuning
+    // User for allowed response codes definmition.
+    CFG_PREFIX_ALLOWED_RESPONSE_CODES  = "codes"
+    // Defines backoff prefixes
+    // More information at
+    //   https://github.com/cenkalti/backoff/blob/v4.0.2/exponential.go#L9
+    CFG_PREFIX_BACKOFF = "backoff"
+
+    // MaxInterval caps the RetryInterval and not the randomized interval.
+    CFG_PREFIX_BACKOFF_MAXINTERVAL = "maxinterval"
+    // After MaxElapsedTime the ExponentialBackOff returns Stop.
+    // It never stops if MaxElapsedTime == 0.
+    CFG_PREFIX_BACKOFF_MAXELAPSEDTIME= "maxelapsedtime"
+    CFG_PREFIX_BACKOFF_INITIALINTERVAL = "initialinterval"
+
 	CFG_PREFIX_CLUSTER          = "cluster"
     CFG_PREFIX_UPDATE           = "update"
 	CFG_PREFIX_FETCHER          = "fetch"

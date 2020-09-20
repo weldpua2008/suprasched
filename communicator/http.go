@@ -11,8 +11,11 @@ import (
 	"net/http"
 	"sync"
 	"time"
+    backoff "github.com/cenkalti/backoff/v4"
 
 	config "github.com/weldpua2008/suprasched/config"
+    utils "github.com/weldpua2008/suprasched/utils"
+
 )
 
 func init() {
@@ -110,14 +113,59 @@ func (s *RestCommunicator) Configure(params map[string]interface{}) error {
 	s.configured = true
 	return nil
 }
+// Fetch metadata from external API with exponential backoff.
+// Example for configuration:
+//         fetch:
+//             communicators:
+//                 one:
+//                     method: "get"
+//                     backoff:
+//                         maxelapsedtime: 600s
+//                         maxinterval: 60s
+//                         initialinterval: 10s
 
 func (s *RestCommunicator) Fetch(ctx context.Context, params map[string]interface{}) (result []map[string]interface{}, err error) {
+    operation := func() error {
+        res, err:=s.fetch(ctx, params)
+        if err == nil {
+            result = res
+        }else {
+            log.Tracef("Fetch for %v [%v] should retry", s.url, s.method)
+        }
+        return err
+    }
+    expBackoff:= backoff.NewExponentialBackOff()
+    backoff_section:=fmt.Sprintf("%v.%v",  s.section,config.CFG_PREFIX_BACKOFF)
+
+    if val:=config.GetTimeDurationDefault(backoff_section,
+            config.CFG_PREFIX_BACKOFF_INITIALINTERVAL, time.Second); val.Milliseconds() > 0 {
+        expBackoff.InitialInterval = val
+    }
+    if val:=config.GetTimeDurationDefault( backoff_section,
+            config.CFG_PREFIX_BACKOFF_MAXINTERVAL, time.Second); val.Milliseconds() > 0 {
+        expBackoff.MaxInterval = val
+    }
+    if val:=config.GetTimeDurationDefault(backoff_section,
+            config.CFG_PREFIX_BACKOFF_MAXELAPSEDTIME, time.Second); val.Milliseconds() > 0 {
+        expBackoff.MaxElapsedTime = val
+    }
+    errRetry := backoff.Retry(operation, expBackoff)
+    return result, errRetry
+
+}
+func (s *RestCommunicator) fetch(ctx context.Context, params map[string]interface{}) (result []map[string]interface{}, err error) {
 	var jsonStr []byte
 	var req *http.Request
 	var rawResponse map[string]interface{}
 
+    allowed_response_codes := config.GetIntSlice(s.section,
+        config.CFG_PREFIX_ALLOWED_RESPONSE_CODES, []int{200,201,202})
+    if v := ctx.Value(CTX_ALLOWED_RESPONSE_CODES); v != nil {
+    	if val,ok:=v.([]int);ok {
+            allowed_response_codes = val
+        }
+    }
 
-	// all_params := config.GetStringMapStringTemplated(s.section, s.param)
     from:= map[string]string{
         "ClientId": config.C.ClientId,
         "ClusterId": config.C.ClusterId,
@@ -169,10 +217,11 @@ func (s *RestCommunicator) Fetch(ctx context.Context, params map[string]interfac
 	if err != nil {
 		return nil, fmt.Errorf("%w got %s", ErrFailedReadResponseBody, err)
 	}
-	if (resp.StatusCode > 202) || (resp.StatusCode < 200) {
 
-        log.Tracef("\nMaking request %s  to %s \nwith %s\nStatusCode %d Response %s\n", s.method, s.url, jsonStr, resp.StatusCode, body)
+	if !utils.ContainsInts(allowed_response_codes, resp.StatusCode) {
+        return nil, fmt.Errorf("%w %v in %v got body %s", ErrNotAllowedResponseCode,resp.StatusCode, allowed_response_codes, body)
 	}
+
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		err = json.Unmarshal(body, &result)
@@ -181,6 +230,9 @@ func (s *RestCommunicator) Fetch(ctx context.Context, params map[string]interfac
 		}
 		result = append(result, rawResponse)
 	}
+    // if !utils.ContainsInts(allowed_response_codes, resp.StatusCode) {
+    //     log.Tracef("\nMaking request %s  to %s \nwith %s\nStatusCode %d Response %s\n", s.method, s.url, jsonStr, resp.StatusCode, body)
+	// }
 
 	return result, nil
 

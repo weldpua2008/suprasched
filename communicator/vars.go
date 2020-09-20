@@ -15,6 +15,9 @@ var (
 	ErrFailedReadResponseBody  = errors.New("Failed to read response body")
 	ErrFailedUnmarshalResponse = errors.New("Cannot unmarshal response")
 	ErrFailedMarshalRequest    = errors.New("Cannot marshal request")
+    ErrFailedResponseCode      = errors.New("Failed request's response code")
+    ErrNotAllowedResponseCode  = errors.New("Not allowed response code")
+
     // internal
     log                        = logrus.WithFields(logrus.Fields{"package": "communicator"})
 
@@ -23,4 +26,5 @@ var (
 const (
 	// ConstructorsTypeRest represents HTTP communicator
 	ConstructorsTypeRest = "HTTP"
+    CTX_ALLOWED_RESPONSE_CODES = "allowed_response_codes"
 )
