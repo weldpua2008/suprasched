@@ -29,8 +29,6 @@ func (r *Registry) Add(rec *Job) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, ok := r.all[rec.StoreKey()]; ok {
-		// log.Tracef("False already exist %v", rec)
-
 		return false
 	}
 

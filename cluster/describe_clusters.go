@@ -77,9 +77,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 				return
 			case <-tickerGenerateClusters.C:
 				for _, describer := range describers_instances {
-
-					supported_cluster := describer.SupportedClusters()
-					for _, cls := range supported_cluster {
+					for _, cls := range describer.SupportedClusters() {
 
 						rec, ok := config.ClusterRegistry.Record(cls.StoreKey())
 						if !ok {

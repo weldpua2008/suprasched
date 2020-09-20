@@ -2,15 +2,18 @@ package config
 
 import (
 	"github.com/spf13/viper"
-
+    "net/http/httptest"
 	"testing"
+    "io/ioutil"
+	"net/http"
+    "encoding/json"
+	"fmt"
+
 )
 
-func LoadCfgForTests(t *testing.T, CfgFile string) Config {
+func LoadCfgForTests(t *testing.T, CfgFile string) (Config,Config) {
 	tmp := C
-	defer func() {
-		C = tmp
-	}()
+
 	C = Config{}
 	CfgFile = CfgFile
 	viper.SetConfigFile(CfgFile)
@@ -30,5 +33,29 @@ func LoadCfgForTests(t *testing.T, CfgFile string) Config {
 	if C.ConfigVersion == string("") {
 		t.Errorf("Expected C.ConfigVersion not empty got %v\n", C)
 	}
-	return C
+	return C, tmp
+}
+
+func  NewTestServer(t *testing.T, in func() interface{}, out func(string) ) *httptest.Server   {
+    // Response server.
+    srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        c:=in()
+        js, err := json.Marshal(&c)
+        if err != nil {
+            log.Warningf("Failed to marshal for '%v' due %v", c, err)
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        w.Header().Set("Content-Type", "application/json")
+        if _, errWrite := w.Write(js); errWrite != nil {
+            t.Errorf("Can't w.Write %v due %v\n", js, err)
+        }
+        b, err := ioutil.ReadAll(r.Body)
+        if err != nil {
+            t.Errorf("ReadAll %s", err)
+        }
+        out(fmt.Sprintf("%s", b))
+    }))
+    return srv
+
 }

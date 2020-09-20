@@ -19,25 +19,6 @@ import (
 	"time"
 )
 
-const (
-	// ProjectName defines project name
-	ProjectName = "suprasched"
-	// CFG_PREFIX_JOB for the config
-	CFG_PREFIX_JOBS         = "jobs"
-	CFG_PREFIX_JOBS_FETCHER = "fetch"
-
-	//CFG_PREFIX_COMMUNICATOR defines parameter in the config for Communicators
-	CFG_PREFIX_COMMUNICATOR            = "communicator"
-	CFG_PREFIX_COMMUNICATORS           = "communicators"
-	CFG_PREFIX_CLUSTER_SUPPORTED_TYPES = "supported"
-
-	CFG_PREFIX_CLUSTER          = "cluster"
-	CFG_PREFIX_FETCHER          = "fetch"
-	CFG_PREFIX_DESCRIBERS       = "describe"
-	CFG_COMMUNICATOR_PARAMS_KEY = "params"
-	CFG_INTERVAL_PARAMETER      = "interval"
-)
-
 var (
 	JobsRegistry    = model.NewRegistry()
 	ClusterRegistry = model.NewClusterRegistry()
@@ -131,7 +112,7 @@ func initConfig() {
 
 }
 
-// GetSliceStringMapStringTemplatedDefault returns slice of [sting]sting maps templated & enriched by default.
+// GetSliceStringMapStringTemplatedDefault returns slice of [string]string maps templated & enriched by default.
 func GetSliceStringMapStringTemplatedDefault(section string, param string, def map[string]string) []map[string]string {
 	ret := make([]map[string]string, 0)
 	sections_values := viper.GetStringMap(fmt.Sprintf("%s.%s", section, param))
@@ -139,6 +120,7 @@ func GetSliceStringMapStringTemplatedDefault(section string, param string, def m
 		if section_value == nil {
 			continue
 		}
+        // log.Infof("%s.%s => %v",  section, param,k1)
 		if params, ok := section_value.(map[string]interface{}); ok {
 			c := make(map[string]string)
 			for k, v := range def {
@@ -164,6 +146,76 @@ func GetSliceStringMapStringTemplatedDefault(section string, param string, def m
 	}
 	return ret
 }
+
+// GetMapStringMapStringTemplatedDefault returns map of [string]string maps templated & enriched by default.
+func GetMapStringMapStringTemplatedDefault(section string, param string, def map[string]string) map[string]map[string]string {
+	ret := make(map[string]map[string]string, 0)
+	sections_values := viper.GetStringMap(fmt.Sprintf("%s.%s", section, param))
+	for subsection, section_value := range sections_values {
+		if section_value == nil {
+			continue
+		}
+        // log.Infof("%s.%s => %v",  section, param,k1)
+		if params, ok := section_value.(map[string]interface{}); ok {
+			c := make(map[string]string)
+			for k, v := range def {
+				c[k] = v
+			}
+			for k, v := range params {
+				var tplBytes bytes.Buffer
+				tpl, err1 := template.New("params").Parse(fmt.Sprintf("%v", v))
+				if err1 != nil {
+					continue
+				}
+
+				// tpl := template.Must(template.New("params").Parse(fmt.Sprintf("%v", v)))
+				if err := tpl.Execute(&tplBytes, C); err != nil {
+					log.Tracef("params executing template for %v got %s", v, err)
+					continue
+				}
+				c[k] = tplBytes.String()
+			}
+			ret[fmt.Sprintf("%s.%s.%s", section, param, subsection)] =  c
+		}
+
+	}
+	return ret
+}
+
+
+func GetStringMapStringTemplatedFromMapDefault(section string, param string, from map[string]string, def map[string]string) map[string]string {
+	c := make(map[string]string)
+	for k, v := range def {
+		c[k] = v
+	}
+	params := viper.GetStringMapString(fmt.Sprintf("%s.%s", section, param))
+	for k, v := range params {
+
+		var tplBytes bytes.Buffer
+		// WARNING: will panic:
+		// tpl := template.Must(template.New("params").Parse(v))
+		// we can preserve failed templated string
+		c[k] = v
+		tpl, err1 := template.New("params").Parse(v)
+		if err1 != nil {
+			continue
+		}
+		err := tpl.Execute(&tplBytes,from)
+		if err != nil {
+			log.Tracef("Failed params executing template: %s from : %v", err, from)
+			continue
+		}
+		c[k] = tplBytes.String()
+	}
+	return c
+}
+
+func GetStringMapStringTemplatedFromMap(section string, param string, from map[string]string) map[string]string {
+	c := make(map[string]string)
+	return GetStringMapStringTemplatedFromMapDefault(section, param, from, c)
+}
+
+
 
 func GetStringMapStringTemplatedDefault(section string, param string, def map[string]string) map[string]string {
 	c := make(map[string]string)

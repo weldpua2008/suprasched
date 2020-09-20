@@ -16,6 +16,7 @@ const (
 	JOB_STATUS_ERROR       = "error"
 	JOB_STATUS_CANCELED    = "canceled"
 	JOB_STATUS_QUEUED      = "queued"
+    JOB_STATUS_FAILED       = "failed"
 
 	CLUSTER_STATUS_STARTING               = "starting"
 	CLUSTER_STATUS_BOOTSTRAPPING          = "bootstraping"

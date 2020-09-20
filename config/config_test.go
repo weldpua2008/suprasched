@@ -26,6 +26,52 @@ func TestLoadConfig(t *testing.T) {
 
 }
 
+func TestGetStringMapStringTemplatedFromMap(t *testing.T) {
+	tmp := C
+	defer func() {
+		C = tmp
+	}()
+	C = LoadCfgForTests(t, CommonCfgFile)
+	from := make(map[string]string)
+    from["Example"] = "example1"
+    from["ClientId"] = "clientId"
+
+	cases := []struct {
+		key  string
+		want string
+	}{
+		{
+			key:  "example",
+			want: from["Example"],
+		},
+		{
+			key:  "a",
+			want: "a",
+		},
+		{
+			key:  "c",
+			want: "1",
+		},
+		{
+			// WARNING: viper downgrade to lower case
+			key:  "clientid",
+			want: from["ClientId"],
+		},
+	}
+	res := GetStringMapStringTemplatedFromMap("TestGetStringMapStringTemplatedFromMap", "param", from)
+	for _, tc := range cases {
+		if got, ok := res[tc.key]; ok {
+			if res[tc.key] != tc.want {
+				t.Errorf("want %v, got %v", tc.want, got)
+			}
+		} else {
+			t.Errorf("want key %v, value %v in res %v", tc.key, tc.want, res)
+		}
+	}
+}
+
+
+
 func TestGetStringMapStringTemplatedDefault(t *testing.T) {
 	tmp := C
 	defer func() {

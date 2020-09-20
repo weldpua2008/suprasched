@@ -76,7 +76,65 @@ func TestGetSectionCommunicator(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		result, got := GetSectionCommunicator(tc.in)
+		result, got := GetSectionCommunicator(tc.section)
+		if (tc.want == nil) && (tc.want != got) {
+			t.Errorf("want %v, got %v", tc.want, got)
+		} else if (tc.want == nil) && (!result.Configured()) {
+			t.Errorf("want %v, got %v, res %v", true, result.Configured(), result)
+
+		} else {
+			if !errors.Is(got, tc.want) {
+				t.Errorf("want %v, got %v, res %v", tc.want, got, result)
+			}
+		}
+	}
+}
+
+
+func TestGetCommunicatorsFromSection(t *testing.T) {
+    // t.SkipNow()
+	config.LoadCfgForTests(t, "fixtures/http.yml")
+
+	cases := []struct {
+		section string
+		in      string
+		want    error
+	}{
+		{
+			section: "GetCommunicatorsFromSection.http",
+			in:      "HTTP",
+			want:    nil,
+		},
+		{
+			section: "GetCommunicatorsFromSection.http",
+			in:      "http",
+			want:    nil,
+		},
+		{
+			section: "GetCommunicatorsFromSection.http_capital",
+			in:      "HTTP",
+			want:    nil,
+		},
+		{
+			section: "GetCommunicatorsFromSection.http_capital",
+			in:      "http",
+			want:    nil,
+		},
+
+		{
+			section: "GetCommunicatorsFromSection.broken",
+			in:      "broken",
+			want:    ErrNoSuitableCommunicator,
+		},
+	}
+
+	for _, tc := range cases {
+        var result Communicator
+		results, got := GetCommunicatorsFromSection(tc.section)
+        // log.Infof("results %v", results)
+        for _, val :=range results{
+            result = val
+        }
 		if (tc.want == nil) && (tc.want != got) {
 			t.Errorf("want %v, got %v", tc.want, got)
 		} else if (tc.want == nil) && (!result.Configured()) {

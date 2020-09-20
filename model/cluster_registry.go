@@ -84,6 +84,18 @@ func (r *ClusterRegistry) Filter(cluster_types []string) []*Cluster {
 	return ret
 }
 
+func (r *ClusterRegistry) AllEmpty() []*Cluster {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	ret := make([]*Cluster, 0)
+	for _, val := range r.all {
+		if val.IsEmpty() {
+			ret = append(ret, val)
+		}
+	}
+	return ret
+}
+
 // // Cleanup process for the registry with batch only locked.
 // // Return number of cleaned clusters.
 // func (r *ClusterRegistry) Cleanup() (num int) {

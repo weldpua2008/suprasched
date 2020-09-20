@@ -3,6 +3,9 @@ version: "1.0"
 http:
     communicator:
         type: "http"
+        params:
+            - { "key": "value"}
+
 http_capital:
     communicator:
         type: "HTTP"
@@ -10,3 +13,23 @@ http_capital:
 broken:
     communicator:
         type: "broken"
+
+GetCommunicatorsFromSection:
+    http:
+        communicators:
+            -:
+                type: "http"
+                params:
+                    - { "key": "value"}
+
+    http_capital:
+        communicators:
+            -:
+                type: "HTTP"
+                params:
+                    - { "key": "{{.clientId}}"}
+
+    broken:
+        communicators:
+            -:
+            type: "broken"

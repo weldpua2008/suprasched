@@ -6,7 +6,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+    // config "github.com/weldpua2008/suprasched/config"
+    // communicator "github.com/weldpua2008/suprasched/communicator"
+
 )
+
+
 
 // Cluster public structure
 type Cluster struct {
@@ -20,6 +25,7 @@ type Cluster struct {
 	CreateAt      time.Time // When cluster was created
 	StartAt       time.Time // When cluster started
 	StopAt        time.Time // When cluster started
+	MaxCapacity   int       // Maximum Jobs per cluster
 
 	LastActivityAt time.Time // When cluster metadata last changed
 	Status         string    // Currentl status
@@ -52,7 +58,25 @@ func (c *Cluster) GetParams() map[string]interface{} {
 	params["ClusterProfile"] = c.ClusterProfile
 	params["ClusterRegion"] = c.ClusterRegion
 	params["ClusterType"] = c.ClusterType
-	params["Status"] = c.Status
+	params["ClusterStatus"] = c.Status
+    params["Status"] = c.Status
+
+	return params
+}
+
+func (c *Cluster) GetParamsMapString() map[string]string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	params := make(map[string]string)
+	params["ClusterId"] = c.ClusterId
+	params["ClusterPool"] = c.ClusterPool
+	params["ClusterProfile"] = c.ClusterProfile
+	params["ClusterRegion"] = c.ClusterRegion
+	params["ClusterType"] = c.ClusterType
+	params["ClusterStatus"] = c.Status
+    params["Status"] = c.Status
+
 	return params
 }
 
@@ -72,24 +96,37 @@ func (c *Cluster) Add(rec *Job) bool {
 	return true
 }
 
-// Len returns length of Clusters on cluster.
+// Len returns length of Jobs on cluster.
 func (c *Cluster) Len() int {
 	c.mu.RLock()
-	t := len(c.all)
-	c.mu.RUnlock()
-	return t
+	defer c.mu.RUnlock()
+	return len(c.all)
+}
+
+// IsFull returns true if cluster reched maximum capacity for Jobs.
+func (c *Cluster) IsFull() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return len(c.all) >= c.MaxCapacity
+}
+
+// IsEmpty returns true if cluster has no Jobs.
+func (c *Cluster) IsEmpty() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return len(c.all) < 1
 }
 
 // Delete a job by job ID.
 // Return false if record does not exist.
-func (c *Cluster) Delete(id string) bool {
+func (c *Cluster) Delete(jid string) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	_, ok := c.all[id]
+	_, ok := c.all[jid]
 	if !ok {
 		return false
 	}
-	delete(c.all, id)
+	delete(c.all, jid)
 	return true
 }
 
@@ -118,8 +155,20 @@ func (c *Cluster) EventMetadata() map[string]string {
 		"ClusterProfile": c.ClusterProfile,
 		"ClusterRegion":  c.ClusterRegion,
 		"ClusterType":    c.ClusterType,
+        "StoreKey":    c.StoreKey(),
+
 	}
 }
+// func (c *Cluster) GetCommunicators()  ([]Communicator, error) {
+// 	c.mu.RLock()
+// 	defer c.mu.RUnlock()
+//     comms, err:= communicator.GetCommunicatorsFromSection(fmt.Sprintf("%v.%v.%v",
+//         config.CFG_PREFIX_CLUSTER,config.CFG_PREFIX_UPDATE, c.ClusterType ))
+//
+// 	return comms, err
+// }
+
+
 
 // UseExternaleStatus compare with another cluster status.
 // returns true if the cluster need update the status
@@ -143,8 +192,8 @@ func (c *Cluster) UseExternaleStatus(ext *Cluster) bool {
 // UseExternaleStatusString compare with cluster status string.
 // returns true if the cluster need update the status
 func (c *Cluster) UseExternaleStatusString(ext string) bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
 		return true
 	} else if strings.ToLower(c.Status) != strings.ToLower(ext) {

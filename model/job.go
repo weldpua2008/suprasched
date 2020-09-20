@@ -23,6 +23,7 @@ type Job struct {
 	MaxFails                int       // Absolute max number of failures.
 	TTR                     uint64    // Time-to-run in Millisecond
 	ClusterId               string    // Identificator for ClusterId
+	ClusterType             string    // Identificator for Cluster Type
 	ClusterStoreKey         string    // Cluster UUID for Registry
 	PreviousClusterStoreKey string    // Previous Cluster UUID
 	ClusterConfig           map[string]interface{}
@@ -106,6 +107,8 @@ func (j *Job) EventMetadata() map[string]string {
 		"RunUID":      j.RunUID,
 		"ExtraRunUID": j.ExtraRunUID,
 		"ClusterId":   j.ClusterId,
+		"ClusterType": j.ClusterType,
+		"StoreKey":    j.StoreKey(),
 	}
 }
 
@@ -114,20 +117,6 @@ func (j *Job) updateStatus(status string) error {
 	log.Trace(fmt.Sprintf("Job %s status %s -> %s", j.Id, j.Status, status))
 	j.Status = status
 	return nil
-}
-
-// IsTerminalStatus returns true if status is terminal:
-// - Failed
-// - Canceled
-// - Successful
-func IsTerminalStatus(status string) bool {
-	switch status {
-	case JOB_STATUS_ERROR, JOB_STATUS_CANCELED, JOB_STATUS_SUCCESS:
-		log.Tracef("IsTerminalStatus %s true", status)
-		return true
-	}
-	log.Tracef("IsTerminalStatus %s false", status)
-	return false
 }
 
 func (j *Job) GetParams() map[string]interface{} {
@@ -153,7 +142,7 @@ func (j *Job) ChangeClusterStoreKey(in string) {
 	}
 }
 
-func (j *Job) GetClusterStoreKey(in string) string {
+func (j *Job) GetClusterStoreKey() string {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return j.ClusterStoreKey

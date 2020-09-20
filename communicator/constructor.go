@@ -9,12 +9,3 @@ type TypeSpec struct {
 	Beta        bool
 	Deprecated  bool
 }
-
-// Constructors is a map of all Communicator types with their specs.
-var Constructors = map[string]TypeSpec{}
-
-// String constants representing each communicator type.
-const (
-	// ConstructorsTypeRest represents HTTP communicator
-	ConstructorsTypeRest = "HTTP"
-)

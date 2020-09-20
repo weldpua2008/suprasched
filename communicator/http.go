@@ -55,7 +55,7 @@ func NewConfiguredRestCommunicator(section string) (Communicator, error) {
 	cfg_params = config.ConvertMapStringToInterface(
 		config.GetStringMapStringTemplated(section, config.CFG_PREFIX_COMMUNICATOR))
 	if _, ok := cfg_params["section"]; !ok {
-		cfg_params["section"] = fmt.Sprintf("%s.%s.type", section, config.CFG_PREFIX_COMMUNICATOR)
+		cfg_params["section"] = fmt.Sprintf("%s.%s", section, config.CFG_PREFIX_COMMUNICATOR)
 	}
 	if _, ok := cfg_params["param"]; !ok {
 		cfg_params["param"] = config.CFG_COMMUNICATOR_PARAMS_KEY
@@ -78,6 +78,7 @@ func (s *RestCommunicator) Configured() bool {
 // Configure reads configuration propertoes from global configuration and
 // from argument.
 func (s *RestCommunicator) Configure(params map[string]interface{}) error {
+    // log.Warningf("Configure %v", params)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -115,10 +116,25 @@ func (s *RestCommunicator) Fetch(ctx context.Context, params map[string]interfac
 	var req *http.Request
 	var rawResponse map[string]interface{}
 
-	s.mu.RLock()
+
+	// all_params := config.GetStringMapStringTemplated(s.section, s.param)
+    from:= map[string]string{
+        "ClientId": config.C.ClientId,
+        "ClusterId": config.C.ClusterId,
+        "ClusterPool": config.C.ClusterPool,
+        "ConfigVersion": config.C.ConfigVersion,
+    }
+    for k, v := range params {
+        if v1, ok := v.(string); ok {
+            from[k] = v1
+        }
+    }
+    s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	all_params := config.GetStringMapStringTemplated(s.section, s.param)
+    all_params := config.GetStringMapStringTemplatedFromMap(s.section, s.param, from)
+    // log.Infof("\nall_params %v\ns.section %v , %v, \nfrom: %v", all_params, s.section, s.param,from)
+
 	for k, v := range params {
 		if v1, ok := v.(string); ok {
 			all_params[k] = v1
@@ -154,7 +170,8 @@ func (s *RestCommunicator) Fetch(ctx context.Context, params map[string]interfac
 		return nil, fmt.Errorf("%w got %s", ErrFailedReadResponseBody, err)
 	}
 	if (resp.StatusCode > 202) || (resp.StatusCode < 200) {
-		log.Tracef("\nMaking request %s  to %s \nwith %s\nStatusCode %d Response %s\n", s.method, s.url, jsonStr, resp.StatusCode, body)
+
+        log.Tracef("\nMaking request %s  to %s \nwith %s\nStatusCode %d Response %s\n", s.method, s.url, jsonStr, resp.StatusCode, body)
 	}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
