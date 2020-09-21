@@ -27,11 +27,12 @@ func TestLoadConfig(t *testing.T) {
 }
 
 func TestGetStringMapStringTemplatedFromMap(t *testing.T) {
-	tmp := C
+
+	c, tmp := LoadCfgForTests(t, CommonCfgFile)
+	C = c
 	defer func() {
 		C = tmp
 	}()
-	C = LoadCfgForTests(t, CommonCfgFile)
 	from := make(map[string]string)
 	from["Example"] = "example1"
 	from["ClientId"] = "clientId"
@@ -71,11 +72,11 @@ func TestGetStringMapStringTemplatedFromMap(t *testing.T) {
 }
 
 func TestGetStringMapStringTemplatedDefault(t *testing.T) {
-	tmp := C
+	c, tmp := LoadCfgForTests(t, CommonCfgFile)
+	C = c
 	defer func() {
 		C = tmp
 	}()
-	C = LoadCfgForTests(t, CommonCfgFile)
 	def := make(map[string]string)
 	def["example"] = "example1"
 	cases := []struct {
@@ -113,11 +114,11 @@ func TestGetStringMapStringTemplatedDefault(t *testing.T) {
 }
 
 func TestGetStringMapStringTemplated(t *testing.T) {
-	tmp := C
+	c, tmp := LoadCfgForTests(t, CommonCfgFile)
+	C = c
 	defer func() {
 		C = tmp
 	}()
-	C = LoadCfgForTests(t, CommonCfgFile)
 	cases := []struct {
 		key  string
 		want string
@@ -149,11 +150,11 @@ func TestGetStringMapStringTemplated(t *testing.T) {
 }
 
 func TestGetTimeDuration(t *testing.T) {
-	tmp := C
+	c, tmp := LoadCfgForTests(t, CommonCfgFile)
+	C = c
 	defer func() {
 		C = tmp
 	}()
-	C = LoadCfgForTests(t, CommonCfgFile)
 	cases := []struct {
 		key  string
 		want time.Duration
@@ -180,11 +181,11 @@ func TestGetTimeDuration(t *testing.T) {
 }
 
 func TestGetTimeDurationEmpty(t *testing.T) {
-	tmp := C
+	c, tmp := LoadCfgForTests(t, "fixtures/empty.yaml")
+	C = c
 	defer func() {
 		C = tmp
 	}()
-	C = LoadCfgForTests(t, "fixtures/empty.yaml")
 
 	want := 1 * time.Second
 	got := GetTimeDuration("")

@@ -126,16 +126,5 @@ func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (stri
 		}
 	}
 
-	// status := cl.Cluster.Status.State
-	// result := *status
-	// switch *status {
-	// case emr.ClusterStateStarting, emr.ClusterStateBootstrapping:
-	// 	result = "STARTING"
-	// case emr.ClusterStateRunning, emr.ClusterStateWaiting:
-	// 	result = "RUNNING"
-	// case emr.ClusterStateTerminated, emr.ClusterStateTerminatedWithErrors:
-	// 	result = "TERMINATED"
-	// }
-
 	return result, fmt.Errorf("Can't find ClusterId: %s", ClusterId)
 }

@@ -107,6 +107,14 @@ func StartFetchJobs(ctx context.Context, jobs chan *model.Job, interval time.Dur
 							continue
 						} else if rec.UpdateStatus(j.Status) {
 							topic = strings.ToLower(fmt.Sprintf("job.%v", rec.Status))
+							if model.IsTerminalStatus(rec.GetStatus()) && rec.ClusterType != model.CLUSTER_TYPE_ON_DEMAND {
+								clusterEventMetadata := map[string]string{"StoreKey": rec.GetClusterStoreKey()}
+								_, err := config.Bus.Emit(ctx, config.TOPIC_CLUSTER_IS_EMPTY, clusterEventMetadata)
+								if err != nil {
+									log.Tracef("%v", err)
+								}
+							}
+
 						}
 						if len(topic) > 1 {
 							_, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())

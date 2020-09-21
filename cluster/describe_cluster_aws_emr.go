@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	// aws_request "github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/emr"
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
@@ -34,11 +35,10 @@ type DescribeEMR struct {
 	section      string
 }
 
-// NewDescribeEMR prepare struct communicator for EMR
+// NewDescriberEMR prepare struct communicator for EMR
 func NewDescriberEMR() ClustersDescriber {
-	s := make(map[string]*session.Session)
 	return &DescribeEMR{
-		aws_sessions: s,
+		aws_sessions: make(map[string]*session.Session),
 		t:            "DescribeEMR",
 	}
 }
@@ -59,9 +59,10 @@ func (c *DescribeEMR) getCachedAwsSession(key string) (*session.Session, error) 
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-
-	if val, ok := c.aws_sessions[key]; ok {
-		return val, nil
+	if c.aws_sessions != nil {
+		if val, ok := c.aws_sessions[key]; ok {
+			return val, nil
+		}
 	}
 	return nil, fmt.Errorf("Session %v is not in cache", key)
 }
@@ -97,12 +98,9 @@ func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Ses
 	if val, err := c.getCachedAwsSession(session_key); err == nil {
 		return val, nil
 	}
+	// Creating & adding the session to the cache
 	c.mu.Lock()
 	defer c.mu.Unlock()
-
-	// if val, ok := c.aws_sessions[session_key]; ok {
-	// 	return val, nil
-	// }
 
 	sess, err := session.NewSessionWithOptions(session.Options{
 		// Specify profile to load for the session's config
@@ -115,13 +113,16 @@ func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Ses
 		// Force enable Shared Config support
 		SharedConfigState: session.SharedConfigEnable,
 	})
+	if c.aws_sessions == nil {
+		c.aws_sessions = make(map[string]*session.Session)
+	}
 	if err == nil {
 		c.aws_sessions[session_key] = sess
 	}
 	return sess, err
 }
 
-// DescribeCluster
+// ClusterStatus return cluster status from AWS EMR Service.
 func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, error) {
 	var ClusterId string
 	var ctx context.Context
@@ -177,4 +178,33 @@ func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, erro
 	}
 
 	return result, nil
+}
+
+// DescribeClusterRequest return cluster Request from AWS EMR Service.
+func (c *DescribeEMR) DescribeClusterRequest(params map[string]interface{}) (out *emr.DescribeClusterOutput, err error) {
+	var ClusterId string
+
+	for _, k := range []string{"ClusterId", "clusterID", "ClusterID", "clusterId",
+		"clusterid", "JobFlowID", "JobFlowId", "JobflowID", "jobFlowId"} {
+		if _, ok := params[k]; ok {
+			ClusterId = params[k].(string)
+			break
+		}
+	}
+	if len(ClusterId) < 1 {
+		return out, fmt.Errorf("ClusterID is empty")
+	}
+	sess, err := c.getAwsSession(params)
+	if err != nil {
+		return out, err
+	}
+	svc := emr.New(sess)
+
+	clusterInput := &emr.DescribeClusterInput{
+		ClusterId: aws.String(ClusterId),
+	}
+	req, resp := svc.DescribeClusterRequest(clusterInput)
+	err = req.Send()
+	out = resp
+	return out, err
 }

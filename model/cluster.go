@@ -18,11 +18,15 @@ type Cluster struct {
 	ClusterRegion  string // Identificator for Cluster Region
 	ClusterType    string // Identificator for Cluster Type
 
-	ClusterConfig map[string]interface{}
-	CreateAt      time.Time // When cluster was created
-	StartAt       time.Time // When cluster started
-	StopAt        time.Time // When cluster started
-	MaxCapacity   int       // Maximum Jobs per cluster
+	ClusterConfig  map[string]interface{}
+	CreateAt       time.Time // When cluster was created
+	StartAt        time.Time // When cluster started
+	StopAt         time.Time // When cluster started
+	MaxCapacity    int       // Maximum Jobs per cluster
+	TimeOutStartAt time.Time // Initial time for timeout
+	TimeOutAt      time.Time // Initial time for timeout
+
+	TimeOutDuration time.Duration // Duration after that Cluster is timed out
 
 	LastActivityAt time.Time // When cluster metadata last changed
 	PreviousStatus string    // Previous Status
@@ -40,10 +44,26 @@ type Cluster struct {
 // NewCluster returns a new Clustec.
 func NewCluster(clusterId string) *Cluster {
 	return &Cluster{
-		ClusterId:   clusterId,
-		all:         make(map[string]*Job),
-		ClusterType: CLUSTER_TYPE_EMR,
+		ClusterId:       clusterId,
+		all:             make(map[string]*Job),
+		ClusterType:     CLUSTER_TYPE_EMR,
+		TimeOutDuration: time.Minute * 15,
 	}
+}
+
+func (c *Cluster) RefreshTimeout() time.Duration {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.TimeOutStartAt = time.Now()
+	c.TimeOutAt = c.TimeOutStartAt.Add(c.TimeOutDuration)
+
+	return c.TimeOutDuration
+}
+
+func (c *Cluster) IsTimeout() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return time.Now().After(c.TimeOutAt)
 }
 
 func (c *Cluster) GetParams() map[string]interface{} {
@@ -105,7 +125,13 @@ func (c *Cluster) Len() int {
 func (c *Cluster) IsFull() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return len(c.all) >= c.MaxCapacity
+	n := 0
+	for _, j := range c.all {
+		if !IsTerminalStatus(j.GetStatus()) {
+			n += 1
+		}
+	}
+	return n >= c.MaxCapacity
 }
 
 // IsEmpty returns true if cluster has no Jobs.
@@ -113,6 +139,18 @@ func (c *Cluster) IsEmpty() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return len(c.all) < 1
+}
+
+// IsFree returns true if cluster has no active Jobs.
+func (c *Cluster) IsFree() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	for _, j := range c.all {
+		if !IsTerminalStatus(j.GetStatus()) {
+			return false
+		}
+	}
+	return true
 }
 
 // Delete a job by job ID.

@@ -77,3 +77,13 @@ func eventJobRunComms(j *model.Job, eData map[string]string) error {
 	}
 	return nil
 }
+
+// emitTestingData sends one event.
+func emitTestingData(in map[string]string) error {
+	topic := "testing"
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // cancel when we are getting the kill signal or exit
+	_, err := config.Bus.Emit(ctx, topic, in)
+	return err
+
+}

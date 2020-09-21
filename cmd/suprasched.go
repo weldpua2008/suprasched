@@ -115,6 +115,7 @@ var rootCmd = &cobra.Command{
 		// log.Fatalf("%v", viper.GetStringSlice("cluster.describe.bi-use1.supported"))
 		handlers.Init()
 		defer handlers.Deregister()
+		defer config.EvenBusTearDown()
 
 		go func() {
 			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
@@ -152,19 +153,24 @@ var rootCmd = &cobra.Command{
 
 		// ctx, cancel := context.WithCancel(context.Background())
 		// defer cancel()
-		//
-		// if false {
-		// 	cl := cluster.NewDescribeEMR()
+
+		// if true {
+		// 	cl1 := cluster.NewDescriberEMR()
+		//     // cl2:= cl1
+		//     cl:=cl1.(*cluster.DescribeEMR)
 		// 	params := make(map[string]interface{})
-		// 	params["ClusterID"] = "j-3JTIEH8MDWQ21"
+		// 	params["ClusterID"] = "j-3E4VH5S1ALOYJ"
 		// 	params["aws_profile"] = "bi-use1"
 		// 	params["ctx"] = ctx
 		//
-		// 	clusterId, _ := cl.DescribeCluster(params)
-		// 	log.Infof("%s", clusterId)
+		// 	// clusterId, _ := cl.ClusterStatus(params)
+		//     // req, resp :=cl.DescribeClusterRequest(params)
+		//     // err := req.Send()
+		//     resp, err :=cl.DescribeClusterRequest(params)
+		// 	log.Fatalf("%v -- %v", resp, err )
 		//
 		// }
-
+		//
 		// f, _ := cluster.NewFetchClustersDefault()
 		// // params :=make(map[string]interface{})
 		//

@@ -171,6 +171,7 @@ func (s *RestCommunicator) fetch(ctx context.Context, params map[string]interfac
 		"ClusterId":     config.C.ClusterId,
 		"ClusterPool":   config.C.ClusterPool,
 		"ConfigVersion": config.C.ConfigVersion,
+		"URL":           config.C.URL,
 	}
 	for k, v := range params {
 		if v1, ok := v.(string); ok {

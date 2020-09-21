@@ -36,8 +36,10 @@ const (
 
 	// Event Matchers.
 	MATCHER_CLUSTER_TERMINATING = "cluster.term.*"
+	MATCHER_CLUSTER_IS_EMPTY    = "cluster.isempty"
 
 	// Cluster related topics.
+	TOPIC_CLUSTER_IS_EMPTY               = "cluster.isempty"
 	TOPIC_CLUSTER_CREATED                = "cluster.created"
 	TOPIC_CLUSTER_STARTING               = "cluster.starting"
 	TOPIC_CLUSTER_BOOTSTRAPPING          = "cluster.bootstraping"

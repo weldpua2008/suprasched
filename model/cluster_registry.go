@@ -8,16 +8,18 @@ import (
 // NewClusterRegistry returns a new ClusterRegistry.
 func NewClusterRegistry() *ClusterRegistry {
 	return &ClusterRegistry{
-		all:    make(map[string]*Cluster),
-		byType: make(map[string][]*Cluster),
+		all:        make(map[string]*Cluster),
+		byType:     make(map[string][]*Cluster),
+		unoccupied: make(map[string]*Cluster),
 	}
 }
 
 // ClusterRegistry holds all Cluster Records.
 type ClusterRegistry struct {
-	all    map[string]*Cluster
-	mu     sync.RWMutex
-	byType map[string][]*Cluster
+	all        map[string]*Cluster
+	unoccupied map[string]*Cluster
+	mu         sync.RWMutex
+	byType     map[string][]*Cluster
 }
 
 // Add a cluster.
@@ -36,6 +38,40 @@ func (r *ClusterRegistry) Add(rec *Cluster) bool {
 	r.all[rec.StoreKey()] = rec
 	r.byType[rec.ClusterType] = append(r.byType[rec.ClusterType], rec)
 	return true
+}
+
+// AddToFree a cluster.
+// Returns false on duplicate or invalid cluster id or not added.
+func (r *ClusterRegistry) AddToFree(storeKey string) bool {
+	if len(storeKey) < 1 {
+		return false
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, ok := r.unoccupied[storeKey]; ok {
+		return false
+	} else if _, ok := r.all[storeKey]; ok {
+		r.unoccupied[storeKey] = r.all[storeKey]
+		return true
+	}
+	return false
+}
+
+// DeleteFromFree a cluster.
+// Returns false on invalid cluster id or not added.
+func (r *ClusterRegistry) DeleteFromFree(storeKey string) bool {
+	if len(storeKey) < 1 {
+		return false
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, ok := r.unoccupied[storeKey]; ok {
+		delete(r.unoccupied, storeKey)
+		return true
+	}
+	return false
 }
 
 // Len returns length of registry.

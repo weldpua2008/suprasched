@@ -30,6 +30,7 @@ type Config struct {
 	ClientId    string `mapstructure:"clientId"`
 	ClusterId   string
 	ClusterPool string
+	URL         string // Used for overload URL for Tests "{{.URL}}"
 	// delay between API calls to prevent Denial-of-service
 	CallAPIDelaySec int `mapstructure:"api_delay_sec"`
 	// Config version

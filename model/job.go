@@ -33,6 +33,7 @@ type Job struct {
 	ExitCode                int // Exit code
 	ctx                     context.Context
 	inTransition            bool // wether Job in some transaction
+	ExtraSendParams         map[string]string
 }
 
 // StoreKey returns Job unique store key
@@ -101,20 +102,25 @@ func (j *Job) UpdateStatus(ext string) bool {
 func (j *Job) EventMetadata() map[string]string {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
+	previousStatus := j.PreviousStatus
+	if len(previousStatus) < 1 {
+		previousStatus = j.Status
+	}
 
 	return map[string]string{
-		"Id":    j.Id,
-		"JobId": j.Id,
-
-		"Status":            j.Status,
-		"JobStatus":         j.Status,
-		"PreviousStatus":    j.PreviousStatus,
-		"JobPreviousStatus": j.PreviousStatus,
-		"RunUID":            j.RunUID,
-		"ExtraRunUID":       j.ExtraRunUID,
-		"ClusterId":         j.ClusterId,
-		"ClusterType":       j.ClusterType,
-		"StoreKey":          j.StoreKey(),
+		"Id":                      j.Id,
+		"JobId":                   j.Id,
+		"Status":                  j.Status,
+		"JobStatus":               j.Status,
+		"PreviousStatus":          previousStatus,
+		"JobPreviousStatus":       previousStatus,
+		"RunUID":                  j.RunUID,
+		"ExtraRunUID":             j.ExtraRunUID,
+		"ClusterId":               j.ClusterId,
+		"ClusterType":             j.ClusterType,
+		"StoreKey":                j.StoreKey(),
+		"PreviousClusterStoreKey": j.PreviousClusterStoreKey,
+		"ClusterStoreKey":         j.ClusterStoreKey,
 	}
 }
 
@@ -134,16 +140,26 @@ func (j *Job) GetParams() map[string]interface{} {
 		previousStatus = j.Status
 	}
 	params := map[string]interface{}{
-		"Id":                j.Id,
-		"JobId":             j.Id,
-		"PreviousStatus":    previousStatus,
-		"JobPreviousStatus": previousStatus,
-		"Status":            j.Status,
-		"RunUID":            j.RunUID,
-		"ExtraRunUID":       j.ExtraRunUID,
-		"ClusterId":         j.ClusterId,
-		"ClusterType":       j.ClusterType,
-		"StoreKey":          j.StoreKey(),
+		"Id":                      j.Id,
+		"JobId":                   j.Id,
+		"PreviousStatus":          previousStatus,
+		"JobPreviousStatus":       previousStatus,
+		"Status":                  j.Status,
+		"RunUID":                  j.RunUID,
+		"ExtraRunUID":             j.ExtraRunUID,
+		"ClusterId":               j.ClusterId,
+		"ClusterType":             j.ClusterType,
+		"PreviousClusterStoreKey": j.PreviousClusterStoreKey,
+		"ClusterStoreKey":         j.ClusterStoreKey,
+		"StoreKey":                j.StoreKey(),
+	}
+	if j.ExtraSendParams != nil {
+		for k, v := range j.ExtraSendParams {
+			if _, ok := params[k]; !ok {
+				params[k] = v
+			}
+		}
+
 	}
 	return params
 }
@@ -207,7 +223,7 @@ func NewJobFromMap(v map[string]interface{}) *Job {
 	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"previousJobStatus", "PreviousJobStatus", "Previous_Job_Status", "PreviousStatus", "previousstatus"}); ok {
 		j.PreviousStatus = found_val
 	}
-	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobId", "jobId", "Job_ID", "Job_Id", "job_Id", "job_id"}); ok {
+	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobId", "jobId", "Job_ID", "Job_Id", "job_Id", "job_id", "Id", "id"}); ok {
 		j.Id = found_val
 	}
 	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterId", "clusterId", "Cluster_Id", "Cluster_ID", "Cluster", "cluster", "clusterid"}); ok {
