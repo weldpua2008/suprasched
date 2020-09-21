@@ -92,7 +92,7 @@ func StartFetchJobs(ctx context.Context, jobs chan *model.Job, interval time.Dur
 						var topic string
 						rec, exist := config.JobsRegistry.Record(storeKey)
 						if !exist {
-
+                            // Possible broken Job
 							if !config.JobsRegistry.Add(j) {
 								continue
 							} else {

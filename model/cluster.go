@@ -286,10 +286,11 @@ func (c *Cluster) UpdateStatus(ext string) bool {
 	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
 		c.updateStatus(ext)
 		return true
-	} else if strings.ToLower(c.Status) != strings.ToLower(ext) {
-		c.updateStatus(ext)
-		return true
 	}
+    // else if strings.ToLower(c.Status) != strings.ToLower(ext) {
+	// 	c.updateStatus(ext)
+	// 	return true
+	// }
 
 	return false
 }

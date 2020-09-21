@@ -126,7 +126,7 @@ func (j *Job) EventMetadata() map[string]string {
 
 // updateStatus job status
 func (j *Job) updateStatus(status string) error {
-	log.Trace(fmt.Sprintf("Job %s status %s -> %s", j.Id, j.Status, status))
+	log.Trace(fmt.Sprintf("Job %s status %s -> %s [%v %v %v]", j.Id, j.Status, status, j.ClusterId, j.ClusterStoreKey, j.ClusterType))
 	j.PreviousStatus = j.Status
 	j.Status = status
 	return nil

@@ -83,21 +83,20 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 						if !ok {
 							continue
 						}
-						// fmt.Printf("cluster %p\n", rec)
 						params := rec.GetParams()
-
 						cluster_status, err := describer.ClusterStatus(params)
 						if err == nil {
-
 							var topic string
-
-							if rec.IsInTransition() {
+							if rec.IsInTransition()  {
 								continue
 							}
+
 							if rec.UpdateStatus(cluster_status) {
-								if !rec.PutInTransition() {
-									continue
-								}
+                                // log.Tracef("=> %v %v", rec.ClusterId, cluster_status)
+                                if model.IsTerminalStatus(cluster_status){
+                                    rec.PutInTransition()
+                                }
+
 								cntr += 1
 								topic = strings.ToLower(fmt.Sprintf("cluster.%v", cluster_status))
 								_, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())
@@ -106,9 +105,6 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 								}
 								if rec.Status != cluster_status {
 									log.Tracef("rec.Status %v != %v", rec.Status, cluster_status)
-
-								} else {
-									log.Tracef("rec.Status %v = %v", rec.Status, cluster_status)
 
 								}
 							}

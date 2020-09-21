@@ -42,7 +42,7 @@ const (
 	TOPIC_CLUSTER_IS_EMPTY               = "cluster.isempty"
 	TOPIC_CLUSTER_CREATED                = "cluster.created"
 	TOPIC_CLUSTER_STARTING               = "cluster.starting"
-	TOPIC_CLUSTER_BOOTSTRAPPING          = "cluster.bootstraping"
+	TOPIC_CLUSTER_BOOTSTRAPPING          = "cluster.bootstrapping"
 	TOPIC_CLUSTER_RUNNING                = "cluster.running"
 	TOPIC_CLUSTER_WAITING                = "cluster.waiting"
 	TOPIC_CLUSTER_TERMINATING            = "cluster.terminating"

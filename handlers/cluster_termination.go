@@ -44,7 +44,7 @@ func ClusterTermination(e *bus.Event) {
 				// j = nil
 			}
 			config.ClusterRegistry.Delete(cl.StoreKey())
-			log.Infof("Terminated all jobs on %v, Event in %s: %+v", cl.ClusterId, e.Topic, e)
+			log.Infof("Terminated all jobs on %v [%s]", cl.ClusterId, e.Topic)
 			// cl = nil
 		}
 	}
