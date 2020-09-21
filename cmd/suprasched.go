@@ -112,7 +112,7 @@ var rootCmd = &cobra.Command{
 		//
 		//     cfg_params := config.GetStringMapStringTemplatedFromMap(section, config.CFG_COMMUNICATOR_PARAMS_KEY, from)
 		// log.Fatalf("%v\n%v - %v",viper.GetStringMapString(section), section, cfg_params)
-
+		// log.Fatalf("%v", viper.GetStringSlice("cluster.describe.bi-use1.supported"))
 		handlers.Init()
 		defer handlers.Deregister()
 
@@ -123,7 +123,7 @@ var rootCmd = &cobra.Command{
 					"%s.fetch",
 					config.CFG_PREFIX_CLUSTER,
 				))); err != nil {
-				log.Tracef("StartGenerateClusters returned error %v", err)
+				log.Warningf("StartGenerateClusters returned error %v", err)
 			}
 		}()
 
@@ -134,7 +134,7 @@ var rootCmd = &cobra.Command{
 					config.CFG_PREFIX_JOBS,
 					config.CFG_PREFIX_JOBS_FETCHER,
 				))); err != nil {
-				log.Tracef("StartFetchJobs returned error %v", err)
+				log.Warningf("StartFetchJobs returned error %v", err)
 			}
 		}()
 
@@ -146,7 +146,7 @@ var rootCmd = &cobra.Command{
 					config.CFG_PREFIX_CLUSTER,
 					config.CFG_PREFIX_DESCRIBERS,
 				))); err != nil {
-				log.Tracef("StartUpdateClustersMetadata returned error %v", err)
+				log.Warningf("StartUpdateClustersMetadata returned error %v", err)
 			}
 		}()
 

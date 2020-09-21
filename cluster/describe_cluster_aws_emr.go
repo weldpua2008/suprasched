@@ -46,6 +46,7 @@ func NewDescriberEMR() ClustersDescriber {
 // NewFetchClustersDefault prepare struct FetchClustersDefault
 func NewDescriberEMRFromSection(section string) (ClustersDescriber, error) {
 	s := make(map[string]*session.Session)
+	// log.Warningf("NewDescriberEMRFromSection %v", section)
 	return &DescribeEMR{
 		aws_sessions: s,
 		t:            "DescribeEMR",
@@ -67,7 +68,11 @@ func (c *DescribeEMR) getCachedAwsSession(key string) (*session.Session, error) 
 
 func (c *DescribeEMR) SupportedClusters() []*model.Cluster {
 	def := []string{ConstructorsDescriberTypeAwsEMR}
-	cluster_types := config.GetGetStringSliceDefault(fmt.Sprintf("%v.%v", c.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES), def)
+	cfg_section := fmt.Sprintf("%v.%v", c.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES)
+	cluster_types := config.GetGetStringSliceDefault(cfg_section, def)
+
+	// log.Infof("GetGetStringSliceDefault %v cfg_section %v: %v", cluster_types, cfg_section, config.ClusterRegistry.Filter(cluster_types))
+
 	return config.ClusterRegistry.Filter(cluster_types)
 }
 

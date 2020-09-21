@@ -17,9 +17,10 @@ import (
 func GetSectionClustersDescriber(section string) ([]ClustersDescriber, error) {
 
 	def := make(map[string]string)
-	describers_cfgs := config.GetSliceStringMapStringTemplatedDefault(section, config.CFG_PREFIX_DESCRIBERS, def)
+
+	describers_cfgs := config.GetMapStringMapStringTemplatedDefault(section, config.CFG_PREFIX_DESCRIBERS, def)
 	res := make([]ClustersDescriber, 0)
-	for _, comm := range describers_cfgs {
+	for subsection, comm := range describers_cfgs {
 		if comm == nil {
 			continue
 		}
@@ -29,7 +30,7 @@ func GetSectionClustersDescriber(section string) ([]ClustersDescriber, error) {
 		}
 		k := strings.ToUpper(describer_type)
 		if type_struct, ok := DescriberConstructors[k]; ok {
-			describer_instance, err := type_struct.constructor(section)
+			describer_instance, err := type_struct.constructor(fmt.Sprintf("%v", subsection))
 			if err != nil {
 				log.Tracef("Can't get describer %v", err)
 				continue
@@ -54,6 +55,7 @@ func GetSectionClustersDescriber(section string) ([]ClustersDescriber, error) {
 // exists on kill
 func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error {
 	describers_instances, err := GetSectionClustersDescriber(config.CFG_PREFIX_CLUSTER)
+
 	if err != nil || describers_instances == nil || len(describers_instances) == 0 {
 		close(clusters)
 		return fmt.Errorf("Failed to start StartUpdateClustersMetadata %v", err)
@@ -77,6 +79,8 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 				return
 			case <-tickerGenerateClusters.C:
 				for _, describer := range describers_instances {
+					// z:=describer.SupportedClusters()
+					// log.Infof("describer.SupportedClusters() %v %v",z, describer )
 					for _, cls := range describer.SupportedClusters() {
 
 						rec, ok := config.ClusterRegistry.Record(cls.StoreKey())

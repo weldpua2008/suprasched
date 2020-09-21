@@ -1,8 +1,8 @@
 package model
 
 import (
+	"strings"
 	"sync"
-	// "time"
 )
 
 // NewClusterRegistry returns a new ClusterRegistry.
@@ -34,6 +34,7 @@ func (r *ClusterRegistry) Add(rec *Cluster) bool {
 	}
 
 	r.all[rec.StoreKey()] = rec
+	r.byType[rec.ClusterType] = append(r.byType[rec.ClusterType], rec)
 	return true
 }
 
@@ -57,8 +58,8 @@ func (r *ClusterRegistry) Delete(id string) bool {
 	delete(r.all, id)
 	idx := -1
 	for i, _ := range r.byType[rec.ClusterType] {
+		idx = i
 		if r.byType[rec.ClusterType][idx] == rec {
-			idx = i
 			break
 		}
 	}
@@ -78,6 +79,10 @@ func (r *ClusterRegistry) Filter(cluster_types []string) []*Cluster {
 	ret := make([]*Cluster, 0)
 	for _, clustertype := range cluster_types {
 		if val, ok := r.byType[clustertype]; ok {
+			ret = append(ret, val...)
+		} else if val, ok := r.byType[strings.ToLower(clustertype)]; ok {
+			ret = append(ret, val...)
+		} else if val, ok := r.byType[strings.ToUpper(clustertype)]; ok {
 			ret = append(ret, val...)
 		}
 	}

@@ -41,13 +41,13 @@ func ClusterTermination(e *bus.Event) {
 			} else {
 				log.Tracef("Canceled Job %v ", j)
 			}
-			config.JobsRegistry.Delete(j.StoreKey())
-			cl.Delete(j.StoreKey())
+			// config.JobsRegistry.Delete(j.StoreKey())
+			// cl.Delete(j.StoreKey())
 			log.Tracef("Removed Job %v ", j.StoreKey())
-			j = nil
+			// j = nil
 		}
 		config.ClusterRegistry.Delete(cl.StoreKey())
-		log.Tracef("Terminated all jobs on %v, Event in %s: %+v", cl.ClusterId, e.Topic, e)
-		cl = nil
+		log.Infof("Terminated all jobs on %v, Event in %s: %+v", cl.ClusterId, e.Topic, e)
+		// cl = nil
 	}
 }
