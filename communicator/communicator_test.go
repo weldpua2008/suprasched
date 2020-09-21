@@ -90,9 +90,8 @@ func TestGetSectionCommunicator(t *testing.T) {
 	}
 }
 
-
 func TestGetCommunicatorsFromSection(t *testing.T) {
-    // t.SkipNow()
+	// t.SkipNow()
 	config.LoadCfgForTests(t, "fixtures/http.yml")
 
 	cases := []struct {
@@ -129,12 +128,12 @@ func TestGetCommunicatorsFromSection(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-        var result Communicator
+		var result Communicator
 		results, got := GetCommunicatorsFromSection(tc.section)
-        // log.Infof("results %v", results)
-        for _, val :=range results{
-            result = val
-        }
+		// log.Infof("results %v", results)
+		for _, val := range results {
+			result = val
+		}
 		if (tc.want == nil) && (tc.want != got) {
 			t.Errorf("want %v, got %v", tc.want, got)
 		} else if (tc.want == nil) && (!result.Configured()) {

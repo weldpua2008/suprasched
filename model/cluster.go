@@ -6,12 +6,9 @@ import (
 	"strings"
 	"sync"
 	"time"
-    // config "github.com/weldpua2008/suprasched/config"
-    // communicator "github.com/weldpua2008/suprasched/communicator"
-
+	// config "github.com/weldpua2008/suprasched/config"
+	// communicator "github.com/weldpua2008/suprasched/communicator"
 )
-
-
 
 // Cluster public structure
 type Cluster struct {
@@ -28,6 +25,7 @@ type Cluster struct {
 	MaxCapacity   int       // Maximum Jobs per cluster
 
 	LastActivityAt time.Time // When cluster metadata last changed
+	PreviousStatus string    // Previous Status
 	Status         string    // Currentl status
 	// MaxAttempts    int       // Absoulute max num of attempts.
 	// MaxFails       int       // Absolute max number of failures.
@@ -59,7 +57,7 @@ func (c *Cluster) GetParams() map[string]interface{} {
 	params["ClusterRegion"] = c.ClusterRegion
 	params["ClusterType"] = c.ClusterType
 	params["ClusterStatus"] = c.Status
-    params["Status"] = c.Status
+	params["Status"] = c.Status
 
 	return params
 }
@@ -75,7 +73,7 @@ func (c *Cluster) GetParamsMapString() map[string]string {
 	params["ClusterRegion"] = c.ClusterRegion
 	params["ClusterType"] = c.ClusterType
 	params["ClusterStatus"] = c.Status
-    params["Status"] = c.Status
+	params["Status"] = c.Status
 
 	return params
 }
@@ -142,6 +140,18 @@ func (c *Cluster) Record(jid string) (*Job, bool) {
 	return nil, false
 }
 
+// Record fetch job by Cluster ID.
+// Follows comma ok idiom
+func (c *Cluster) All() []*Job {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	ret := make([]*Job, len(c.all))
+	for _, v := range c.all {
+		ret = append(ret, v)
+	}
+	return ret
+}
+
 // EventMetadata.
 func (c *Cluster) EventMetadata() map[string]string {
 	c.mu.RLock()
@@ -155,10 +165,10 @@ func (c *Cluster) EventMetadata() map[string]string {
 		"ClusterProfile": c.ClusterProfile,
 		"ClusterRegion":  c.ClusterRegion,
 		"ClusterType":    c.ClusterType,
-        "StoreKey":    c.StoreKey(),
-
+		"StoreKey":       c.StoreKey(),
 	}
 }
+
 // func (c *Cluster) GetCommunicators()  ([]Communicator, error) {
 // 	c.mu.RLock()
 // 	defer c.mu.RUnlock()
@@ -167,8 +177,6 @@ func (c *Cluster) EventMetadata() map[string]string {
 //
 // 	return comms, err
 // }
-
-
 
 // UseExternaleStatus compare with another cluster status.
 // returns true if the cluster need update the status
@@ -238,15 +246,22 @@ func (c *Cluster) UpdateStatus(ext string) bool {
 	defer c.mu.Unlock()
 
 	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
-		c.Status = ext
+		c.updateStatus(ext)
 		return true
 	} else if strings.ToLower(c.Status) != strings.ToLower(ext) {
-
-		c.Status = ext
+		c.updateStatus(ext)
 		return true
 	}
 
 	return false
+}
+
+// updateStatus cluster status
+func (c *Cluster) updateStatus(ext string) error {
+	c.PreviousStatus = c.Status
+	c.Status = ext
+	log.Trace(fmt.Sprintf("Cluster %s status %s -> %s", c.ClusterId, c.PreviousStatus, c.Status))
+	return nil
 }
 
 func (c *Cluster) UpdateStatusInTransition(ext string) bool {
@@ -254,11 +269,11 @@ func (c *Cluster) UpdateStatusInTransition(ext string) bool {
 	defer c.mu.Unlock()
 	if !c.inTransition {
 		if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
-			c.Status = ext
+			c.updateStatus(ext)
 			c.inTransition = true
 			return true
 		} else if c.Status != ext {
-			c.Status = ext
+			c.updateStatus(ext)
 			c.inTransition = true
 			return true
 		}

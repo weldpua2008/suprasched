@@ -70,7 +70,7 @@ func GetCommunicatorsFromSection(section string) ([]Communicator, error) {
 	def := make(map[string]string)
 
 	// comms := config.GetSliceStringMapStringTemplatedDefault(section, config.CFG_PREFIX_COMMUNICATORS, def)
-    comms := config.GetMapStringMapStringTemplatedDefault(section, config.CFG_PREFIX_COMMUNICATORS, def)
+	comms := config.GetMapStringMapStringTemplatedDefault(section, config.CFG_PREFIX_COMMUNICATORS, def)
 
 	res := make([]Communicator, 0)
 	for section, comm := range comms {
@@ -81,16 +81,16 @@ func GetCommunicatorsFromSection(section string) ([]Communicator, error) {
 		if comm_type, ok := comm["type"]; ok {
 			communicator_type = comm_type
 		}
-        comm["section"] = section
-        if _, ok :=comm["param"] ; !ok {
-            comm["param"] = config.CFG_COMMUNICATOR_PARAMS_KEY            
-        }
+		comm["section"] = section
+		if _, ok := comm["param"]; !ok {
+			comm["param"] = config.CFG_COMMUNICATOR_PARAMS_KEY
+		}
 
 		k := strings.ToUpper(communicator_type)
 		if type_struct, ok := Constructors[k]; ok {
 			// if comm, err := type_struct.constructor(section); err == nil {
 			communicator_instance := type_struct.instance()
-            // log.Warningf("comm %v", comm)
+			// log.Warningf("comm %v", comm)
 			if err1 := communicator_instance.Configure(config.ConvertMapStringToInterface(comm)); err1 != nil {
 				log.Tracef("Can't configure %v communicator, got %v", communicator_type, comm)
 				return nil, err1

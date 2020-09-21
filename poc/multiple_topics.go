@@ -8,7 +8,7 @@ import (
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
 	"sync"
-    "time"
+	"time"
 )
 
 var (
@@ -72,15 +72,12 @@ func EmptyHandler(e *bus.Event) {
 	mu.Unlock()
 }
 
-
 func ParallelHandler(e *bus.Event) {
 	mu.Lock()
 	empty_cntr += 1
 	mu.Unlock()
-    time.Sleep(500 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 }
-
-
 
 func AssignNewFreeCluster(e *bus.Event) {
 

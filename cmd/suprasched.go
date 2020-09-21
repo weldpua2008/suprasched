@@ -102,16 +102,16 @@ var rootCmd = &cobra.Command{
 		})
 
 		// log.Trace("Config file:", viper.ConfigFileUsed())
-        // section:= fmt.Sprintf("%v.%v.ondemand.%v",config.CFG_PREFIX_CLUSTER,config.CFG_PREFIX_UPDATE, config.CFG_PREFIX_COMMUNICATORS )
-        // section="cluster.update.ondemand.communicators"
-        //
-        // from := map[string]string{
-        //     "ClusterId": "ClusterId",
-        //     "ClusterPool": "ClusterPool",
-        // }
-        //
-        //     cfg_params := config.GetStringMapStringTemplatedFromMap(section, config.CFG_COMMUNICATOR_PARAMS_KEY, from)
-        // log.Fatalf("%v\n%v - %v",viper.GetStringMapString(section), section, cfg_params)
+		// section:= fmt.Sprintf("%v.%v.ondemand.%v",config.CFG_PREFIX_CLUSTER,config.CFG_PREFIX_UPDATE, config.CFG_PREFIX_COMMUNICATORS )
+		// section="cluster.update.ondemand.communicators"
+		//
+		// from := map[string]string{
+		//     "ClusterId": "ClusterId",
+		//     "ClusterPool": "ClusterPool",
+		// }
+		//
+		//     cfg_params := config.GetStringMapStringTemplatedFromMap(section, config.CFG_COMMUNICATOR_PARAMS_KEY, from)
+		// log.Fatalf("%v\n%v - %v",viper.GetStringMapString(section), section, cfg_params)
 
 		handlers.Init()
 		defer handlers.Deregister()

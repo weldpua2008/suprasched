@@ -120,7 +120,7 @@ func GetSliceStringMapStringTemplatedDefault(section string, param string, def m
 		if section_value == nil {
 			continue
 		}
-        // log.Infof("%s.%s => %v",  section, param,k1)
+		// log.Infof("%s.%s => %v",  section, param,k1)
 		if params, ok := section_value.(map[string]interface{}); ok {
 			c := make(map[string]string)
 			for k, v := range def {
@@ -135,7 +135,7 @@ func GetSliceStringMapStringTemplatedDefault(section string, param string, def m
 
 				// tpl := template.Must(template.New("params").Parse(fmt.Sprintf("%v", v)))
 				if err := tpl.Execute(&tplBytes, C); err != nil {
-					log.Tracef("params executing template for %v got %s", v, err)
+					// log.Tracef("params executing template for %v got %s", v, err)
 					continue
 				}
 				c[k] = tplBytes.String()
@@ -155,7 +155,7 @@ func GetMapStringMapStringTemplatedDefault(section string, param string, def map
 		if section_value == nil {
 			continue
 		}
-        // log.Infof("%s.%s => %v",  section, param,k1)
+		// log.Infof("%s.%s => %v",  section, param,k1)
 		if params, ok := section_value.(map[string]interface{}); ok {
 			c := make(map[string]string)
 			for k, v := range def {
@@ -170,18 +170,17 @@ func GetMapStringMapStringTemplatedDefault(section string, param string, def map
 
 				// tpl := template.Must(template.New("params").Parse(fmt.Sprintf("%v", v)))
 				if err := tpl.Execute(&tplBytes, C); err != nil {
-					log.Tracef("params executing template for %v got %s", v, err)
+					// log.Tracef("params executing template for %v got %s", v, err)
 					continue
 				}
 				c[k] = tplBytes.String()
 			}
-			ret[fmt.Sprintf("%s.%s.%s", section, param, subsection)] =  c
+			ret[fmt.Sprintf("%s.%s.%s", section, param, subsection)] = c
 		}
 
 	}
 	return ret
 }
-
 
 func GetStringMapStringTemplatedFromMapDefault(section string, param string, from map[string]string, def map[string]string) map[string]string {
 	c := make(map[string]string)
@@ -200,7 +199,7 @@ func GetStringMapStringTemplatedFromMapDefault(section string, param string, fro
 		if err1 != nil {
 			continue
 		}
-		err := tpl.Execute(&tplBytes,from)
+		err := tpl.Execute(&tplBytes, from)
 		if err != nil {
 			log.Tracef("Failed params executing template: %s from : %v", err, from)
 			continue
@@ -214,8 +213,6 @@ func GetStringMapStringTemplatedFromMap(section string, param string, from map[s
 	c := make(map[string]string)
 	return GetStringMapStringTemplatedFromMapDefault(section, param, from, c)
 }
-
-
 
 func GetStringMapStringTemplatedDefault(section string, param string, def map[string]string) map[string]string {
 	c := make(map[string]string)
@@ -275,12 +272,11 @@ func GetGetStringSliceDefault(section string, def []string) []string {
 
 // GetIntSlice returns []int or default.
 func GetIntSlice(section string, param string, def []int) []int {
-    if val := viper.GetIntSlice(fmt.Sprintf("%v.%v", section, param)); val != nil && len(val) > 0 {
+	if val := viper.GetIntSlice(fmt.Sprintf("%v.%v", section, param)); val != nil && len(val) > 0 {
 		return val
 	}
 	return def
 }
-
 
 // GetTimeDuration return delay for the section with default of 1 second.
 // Example config:
@@ -307,8 +303,8 @@ func GetTimeDuration(section string) (interval time.Duration) {
 func GetTimeDurationDefault(section string, param string, def time.Duration) (interval time.Duration) {
 	var comp time.Duration
 
-	for _, k := range []string{fmt.Sprintf("%v.%v.%v", section ,param,  CFG_INTERVAL_PARAMETER),
-        fmt.Sprintf("%v.%v", section ,param), section, CFG_INTERVAL_PARAMETER} {
+	for _, k := range []string{fmt.Sprintf("%v.%v.%v", section, param, CFG_INTERVAL_PARAMETER),
+		fmt.Sprintf("%v.%v", section, param), section, CFG_INTERVAL_PARAMETER} {
 		delay := viper.GetDuration(k)
 		if delay > comp && delay.Milliseconds() > 0 {
 			return delay

@@ -33,8 +33,8 @@ func TestGetStringMapStringTemplatedFromMap(t *testing.T) {
 	}()
 	C = LoadCfgForTests(t, CommonCfgFile)
 	from := make(map[string]string)
-    from["Example"] = "example1"
-    from["ClientId"] = "clientId"
+	from["Example"] = "example1"
+	from["ClientId"] = "clientId"
 
 	cases := []struct {
 		key  string
@@ -69,8 +69,6 @@ func TestGetStringMapStringTemplatedFromMap(t *testing.T) {
 		}
 	}
 }
-
-
 
 func TestGetStringMapStringTemplatedDefault(t *testing.T) {
 	tmp := C

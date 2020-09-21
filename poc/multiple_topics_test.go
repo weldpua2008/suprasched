@@ -11,7 +11,7 @@ import (
 )
 
 func BenchmarkParallelHandler(b *testing.B) {
-    b.SkipNow()
+	b.SkipNow()
 	config.JobsRegistry = model.NewRegistry()
 	config.ClusterRegistry = model.NewClusterRegistry()
 	cluster_types := []string{"type1", "type2", "type3"}
@@ -21,7 +21,7 @@ func BenchmarkParallelHandler(b *testing.B) {
 	handlers.Start("ParallelHandler", ParallelHandler, config.TOPIC_JOB_CREATED)
 	defer handlers.Stop("ParallelHandler")
 
-	if err := InitializeJobs((b.N+10),
+	if err := InitializeJobs((b.N + 10),
 		cluster_types,
 		[]string{"PENDING", "RUNNING", "FAILED"},
 	); err != nil {
@@ -62,22 +62,22 @@ func BenchmarkParallelHandler(b *testing.B) {
 	}
 	log.Warningf("BenchmarkParallelHandler jobs %v took %s %s per job", len(jobs), time.Since(start), time.Duration(int(int64(time.Since(start).Nanoseconds())/int64(len(jobs))))*time.Nanosecond)
 
-    // b.TimerStop()
-    start = time.Now()
+	// b.TimerStop()
+	start = time.Now()
 
-    for _, j := range jobs {
-			topic := config.TOPIC_JOB_CREATED
-			_, err := config.Bus.Emit(ctx, topic, j.EventMetadata())
-			if err != nil {
-				log.Tracef("%v", err)
-			}
+	for _, j := range jobs {
+		topic := config.TOPIC_JOB_CREATED
+		_, err := config.Bus.Emit(ctx, topic, j.EventMetadata())
+		if err != nil {
+			log.Tracef("%v", err)
+		}
 	}
 	log.Warningf("BenchmarkParallelHandler jobs %v took %s %s per job", len(jobs), time.Since(start), time.Duration(int(int64(time.Since(start).Nanoseconds())/int64(len(jobs))))*time.Nanosecond)
 
 }
 
 func BenchmarkEmptyHandler(b *testing.B) {
-    b.SkipNow()
+	b.SkipNow()
 	config.JobsRegistry = model.NewRegistry()
 	config.ClusterRegistry = model.NewClusterRegistry()
 	cluster_types := []string{"type1", "type2", "type3"}
@@ -147,7 +147,7 @@ func BenchmarkMultipleTopicsHandlerJ1000000C1000(b *testing.B) {
 }
 
 func benchmarkMultipleTopicsHandler(num_jobs int, num_cluster int, b *testing.B) {
-b.SkipNow()
+	b.SkipNow()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel when we are getting the kill signal or exit
 	// "cluster.term.*"

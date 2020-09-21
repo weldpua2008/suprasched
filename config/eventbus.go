@@ -6,7 +6,6 @@ import (
 	"github.com/mustafaturan/monoton/sequencer"
 )
 
-
 var (
 	// Bus is a ref to bus.Bus
 	Bus *bus.Bus

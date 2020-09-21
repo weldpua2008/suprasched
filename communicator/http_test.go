@@ -3,8 +3,8 @@ package communicator
 import (
 	"context"
 	"errors"
-    "strings"
 	config "github.com/weldpua2008/suprasched/config"
+	"strings"
 	"testing"
 )
 
@@ -12,9 +12,10 @@ type Response struct {
 	Number int    `json:"number"`
 	Str    string `json:"str"`
 }
+
 var (
-    globalGot string
-    responses []Response
+	globalGot string
+	responses []Response
 )
 
 func in() interface{} {
@@ -26,22 +27,21 @@ func in() interface{} {
 	}
 	c1 := make([]Response, 0)
 	c1 = append(c1, c)
-    return c1
+	return c1
 }
 
-func out(in string){
-    globalGot = in
+func out(in string) {
+	globalGot = in
 }
-
 
 func TestGetCommunicatorFetch(t *testing.T) {
-	C, tmpC :=config.LoadCfgForTests(t, "fixtures/fetch_http.yml")
-    config.C = C
+	C, tmpC := config.LoadCfgForTests(t, "fixtures/fetch_http.yml")
+	config.C = C
 
-    defer func() {
+	defer func() {
 		config.C = tmpC
 	}()
-    globalGot = ""
+	globalGot = ""
 	responses = []Response{
 		{
 			Number: 1,
@@ -52,9 +52,9 @@ func TestGetCommunicatorFetch(t *testing.T) {
 			Str:    "Str1",
 		},
 	}
-    srv:= config.NewTestServer(t, in, out )
+	srv := config.NewTestServer(t, in, out)
 	defer func() {
-        globalGot = ""
+		globalGot = ""
 		srv.Close()
 	}()
 
@@ -64,14 +64,14 @@ func TestGetCommunicatorFetch(t *testing.T) {
 		want         map[string]interface{}
 		wantErr      error
 		wantFetchErr error
-        gotContains []string
+		gotContains  []string
 	}{
 		{
 			section: "get",
 			params: map[string]interface{}{
-				"method": "GET",
-				"url":    srv.URL,
-                "clientId": "clientId",
+				"method":   "GET",
+				"url":      srv.URL,
+				"clientId": "clientId",
 			},
 			want: map[string]interface{}{
 				"Number": responses[0].Number,
@@ -79,7 +79,7 @@ func TestGetCommunicatorFetch(t *testing.T) {
 			},
 			wantErr:      nil,
 			wantFetchErr: nil,
-            gotContains: []string{ `"a":"a"`, `"c":"c"`, `k":"clientId"`},
+			gotContains:  []string{`"a":"a"`, `"c":"c"`, `k":"clientId"`},
 		},
 		{
 			section: "get",
@@ -88,9 +88,9 @@ func TestGetCommunicatorFetch(t *testing.T) {
 				"url":    srv.URL,
 			},
 			want: map[string]interface{}{
-				"Number": responses[1].Number,
-				"Str":    responses[1].Str,
-                "clientId": "clientId",
+				"Number":   responses[1].Number,
+				"Str":      responses[1].Str,
+				"clientId": "clientId",
 			},
 			wantErr:      nil,
 			wantFetchErr: nil,
@@ -136,23 +136,21 @@ func TestGetCommunicatorFetch(t *testing.T) {
 		if len(globalGot) < 1 {
 			t.Errorf("want len > 0 , got %v, send params %v", globalGot, sent_params)
 		}
-        for _,expectGot := range tc.gotContains {
-            if !strings.Contains(globalGot,expectGot)  {
-                t.Errorf("want %v in got %v", expectGot, globalGot)
-            }
+		for _, expectGot := range tc.gotContains {
+			if !strings.Contains(globalGot, expectGot) {
+				t.Errorf("want %v in got %v", expectGot, globalGot)
+			}
 
-        }
-
+		}
 
 	}
 }
 
-
 func TestGetCommunicatorsFromSectionFetch(t *testing.T) {
-    C, tmpC :=config.LoadCfgForTests(t, "fixtures/fetch_http.yml")
-    config.C = C
+	C, tmpC := config.LoadCfgForTests(t, "fixtures/fetch_http.yml")
+	config.C = C
 
-    defer func() {
+	defer func() {
 		config.C = tmpC
 	}()
 	responses = []Response{
@@ -166,7 +164,7 @@ func TestGetCommunicatorsFromSectionFetch(t *testing.T) {
 		},
 	}
 	// Response server.
-    srv:= config.NewTestServer(t, in, out )
+	srv := config.NewTestServer(t, in, out)
 	defer func() {
 		srv.Close()
 	}()
@@ -175,20 +173,19 @@ func TestGetCommunicatorsFromSectionFetch(t *testing.T) {
 		section      string
 		params       map[string]interface{}
 		want         map[string]interface{}
-        sent_params  map[string]interface{}
+		sent_params  map[string]interface{}
 		wantErr      error
 		wantFetchErr error
-        gotContains []string
-
+		gotContains  []string
 	}{
 		{
 			section: "GetCommunicatorsFromSection.get",
-            sent_params: map[string]interface{}{
-    			"a": "a", "Param":"Param",
-    		},
+			sent_params: map[string]interface{}{
+				"a": "a", "Param": "Param",
+			},
 			params: map[string]interface{}{
-				"url":    srv.URL,
-                "Param": "Param",
+				"url":   srv.URL,
+				"Param": "Param",
 			},
 			want: map[string]interface{}{
 				"Number": responses[0].Number,
@@ -196,18 +193,17 @@ func TestGetCommunicatorsFromSectionFetch(t *testing.T) {
 			},
 			wantErr:      nil,
 			wantFetchErr: nil,
-            gotContains: []string{ `"a":"a"`, `"c":"c"`, `key":"clientId"`,
-            `param":"Param"`},
-
+			gotContains: []string{`"a":"a"`, `"c":"c"`, `key":"clientId"`,
+				`param":"Param"`},
 		},
 		{
 			section: "GetCommunicatorsFromSection.get",
 			params: map[string]interface{}{
-				"url":    srv.URL,
+				"url": srv.URL,
 			},
-            sent_params: map[string]interface{}{
-    			"a": "a",
-    		},
+			sent_params: map[string]interface{}{
+				"a": "a",
+			},
 			want: map[string]interface{}{
 				"Number": responses[1].Number,
 				"Str":    responses[1].Str,
@@ -218,11 +214,11 @@ func TestGetCommunicatorsFromSectionFetch(t *testing.T) {
 	}
 	for _, tc := range cases {
 		results, got := GetCommunicatorsFromSection(tc.section)
-        var result Communicator
+		var result Communicator
 
-        for _, val :=range results{
-            result = val
-        }
+		for _, val := range results {
+			result = val
+		}
 
 		if (tc.wantErr == nil) && (tc.wantErr != got) {
 			t.Errorf("want %v, got %v", tc.wantErr, got)
@@ -263,13 +259,12 @@ func TestGetCommunicatorsFromSectionFetch(t *testing.T) {
 		if len(globalGot) < 1 {
 			t.Errorf("want len > 0 , got %v, send params %v", globalGot, tc.sent_params)
 		}
-        for _,expectGot := range tc.gotContains {
-            if !strings.Contains(globalGot,expectGot)  {
-                t.Errorf("want %v in got %v", expectGot, globalGot)
-            }
+		for _, expectGot := range tc.gotContains {
+			if !strings.Contains(globalGot, expectGot) {
+				t.Errorf("want %v in got %v", expectGot, globalGot)
+			}
 
-        }
-
+		}
 
 	}
 }
