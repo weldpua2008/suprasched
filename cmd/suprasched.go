@@ -19,6 +19,7 @@ import (
 	handlers "github.com/weldpua2008/suprasched/handlers"
 	job "github.com/weldpua2008/suprasched/job"
 	model "github.com/weldpua2008/suprasched/model"
+    healthcheck "github.com/weldpua2008/suprasched/healthcheck"
 
 	// worker "github.com/weldpua2008/suprasched/worker"
 	"time"
@@ -33,6 +34,7 @@ import (
 var (
 	verbose    bool
 	traceFlag  bool
+    enableHealthcheckServer bool
 	log            = logrus.WithFields(logrus.Fields{"package": "cmd"})
 	numWorkers int = 5
 )
@@ -43,6 +45,8 @@ func init() {
 	// will be global for application.
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose")
 	rootCmd.PersistentFlags().BoolVarP(&traceFlag, "trace", "t", false, "trace")
+    rootCmd.PersistentFlags().BoolVarP(&enableHealthcheckServer, "healthcheck", "p", true, "healthcheck")
+
 	// rootCmd.PersistentFlags().StringVar(&config.ClientId, "clientId", "", "ClientId (default is suprasched)")
 
 	// rootCmd.PersistentFlags().IntVarP(&numWorkers, "workers", "w", 5, "Number of workers")
@@ -87,6 +91,7 @@ var rootCmd = &cobra.Command{
 			logrus.SetLevel(logrus.DebugLevel)
 		}
 
+
 		// load config
 		// if errCnf := model.ReinitializeConfig(); errCnf != nil {
 		// 	log.Tracef("Failed ReinitializeConfig %v\n", errCnf)
@@ -100,6 +105,12 @@ var rootCmd = &cobra.Command{
 			// }
 			config.ReinitializeConfig()
 		})
+        if enableHealthcheckServer{
+            addr:=config.GetStringTemplatedDefault("healthcheck.listen", ":8080")
+            healthcheck_uri:=config.GetStringTemplatedDefault("healthcheck.uri", "/health/is_alive")
+            srv:=healthcheck.StartHealthCheck(addr,healthcheck_uri)
+            defer healthcheck.WaitForShutdown(ctx, srv)
+        }
 
 		// log.Trace("Config file:", viper.ConfigFileUsed())
 		// section:= fmt.Sprintf("%v.%v.ondemand.%v",config.CFG_PREFIX_CLUSTER,config.CFG_PREFIX_UPDATE, config.CFG_PREFIX_COMMUNICATORS )

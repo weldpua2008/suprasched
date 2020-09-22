@@ -313,3 +313,22 @@ func GetTimeDurationDefault(section string, param string, def time.Duration) (in
 	}
 	return def
 }
+
+func GetStringTemplatedDefault(section string, def string) string {
+    v:=viper.GetString(section)
+    if len(v) > 0 {
+        var tplBytes bytes.Buffer
+
+        tpl, err1 := template.New("params").Parse(v)
+        if err1 != nil {
+            return def
+        }
+        err := tpl.Execute(&tplBytes, C)
+        if err != nil {
+            return def
+        }
+        return tplBytes.String()
+
+    }
+return def
+}
