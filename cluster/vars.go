@@ -11,6 +11,7 @@ var (
 	ErrNoSuitableClustersFetcher   = errors.New("No suitable ClustersFetcher found")
 	ErrNoSuitableClustersDescriber = errors.New("No suitable ClustersDescriber found")
 	ErrEmptyClusterId              = errors.New("Cluster Id is empty")
+	ErrClusterIdIsNotValid         = errors.New("InvalidRequestException: Cluster id")
 	// Internal
 	empty_clusters_chan = make(chan *model.Cluster, 1)
 )

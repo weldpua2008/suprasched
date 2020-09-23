@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
@@ -87,15 +88,15 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 						cluster_status, err := describer.ClusterStatus(params)
 						if err == nil {
 							var topic string
-							if rec.IsInTransition()  {
+							if rec.IsInTransition() {
 								continue
 							}
 
 							if rec.UpdateStatus(cluster_status) {
-                                // log.Tracef("=> %v %v", rec.ClusterId, cluster_status)
-                                if model.IsTerminalStatus(cluster_status){
-                                    rec.PutInTransition()
-                                }
+								// log.Tracef("=> %v %v", rec.ClusterId, cluster_status)
+								if model.IsTerminalStatus(cluster_status) {
+									rec.PutInTransition()
+								}
 
 								cntr += 1
 								topic = strings.ToLower(fmt.Sprintf("cluster.%v", cluster_status))
@@ -108,9 +109,17 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 
 								}
 							}
-						} else {
-							log.Tracef("Failed to describe cluster status '%v', but failed with %v", cluster_status, err)
+						} else if errors.Is(err, ErrClusterIdIsNotValid) {
+							/*
+							   TODO: It's better to remove such cluster and log once
+							*/
+							if config.ClusterRegistry.Delete(cls.StoreKey()) {
+								cls = nil
+							}
+							// continue
 
+						} else {
+							log.Tracef("Failed to describe cluster status '%v', failed with %v", cluster_status, err)
 						}
 					}
 				}

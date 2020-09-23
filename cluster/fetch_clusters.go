@@ -63,22 +63,22 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 						for _, cls := range clusters_slice {
 							var topic string
 							rec, exist := config.ClusterRegistry.Record(cls.StoreKey())
-                            // log.Tracef("rec  %v %v %v", cls.ClusterId, cls.ClusterType, cls.Status)
+							// log.Tracef("rec  %v %v %v", cls.ClusterId, cls.ClusterType, cls.Status)
 							if !exist {
 								if !config.ClusterRegistry.Add(cls) {
-                                    log.Tracef("!config.ClusterRegistry.Add %v", cls)
+									log.Tracef("!config.ClusterRegistry.Add %v", cls)
 									continue
 								} else {
 									topic = config.TOPIC_CLUSTER_CREATED
 									rec, exist = config.ClusterRegistry.Record(cls.StoreKey())
 									if !exist {
-                                        log.Tracef("Skip !config.ClusterRegistry.Record %v", cls)
+										log.Tracef("Skip !config.ClusterRegistry.Record %v", cls)
 										continue
 									}
 									j += 1
 								}
 							} else if rec.IsInTransition() {
-                                // log.Tracef("Skip IsInTransition %v", rec)
+								// log.Tracef("Skip IsInTransition %v", rec)
 								continue
 							} else if rec.UpdateStatus(cls.Status) {
 								topic = strings.ToLower(fmt.Sprintf("cluster.%v", rec.Status))

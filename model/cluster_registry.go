@@ -85,6 +85,7 @@ func (r *ClusterRegistry) Len() int {
 // Delete a cluster by cluster ID.
 // Return false if record does not exist.
 func (r *ClusterRegistry) Delete(id string) bool {
+	r.DeleteFromFree(id)
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	rec, ok := r.all[id]

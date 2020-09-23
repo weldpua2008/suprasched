@@ -16,6 +16,8 @@
 ```golang
 (j *Job) updateStatus
 ```
+### Clusters:
+* Decomission cluster
 
 ### OTHER:
 * Tickers aren't update with config update

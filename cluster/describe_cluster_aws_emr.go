@@ -163,7 +163,9 @@ func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, erro
 		ClusterId: aws.String(ClusterId),
 	}
 	cl, err := svc.DescribeClusterWithContext(clusterCtx, clusterInput)
+
 	if err != nil {
+		// log.Tracef("svc.DescribeClusterWithContext %v - %v", clusterInput, err)
 		return "", err
 	}
 	status := cl.Cluster.Status.State

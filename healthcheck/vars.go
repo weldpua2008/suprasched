@@ -7,6 +7,6 @@ import (
 )
 
 var (
-	log                      = logrus.WithFields(logrus.Fields{"package": "communicator"})
+	log                  = logrus.WithFields(logrus.Fields{"package": "communicator"})
 	ErrServerListenError = errors.New("Error HTTP server ListenAndServe:")
 )

@@ -287,7 +287,7 @@ func (c *Cluster) UpdateStatus(ext string) bool {
 		c.updateStatus(ext)
 		return true
 	}
-    // else if strings.ToLower(c.Status) != strings.ToLower(ext) {
+	// else if strings.ToLower(c.Status) != strings.ToLower(ext) {
 	// 	c.updateStatus(ext)
 	// 	return true
 	// }
