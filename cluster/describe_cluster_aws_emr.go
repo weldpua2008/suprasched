@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
+	"strings"
 	"sync"
 	"time"
 )
@@ -165,7 +166,9 @@ func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, erro
 	cl, err := svc.DescribeClusterWithContext(clusterCtx, clusterInput)
 
 	if err != nil {
-		// log.Tracef("svc.DescribeClusterWithContext %v - %v", clusterInput, err)
+		if strings.Contains(err.Error(), "InvalidRequestException: Cluster id") && strings.Contains(err.Error(), "is not valid") {
+			return "", fmt.Errorf("%w '%v'", ErrClusterIdIsNotValid, ClusterId)
+		}
 		return "", err
 	}
 	status := cl.Cluster.Status.State

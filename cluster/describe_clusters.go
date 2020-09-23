@@ -57,6 +57,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 		close(clusters)
 		return fmt.Errorf("Failed to start StartUpdateClustersMetadata %v", err)
 	}
+	notValidClusterIds := make(map[string]struct{}, 0)
 
 	doneNumClusters := make(chan int, 1)
 	log.Infof("Starting update Clusters with delay %v", interval)
@@ -84,6 +85,11 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 						if !ok {
 							continue
 						}
+						if _, ok := notValidClusterIds[rec.ClusterId]; ok {
+							// log.Tracef("Skip %v", rec.ClusterId)
+							continue
+						}
+
 						params := rec.GetParams()
 						cluster_status, err := describer.ClusterStatus(params)
 						if err == nil {
@@ -113,10 +119,14 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 							/*
 							   TODO: It's better to remove such cluster and log once
 							*/
+							if len(notValidClusterIds) > 4096 {
+								notValidClusterIds = make(map[string]struct{}, 0)
+							}
+							notValidClusterIds[rec.ClusterId] = struct{}{}
 							if config.ClusterRegistry.Delete(cls.StoreKey()) {
 								cls = nil
 							}
-							// continue
+							continue
 
 						} else {
 							log.Tracef("Failed to describe cluster status '%v', failed with %v", cluster_status, err)
