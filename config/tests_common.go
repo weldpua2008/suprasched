@@ -4,11 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/viper"
+	"go.uber.org/goleak"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 func LoadCfgForTests(t *testing.T, CfgFile string) (Config, Config) {
 	tmp := C

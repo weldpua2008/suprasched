@@ -102,6 +102,7 @@ func StartFetchJobs(ctx context.Context, jobs chan *model.Job, interval time.Dur
 								}
 								topic = config.TOPIC_JOB_CREATED
 								cntr += 1
+								jobsFetched.Inc()
 							}
 						} else if rec.IsInTransition() {
 							continue

@@ -4,8 +4,13 @@ import (
 	config "github.com/weldpua2008/suprasched/config"
 
 	"errors"
+	"go.uber.org/goleak"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 func TestGetCommunicator(t *testing.T) {
 	cases := []struct {

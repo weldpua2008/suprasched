@@ -5,9 +5,14 @@ import (
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
 
+	"go.uber.org/goleak"
 	"strings"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 type Response struct {
 	Number int    `json:"number"`

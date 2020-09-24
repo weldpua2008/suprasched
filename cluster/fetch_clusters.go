@@ -75,6 +75,7 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 										log.Tracef("Skip !config.ClusterRegistry.Record %v", cls)
 										continue
 									}
+									clustersFetched.Inc()
 									j += 1
 								}
 							} else if rec.IsInTransition() {

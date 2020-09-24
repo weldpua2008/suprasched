@@ -2,9 +2,14 @@ package model
 
 import (
 	"fmt"
+	"go.uber.org/goleak"
 	"testing"
 	"time"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 func BenchmarkRegistryAdd(b *testing.B) {
 	r := NewRegistry()

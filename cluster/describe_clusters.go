@@ -103,7 +103,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 								if model.IsTerminalStatus(cluster_status) {
 									rec.PutInTransition()
 								}
-
+								clustersDescribed.Inc()
 								cntr += 1
 								topic = strings.ToLower(fmt.Sprintf("cluster.%v", cluster_status))
 								_, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())

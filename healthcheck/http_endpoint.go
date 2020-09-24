@@ -3,6 +3,7 @@ package healthcheck
 import (
 	"context"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"time"
 )
@@ -20,8 +21,10 @@ func StartHealthCheck(listenAddr string, uri string) *http.Server {
 		WriteTimeout: 10 * time.Second,
 	}
 	http.HandleFunc(uri, healthHandler)
+	http.Handle("/metrics", promhttp.Handler())
+
 	go func() {
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("%w %v", ErrServerListenError, err)
 		}
 	}()
@@ -29,5 +32,8 @@ func StartHealthCheck(listenAddr string, uri string) *http.Server {
 }
 
 func WaitForShutdown(ctx context.Context, srv *http.Server) {
-	srv.Shutdown(ctx)
+	if err := srv.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
+		log.Warningf("Shutdown %v", err)
+
+	}
 }

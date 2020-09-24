@@ -5,10 +5,15 @@ import (
 	config "github.com/weldpua2008/suprasched/config"
 	handlers "github.com/weldpua2008/suprasched/handlers"
 	model "github.com/weldpua2008/suprasched/model"
+	"go.uber.org/goleak"
 	"sync"
 	"testing"
 	"time"
 )
+
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(m)
+}
 
 func BenchmarkParallelHandler(b *testing.B) {
 	b.SkipNow()
