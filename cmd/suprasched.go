@@ -17,8 +17,8 @@ import (
 	config "github.com/weldpua2008/suprasched/config"
 
 	handlers "github.com/weldpua2008/suprasched/handlers"
-	healthcheck "github.com/weldpua2008/suprasched/healthcheck"
 	job "github.com/weldpua2008/suprasched/job"
+	metrics "github.com/weldpua2008/suprasched/metrics"
 	model "github.com/weldpua2008/suprasched/model"
 
 	// worker "github.com/weldpua2008/suprasched/worker"
@@ -106,10 +106,15 @@ var rootCmd = &cobra.Command{
 		})
 		if enableHealthcheckServer {
 			addr := config.GetStringTemplatedDefault("healthcheck.listen", ":8080")
-			healthcheck_uri := config.GetStringTemplatedDefault("healthcheck.uri", "/health/is_alive")
-			srv := healthcheck.StartHealthCheck(addr, healthcheck_uri)
-			defer healthcheck.WaitForShutdown(ctx, srv)
+			metrics_uri := config.GetStringTemplatedDefault("healthcheck.uri", "/health/is_alive")
+			metrics.StartHealthCheck(addr, metrics_uri)
+
 		}
+		prometheus_addr := config.GetStringTemplatedDefault("prometheus.listen", ":8080")
+		prometheus_uri := config.GetStringTemplatedDefault("prometheus.uri", "/metrics")
+		metrics.AddPrometheusMetricsHandler(prometheus_addr, prometheus_uri)
+		metrics.StartAll()
+		defer metrics.StopAll(ctx)
 
 		// log.Trace("Config file:", viper.ConfigFileUsed())
 		// section:= fmt.Sprintf("%v.%v.ondemand.%v",config.CFG_PREFIX_CLUSTER,config.CFG_PREFIX_UPDATE, config.CFG_PREFIX_COMMUNICATORS )
