@@ -13,6 +13,31 @@ var (
 	ErrNoSuitableClustersDescriber = errors.New("No suitable ClustersDescriber found")
 	ErrEmptyClusterId              = errors.New("Cluster Id is empty")
 	ErrClusterIdIsNotValid         = errors.New("InvalidRequestException: Cluster id is not valid")
+
+	clusterStatuses = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "suprasched",
+			Subsystem: "clusters",
+			Name:      "statuses",
+			Help:      "Number of cluster statuses, partitioned by Profile and Type.",
+		},
+		[]string{
+			// Which profile is used?
+			"profile",
+			// Of what type is the cluster?
+			"type",
+			// What is the cluster status?
+			"status",
+		},
+	)
+	// clusterStatuses = prometheus.NewCounterVec(
+	// 	prometheus.CounterOpts{
+	// 		Name: "suprasched_clusters_statuses",
+	// 		Help: "Number of hard-disk errors.",
+	// 	},
+	// 	[]string{"device"},
+	// )
+
 	// Internal
 	clustersDescribed = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "suprasched_clusters_describe_total",

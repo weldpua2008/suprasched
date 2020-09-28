@@ -141,6 +141,8 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 							log.Tracef("Failed to describe cluster status '%v', failed with %v", cluster_status, err)
 						}
 					}
+					config.ClusterRegistry.DumpMetrics(clusterStatuses)
+					// clusterStatuses
 				}
 			}
 		}

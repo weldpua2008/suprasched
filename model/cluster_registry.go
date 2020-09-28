@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"strings"
 	"sync"
 )
@@ -136,6 +137,36 @@ func (r *ClusterRegistry) AllEmpty() []*Cluster {
 		}
 	}
 	return ret
+}
+
+// DumpMetrics.
+func (r *ClusterRegistry) DumpMetrics(in *prometheus.GaugeVec) {
+	r.mu.RLock()
+	// defer r.mu.RUnlock()
+	// Cluster profile -> type ->  status
+	temp_cnt := make(map[string]map[string]map[string]int, 0)
+	for _, cls := range r.all {
+		if _, ok := temp_cnt[cls.ClusterProfile]; !ok {
+			temp_cnt[cls.ClusterProfile] = make(map[string]map[string]int, 0)
+		}
+
+		if _, ok := temp_cnt[cls.ClusterProfile][cls.ClusterType]; !ok {
+			temp_cnt[cls.ClusterProfile][cls.ClusterType] = make(map[string]int, 0)
+
+		}
+		temp_cnt[cls.ClusterProfile][cls.ClusterType][cls.Status] += 1
+
+	}
+	r.mu.RUnlock()
+	// log.Warning(temp_cnt)
+	for clusterProfile, val := range temp_cnt {
+		for clusterType, val1 := range val {
+			for status, val2 := range val1 {
+				in.WithLabelValues(strings.ToLower(clusterProfile), strings.ToLower(clusterType), strings.ToLower(status)).Set(float64(val2))
+			}
+
+		}
+	}
 }
 
 // // Cleanup process for the registry with batch only locked.

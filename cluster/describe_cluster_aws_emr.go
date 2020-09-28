@@ -124,6 +124,8 @@ func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Ses
 }
 
 // ClusterStatus return cluster status from AWS EMR Service.
+// TODO:
+// * Support multiple AWS Profiles.
 func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, error) {
 	var ClusterId string
 	var ctx context.Context
