@@ -5,6 +5,7 @@ import (
 	"fmt"
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
+	utils "github.com/weldpua2008/suprasched/utils"
 	"strings"
 	"time"
 )
@@ -57,7 +58,12 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 				log.Debug("Clusters fetch finished [ SUCCESSFULLY ]")
 				return
 			case <-tickerGenerateClusters.C:
+				isDelayed := utils.RandomBoolean()
+
 				for _, fetcher := range fetchers {
+					if isDelayed {
+						break
+					}
 					clusters_slice, err := fetcher.Fetch()
 					if err == nil {
 						for _, cls := range clusters_slice {

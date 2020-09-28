@@ -93,18 +93,31 @@ func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (stri
 	}
 	clusterCtx, cancel = context.WithTimeout(ctx, time.Duration(ttr)*time.Second)
 	defer cancel() // cancel when we are getting the kill signal or exit
-	param := make(map[string]interface{})
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	result := "UNKNOWN"
-	for _, comm := range d.comms {
-
-		res, err := comm.Fetch(clusterCtx, param)
-		if err != nil {
-			log.Tracef("Can't Describe %v", err)
+	// param := make(map[string]interface{})
+	param := config.ConvertMapStringToInterface(
+		config.GetStringMapStringTemplated(d.section, config.CFG_PREFIX_COMMUNICATORS))
+	for k, v := range params {
+		if k == "context" || k == "ctx" {
 			continue
 		}
 
+		param[k] = v
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	result := "UNKNOWN"
+
+	for _, comm := range d.comms {
+		comm.Configure(param)
+		// if err:=comm.Configure(param);err != nil {
+		//     log.Tracef("comm.Configure %v => %v", comm, err)
+		//
+		// }
+		res, err := comm.Fetch(clusterCtx, param)
+		if err != nil {
+			log.Tracef("Can't Describe %v %v", ClusterId, err)
+			continue
+		}
 		for _, v := range res {
 			if v == nil {
 				continue

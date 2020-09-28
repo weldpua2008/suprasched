@@ -24,6 +24,12 @@ var (
 	ClusterRegistry = model.NewClusterRegistry()
 )
 
+func RefreshRegistries() {
+	JobsRegistry = model.NewRegistry()
+	ClusterRegistry = model.NewClusterRegistry()
+
+}
+
 // Config is top level Configuration structure
 type Config struct {
 	// Indentification for the process

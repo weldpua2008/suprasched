@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cluster "github.com/weldpua2008/suprasched/cluster"
+	"math/rand"
 	// communicator "github.com/weldpua2008/suprasched/communicator"
 	config "github.com/weldpua2008/suprasched/config"
 
@@ -67,6 +68,7 @@ var rootCmd = &cobra.Command{
                 Complete documentation is available at github.com/weldpua2008/suprasched/cmd`,
 	Version: FormattedVersion(),
 	Run: func(cmd *cobra.Command, args []string) {
+		rand.Seed(time.Now().UnixNano())
 		sigs := make(chan os.Signal, 1)
 		shutchan := make(chan bool, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

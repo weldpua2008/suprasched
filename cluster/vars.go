@@ -18,6 +18,22 @@ var (
 		Name: "suprasched_clusters_describe_total",
 		Help: "The total number of described clusters",
 	})
+
+	clusterIdsAreNotValid = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "suprasched_cluster_ids_are_not_valid_total",
+		Help: "The total number of not valid clusters Ids",
+	})
+
+	reqClustersDescribed = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "suprasched_req_clusters_describe_total",
+		Help: "The total number of query for describe clusters",
+	})
+
+	reqClustersFailDescribed = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "suprasched_req_clusters_fail_describe_total",
+		Help: "The total number of query for fail to describe clusters",
+	})
+
 	clustersFetched = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "suprasched_clusters_fetch_total",
 		Help: "The total number of fetched clusters",

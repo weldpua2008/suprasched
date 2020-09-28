@@ -2,10 +2,13 @@ package cluster
 
 import (
 	"context"
+	// "math/rand"
 	"errors"
 	"fmt"
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
+	utils "github.com/weldpua2008/suprasched/utils"
+
 	"strings"
 	"time"
 )
@@ -76,9 +79,12 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 				log.Debug("Clusters description finished [ SUCCESSFULLY ]")
 				return
 			case <-tickerGenerateClusters.C:
+				isDelayed := utils.RandomBoolean()
 				for _, describer := range describers_instances {
-					// z:=describer.SupportedClusters()
-					// log.Infof("describer.SupportedClusters() %v %v",z, describer )
+					if isDelayed {
+						break
+					}
+
 					for _, cls := range describer.SupportedClusters() {
 
 						rec, ok := config.ClusterRegistry.Record(cls.StoreKey())
@@ -93,6 +99,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 						params := rec.GetParams()
 						cluster_status, err := describer.ClusterStatus(params)
 						if err == nil {
+							reqClustersDescribed.Inc()
 							var topic string
 							if rec.IsInTransition() {
 								continue
@@ -119,6 +126,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 							/*
 							   TODO: It's better to remove such cluster and log once
 							*/
+							clusterIdsAreNotValid.Set(float64(len(notValidClusterIds)))
 							if len(notValidClusterIds) > 4096 {
 								notValidClusterIds = make(map[string]struct{}, 0)
 							}
@@ -129,6 +137,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 							continue
 
 						} else {
+							reqClustersFailDescribed.Inc()
 							log.Tracef("Failed to describe cluster status '%v', failed with %v", cluster_status, err)
 						}
 					}
