@@ -54,15 +54,22 @@ func NewDescribeClusterHttpBySection(section string) (ClustersDescriber, error) 
 		}
 	}
 	return nil, fmt.Errorf("Can't initialize DescribeClusterHttp '%s': %v", config.CFG_PREFIX_CLUSTER, err)
-
 }
 
+// SupportedClusters returns all supported in Cluster Registry defined by configuration(e.g. type).
+// For example support on-demand and HTTP types in config:
+//     cluster:
+//         describe:
+//             supported:
+//                 - "on-demand"
+//                 - "HTTP"
 func (d *DescribeClusterHttp) SupportedClusters() []*model.Cluster {
 	def := []string{ConstructorsFetcherTypeRest}
 	cluster_types := config.GetGetStringSliceDefault(fmt.Sprintf("%v.%v", d.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES), def)
 	return config.ClusterRegistry.Filter(cluster_types)
 }
 
+// ClusterStatus by the Cluster Id from HTTP rest API.
 func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (string, error) {
 	var ClusterId string
 	var ctx context.Context
