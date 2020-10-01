@@ -31,7 +31,7 @@ func (s *SrvSession) Start() *http.Server {
 	defer s.mu.RUnlock()
 	go func() {
 		if err := s.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("%w %v", ErrServerListenError, err)
+			log.Warningf("%v %v", ErrServerListenError, err)
 		}
 	}()
 	return s.srv

@@ -281,13 +281,17 @@ func (c *Cluster) FinishTransition() bool {
 	return false
 }
 
+func (c *Cluster) SyncedWithExternalAPI() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.LastSyncedAt = time.Now().Add(c.LastSyncedDuration)
+}
+
 // UpdateStatus compare with cluster status string and updates.
 // returns true if the cluster need update the status
 func (c *Cluster) UpdateStatus(ext string) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.LastSyncedAt = time.Now().Add(c.LastSyncedDuration)
-
 	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
 		c.updateStatus(ext)
 		return true

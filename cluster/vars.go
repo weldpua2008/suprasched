@@ -14,6 +14,7 @@ var (
 	ErrEmptyClusterId              = errors.New("Cluster Id is empty")
 	ErrClusterIdIsNotValid         = errors.New("InvalidRequestException: Cluster id is not valid")
 
+	// Internal variables
 	clusterStatuses = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "suprasched",
@@ -30,6 +31,26 @@ var (
 			"status",
 		},
 	)
+
+	apiCallsStatistics = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "suprasched",
+			Subsystem: "api",
+			Name:      "calls",
+			Help:      "Number of API calls to 3rd party API partitioned by Type.",
+		},
+		[]string{
+			// For example Amazon
+			"provider",
+			// Which profile is used?
+			"profile",
+			// Of what type is the request?
+			"type",
+			// What is the Operation?
+			"operation",
+		},
+	)
+
 	// clusterStatuses = prometheus.NewCounterVec(
 	// 	prometheus.CounterOpts{
 	// 		Name: "suprasched_clusters_statuses",
@@ -38,7 +59,6 @@ var (
 	// 	[]string{"device"},
 	// )
 
-	// Internal
 	clustersDescribed = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "suprasched_clusters_describe_total",
 		Help: "The total number of described clusters",

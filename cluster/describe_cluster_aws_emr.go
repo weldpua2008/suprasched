@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	aws_request "github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
-	// aws_request "github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/emr"
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -82,6 +83,11 @@ func (c *DescribeEMR) SupportedClusters() []*model.Cluster {
 func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Session, error) {
 	var Profile string
 	Region := "us-east-1"
+
+	if len(os.Getenv("AWS_DEFAULT_REGION")) > 0 {
+		Region = os.Getenv("AWS_DEFAULT_REGION")
+	}
+
 	for _, k := range []string{"AWS_PROFILE", "PROFILE", "aws_profile", "profile", "Profile", "ClusterProfile"} {
 		if _, ok := params[k]; ok {
 			Profile = params[k].(string)
@@ -102,7 +108,6 @@ func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Ses
 	// Creating & adding the session to the cache
 	c.mu.Lock()
 	defer c.mu.Unlock()
-
 	sess, err := session.NewSessionWithOptions(session.Options{
 		// Specify profile to load for the session's config
 		Profile: Profile,
@@ -114,6 +119,16 @@ func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Ses
 		// Force enable Shared Config support
 		SharedConfigState: session.SharedConfigEnable,
 	})
+	sess.Handlers.Send.PushFront(func(r *aws_request.Request) {
+		// Log every request made and its payload
+		apiCallsStatistics.WithLabelValues(
+			"aws",
+			fmt.Sprintf("%v.%v", Profile, Region),
+			"emr",
+			strings.ToLower(r.Operation.Name),
+		).Inc()
+	})
+
 	if c.aws_sessions == nil {
 		c.aws_sessions = make(map[string]*session.Session)
 	}

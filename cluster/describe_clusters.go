@@ -91,12 +91,12 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 						if !ok {
 							continue
 						}
+
 						if !time.Now().After(rec.LastSyncedAt) {
 							continue
 						}
 
 						if _, ok := notValidClusterIds[rec.ClusterId]; ok {
-							// log.Tracef("Skip %v", rec.ClusterId)
 							continue
 						}
 
@@ -108,7 +108,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 							if rec.IsInTransition() {
 								continue
 							}
-
+							rec.SyncedWithExternalAPI()
 							if rec.UpdateStatus(cluster_status) {
 								// log.Tracef("=> %v %v", rec.ClusterId, cluster_status)
 								if model.IsTerminalStatus(cluster_status) {
