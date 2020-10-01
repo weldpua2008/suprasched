@@ -32,8 +32,8 @@ var (
 		},
 	)
 
-	apiCallsStatistics = promauto.NewGaugeVec(
-		prometheus.GaugeOpts{
+	apiCallsStatistics = promauto.NewCounterVec(
+		prometheus.CounterOpts{
 			Namespace: "suprasched",
 			Subsystem: "api",
 			Name:      "calls",
