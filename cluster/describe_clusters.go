@@ -91,6 +91,10 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 						if !ok {
 							continue
 						}
+						if !time.Now().After(rec.LastSyncedAt) {
+							continue
+						}
+
 						if _, ok := notValidClusterIds[rec.ClusterId]; ok {
 							// log.Tracef("Skip %v", rec.ClusterId)
 							continue

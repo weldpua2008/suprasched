@@ -6,7 +6,8 @@
 * capacity mesure
 * empty clusters should be terminated
 * terminate clusters
-
+* Adaptive EMR describe -
+    if we got no new EMR from API then we should describe old with interval more then  1 minute
 ## Jobs:
 * unassigned jobs must be canceled
 

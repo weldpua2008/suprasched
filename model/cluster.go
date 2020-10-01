@@ -26,7 +26,9 @@ type Cluster struct {
 	TimeOutStartAt time.Time // Initial time for timeout
 	TimeOutAt      time.Time // Initial time for timeout
 
-	TimeOutDuration time.Duration // Duration after that Cluster is timed out
+	TimeOutDuration    time.Duration // Duration after that Cluster is timed out
+	LastSyncedAt       time.Time     // When cluster metadata last changed
+	LastSyncedDuration time.Duration
 
 	LastActivityAt time.Time // When cluster metadata last changed
 	PreviousStatus string    // Previous Status
@@ -44,10 +46,12 @@ type Cluster struct {
 // NewCluster returns a new Clustec.
 func NewCluster(clusterId string) *Cluster {
 	return &Cluster{
-		ClusterId:       clusterId,
-		all:             make(map[string]*Job),
-		ClusterType:     CLUSTER_TYPE_EMR,
-		TimeOutDuration: time.Minute * 15,
+		ClusterId:          clusterId,
+		all:                make(map[string]*Job),
+		ClusterType:        CLUSTER_TYPE_EMR,
+		TimeOutDuration:    time.Minute * 15,
+		LastSyncedAt:       time.Now(),
+		LastSyncedDuration: time.Second * 30,
 	}
 }
 
@@ -282,6 +286,7 @@ func (c *Cluster) FinishTransition() bool {
 func (c *Cluster) UpdateStatus(ext string) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.LastSyncedAt = time.Now().Add(c.LastSyncedDuration)
 
 	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
 		c.updateStatus(ext)
