@@ -7,6 +7,8 @@ import (
 	aws_request "github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/aws/aws-sdk-go/service/emr/emriface"
+
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
 	"os"
@@ -35,6 +37,12 @@ type DescribeEMR struct {
 	mu           sync.RWMutex
 	t            string
 	section      string
+	getemr       func(*session.Session) emriface.EMRAPI
+}
+
+// DefaultGetEMR implements EMR Api wrapper for tests.
+func DefaultGetEMR(sess *session.Session) emriface.EMRAPI {
+	return emr.New(sess)
 }
 
 // NewDescriberEMR prepare struct communicator for EMR
@@ -42,6 +50,7 @@ func NewDescriberEMR() ClustersDescriber {
 	return &DescribeEMR{
 		aws_sessions: make(map[string]*session.Session),
 		t:            "DescribeEMR",
+		getemr:       DefaultGetEMR,
 	}
 }
 
@@ -53,6 +62,7 @@ func NewDescriberEMRFromSection(section string) (ClustersDescriber, error) {
 		aws_sessions: s,
 		t:            "DescribeEMR",
 		section:      section,
+		getemr:       DefaultGetEMR,
 	}, nil
 
 }
@@ -175,8 +185,7 @@ func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, erro
 	if err != nil {
 		return "", err
 	}
-	svc := emr.New(sess)
-
+	svc := c.getemr(sess)
 	clusterInput := &emr.DescribeClusterInput{
 		ClusterId: aws.String(ClusterId),
 	}
