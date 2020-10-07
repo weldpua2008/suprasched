@@ -9,10 +9,11 @@ import (
 )
 
 var (
-	ErrNoSuitableClustersFetcher   = errors.New("No suitable ClustersFetcher found")
-	ErrNoSuitableClustersDescriber = errors.New("No suitable ClustersDescriber found")
-	ErrEmptyClusterId              = errors.New("Cluster Id is empty")
-	ErrClusterIdIsNotValid         = errors.New("InvalidRequestException: Cluster id is not valid")
+	ErrNoSuitableClustersFetcher    = errors.New("No suitable ClustersFetcher found")
+	ErrNoSuitableClustersDescriber  = errors.New("No suitable ClustersDescriber found")
+	ErrNoSuitableClustersTerminator = errors.New("No suitable ClustersTerminator found")
+	ErrEmptyClusterId               = errors.New("Cluster Id is empty")
+	ErrClusterIdIsNotValid          = errors.New("InvalidRequestException: Cluster id is not valid")
 
 	// Internal variables
 	clusterStatuses = promauto.NewGaugeVec(
@@ -29,25 +30,6 @@ var (
 			"type",
 			// What is the cluster status?
 			"status",
-		},
-	)
-
-	apiCallsStatistics = promauto.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: "suprasched",
-			Subsystem: "api",
-			Name:      "calls",
-			Help:      "Number of API calls to 3rd party API partitioned by Type.",
-		},
-		[]string{
-			// For example Amazon
-			"provider",
-			// Which profile is used?
-			"profile",
-			// Of what type is the request?
-			"type",
-			// What is the Operation?
-			"operation",
 		},
 	)
 

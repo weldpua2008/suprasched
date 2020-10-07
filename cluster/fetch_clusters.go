@@ -75,6 +75,8 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 									log.Tracef("!config.ClusterRegistry.Add %v", cls)
 									continue
 								} else {
+
+									// config.ClusterRegistry.MarkFree(cls.StoreKey())
 									topic = config.TOPIC_CLUSTER_CREATED
 									rec, exist = config.ClusterRegistry.Record(cls.StoreKey())
 									if !exist {

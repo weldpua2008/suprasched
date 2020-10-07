@@ -3,20 +3,23 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/emr/emriface"
 	communicator "github.com/weldpua2008/suprasched/communicator"
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
+	utils "github.com/weldpua2008/suprasched/utils"
 
 	"sync"
 	"time"
 )
 
 func init() {
-	DescriberConstructors[ConstructorsDescriberTypeRest] = DescriberTypeSpec{
-		instance:    NewDescribeClusterHttp,
-		constructor: NewDescribeClusterHttpBySection,
+	TerminatorConstructors[ConstructorsTerminaterTypeEMR] = TerminatorTypeSpec{
+		instance:    NewTerminateClusterEMR,
+		constructor: NewTerminateClusterEMRBySection,
 		Summary: `
-DescribeEMR is an implementation of ClustersDescriber for Amazon EMR clusters.`,
+TerminateEMR is an implementation of ClustersTerminator for Amazon EMR clusters.`,
 		Description: `
 It supports the following params:
 - ` + "`ClusterId`" + ` Cluster Identificator
@@ -25,52 +28,60 @@ It supports the following params:
 	}
 }
 
-type DescribeClusterHttp struct {
-	ClustersDescriber
+type TerminateClusterEMR struct {
+	ClustersTerminator
 	section string
 	mu      sync.RWMutex
 	comm    communicator.Communicator
 	comms   []communicator.Communicator
 	t       string
+	getemr  func(*session.Session) emriface.EMRAPI
 }
 
-// NewDescribeEMR prepare struct communicator for EMR
-func NewDescribeClusterHttp() ClustersDescriber {
-	return &DescribeClusterHttp{}
+// NewTerminateEMR prepare struct communicator for EMR
+func NewTerminateClusterEMR() ClustersTerminator {
+	return &TerminateClusterEMR{
+		getemr: DefaultGetEMR,
+	}
 }
 
-// NewDescribeClustersDefault prepare struct DescribeClustersDefault
-func NewDescribeClusterHttpBySection(section string) (ClustersDescriber, error) {
+// NewTerminateClustersDefault prepare struct TerminateClustersDefault
+func NewTerminateClusterEMRBySection(section string) (ClustersTerminator, error) {
 	comms, err := communicator.GetCommunicatorsFromSection(section)
 	if err == nil {
-		return &DescribeClusterHttp{comms: comms, t: "DescribeClusterHttp", section: section}, nil
+		return &TerminateClusterEMR{comms: comms, t: "TerminateClusterEMR", section: section}, nil
 	} else {
 		comm, err := communicator.GetSectionCommunicator(section)
 		if err == nil {
 			comms := make([]communicator.Communicator, 0)
 			comms = append(comms, comm)
-			return &DescribeClusterHttp{comm: comm, comms: comms, t: "DescribeClusterHttp", section: section}, nil
+			return &TerminateClusterEMR{
+				comm:    comm,
+				comms:   comms,
+				t:       "TerminateClusterEMR",
+				section: section,
+				getemr:  DefaultGetEMR,
+			}, nil
 
 		}
 	}
-	return nil, fmt.Errorf("Can't initialize DescribeClusterHttp '%s': %v", config.CFG_PREFIX_CLUSTER, err)
+	return nil, fmt.Errorf("Can't initialize TerminateClusterEMR '%s': %v", config.CFG_PREFIX_CLUSTER, err)
 }
 
 // SupportedClusters returns all supported in Cluster Registry defined by configuration(e.g. type).
 // For example support on-demand and HTTP types in config:
 //     cluster:
-//         describe:
+//         terminate:
 //             supported:
-//                 - "on-demand"
-//                 - "HTTP"
-func (d *DescribeClusterHttp) SupportedClusters() []*model.Cluster {
-	def := []string{ConstructorsDescriberTypeRest}
+//                 - "EMR"
+func (d *TerminateClusterEMR) SupportedClusters() []*model.Cluster {
+	def := []string{ConstructorsFetcherTypeRest}
 	cluster_types := config.GetGetStringSliceDefault(fmt.Sprintf("%v.%v", d.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES), def)
-	return config.ClusterRegistry.Filter(cluster_types)
+	return config.ClusterRegistry.FilterFree(cluster_types)
 }
 
 // ClusterStatus by the Cluster Id from HTTP rest API.
-func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (string, error) {
+func (d *TerminateClusterEMR) Terminate(params map[string]interface{}) error {
 	var ClusterId string
 	var ctx context.Context
 	var clusterCtx context.Context
@@ -85,7 +96,7 @@ func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (stri
 		}
 	}
 	if len(ClusterId) < 1 {
-		return "", ErrEmptyClusterId
+		return ErrEmptyClusterId
 	}
 	for _, k := range []string{"context", "ctx"} {
 		if _, ok := params[k]; ok {
@@ -112,39 +123,16 @@ func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (stri
 	}
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	result := "UNKNOWN"
 
 	for _, comm := range d.comms {
-		comm.Configure(param)
-		// if err:=comm.Configure(param);err != nil {
-		//     log.Tracef("comm.Configure %v => %v", comm, err)
-		//
-		// }
+		comm.Configure(params)
 		res, err := comm.Fetch(clusterCtx, param)
+		utils.EmrClusterTerminate(params, d.getemr)
 		if err != nil {
-			log.Tracef("Can't Describe %v %v", ClusterId, err)
+			log.Tracef("Can't Terminate %v %v %v", ClusterId, err, res)
 			continue
 		}
-		for _, v := range res {
-			if v == nil {
-				continue
-			}
-			for _, k := range []string{"ClusterStatus", "Cluster_Status", "Status", "status"} {
-				if _, ok := v[k]; ok {
-					status := v[k].(string)
-					switch status {
-					case "NOTREADY":
-						return model.CLUSTER_STATUS_STARTING, nil
-					case "READY":
-						return model.CLUSTER_STATUS_RUNNING, nil
-					default:
-						return status, nil
-					}
 
-				}
-			}
-		}
 	}
-
-	return result, fmt.Errorf("Can't find ClusterId: %s", ClusterId)
+	return nil
 }

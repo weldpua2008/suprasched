@@ -31,6 +31,7 @@ const (
 	CFG_PREFIX_UPDATE           = "update"
 	CFG_PREFIX_FETCHER          = "fetch"
 	CFG_PREFIX_DESCRIBERS       = "describe"
+	CFG_PREFIX_TERMINATORS      = "terminate"
 	CFG_COMMUNICATOR_PARAMS_KEY = "params"
 	CFG_INTERVAL_PARAMETER      = "interval"
 

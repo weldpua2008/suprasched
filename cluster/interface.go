@@ -14,3 +14,9 @@ type ClustersDescriber interface {
 type ClustersFetcher interface {
 	Fetch() ([]*model.Cluster, error)
 }
+
+// ClustersTerminator Terminates Cluster
+type ClustersTerminator interface {
+	Terminate(map[string]interface{}) error
+	SupportedClusters() []*model.Cluster
+}

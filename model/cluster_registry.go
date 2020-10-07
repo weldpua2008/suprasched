@@ -41,9 +41,24 @@ func (r *ClusterRegistry) Add(rec *Cluster) bool {
 	return true
 }
 
-// AddToFree a cluster.
+// FilterFree cluster list by cluster types.
+func (r *ClusterRegistry) FilterFree(cluster_types []string) []*Cluster {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	ret := make([]*Cluster, 0)
+	for _, cl := range r.unoccupied {
+		for _, clustertype := range cluster_types {
+			if strings.ToLower(cl.ClusterType) == strings.ToLower(clustertype) {
+				ret = append(ret, cl)
+			}
+		}
+	}
+	return ret
+}
+
+// MarkFree a cluster.
 // Returns false on duplicate or invalid cluster id or not added.
-func (r *ClusterRegistry) AddToFree(storeKey string) bool {
+func (r *ClusterRegistry) MarkFree(storeKey string) bool {
 	if len(storeKey) < 1 {
 		return false
 	}
@@ -59,9 +74,9 @@ func (r *ClusterRegistry) AddToFree(storeKey string) bool {
 	return false
 }
 
-// DeleteFromFree a cluster.
+// UnMarkFree a cluster.
 // Returns false on invalid cluster id or not added.
-func (r *ClusterRegistry) DeleteFromFree(storeKey string) bool {
+func (r *ClusterRegistry) UnMarkFree(storeKey string) bool {
 	if len(storeKey) < 1 {
 		return false
 	}
@@ -86,7 +101,7 @@ func (r *ClusterRegistry) Len() int {
 // Delete a cluster by cluster ID.
 // Return false if record does not exist.
 func (r *ClusterRegistry) Delete(id string) bool {
-	r.DeleteFromFree(id)
+	r.UnMarkFree(id)
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	rec, ok := r.all[id]
@@ -110,7 +125,7 @@ func (r *ClusterRegistry) Delete(id string) bool {
 	return true
 }
 
-// Filter a cluster by cluster types.
+// Filter a cluster list by cluster types.
 func (r *ClusterRegistry) Filter(cluster_types []string) []*Cluster {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

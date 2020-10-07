@@ -77,6 +77,7 @@ var rootCmd = &cobra.Command{
 		jobs := make(chan *model.Job, 1)
 		clusters := make(chan *model.Cluster, 1)
 		describers := make(chan *model.Cluster, 1)
+		terminators := make(chan *model.Cluster, 1)
 		// var wg sync.WaitGroup
 		// jobs := make(chan *model.Job, 1)
 		log.Infof("Starting suprasched\n")
@@ -165,6 +166,18 @@ var rootCmd = &cobra.Command{
 					config.CFG_PREFIX_DESCRIBERS,
 				))); err != nil {
 				log.Warningf("StartUpdateClustersMetadata returned error %v", err)
+			}
+		}()
+
+		go func() {
+			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
+			if err := cluster.StartTerminateClusters(ctx, terminators, config.GetTimeDuration(
+				fmt.Sprintf(
+					"%s.%s",
+					config.CFG_PREFIX_CLUSTER,
+					config.CFG_PREFIX_TERMINATORS,
+				))); err != nil {
+				log.Warningf("StartTerminateClusters returned error %v", err)
 			}
 		}()
 
