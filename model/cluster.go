@@ -49,7 +49,7 @@ func NewCluster(clusterId string) *Cluster {
 		ClusterId:          clusterId,
 		all:                make(map[string]*Job),
 		ClusterType:        CLUSTER_TYPE_EMR,
-		TimeOutDuration:    time.Minute * 2022,
+		TimeOutDuration:    time.Minute * 120,
 		LastSyncedAt:       time.Now(),
 		LastSyncedDuration: time.Second * 30,
 	}
