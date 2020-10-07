@@ -10,7 +10,7 @@ var (
 	EventBusmessagesProcessed = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "suprasched",
 		Subsystem: "eventbus",
-		Name:      "latency_msec",
+		Name:      "latency_ns",
 		Help:      "The latency distribution of messages processed by Eventbus",
 	},
 		[]string{"topic", "type"},

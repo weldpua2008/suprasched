@@ -20,7 +20,7 @@ func wrapMetrics(f func(e *bus.Event)) func(e *bus.Event) {
 	return func(e *bus.Event) {
 		start := time.Now()
 		defer metrics.EventBusmessagesProcessed.WithLabelValues(e.Topic,
-			"wraped").Observe(float64(time.Now().Sub(start).Milliseconds()))
+			"wraped").Observe(float64(time.Now().Sub(start).Nanoseconds()))
 		f(e)
 	}
 }
