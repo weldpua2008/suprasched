@@ -7,6 +7,15 @@ import (
 )
 
 var (
+	EventBusmessagesProcessed = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "suprasched",
+		Subsystem: "eventbus",
+		Name:      "latency_msec",
+		Help:      "The latency distribution of messages processed by Eventbus",
+	},
+		[]string{"topic", "type"},
+	)
+
 	ApiCallsStatistics = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: "suprasched",

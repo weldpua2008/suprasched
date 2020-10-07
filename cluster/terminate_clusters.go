@@ -91,7 +91,11 @@ func StartTerminateClusters(ctx context.Context, clusters chan *model.Cluster, i
 						if !ok {
 							continue
 						}
-
+						if !rec.IsFree() {
+							config.ClusterRegistry.UnMarkFree(rec.StoreKey())
+							rec.RefreshTimeout()
+							continue
+						}
 						if !rec.IsTimeout() {
 							continue
 						}

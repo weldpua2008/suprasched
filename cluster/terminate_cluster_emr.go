@@ -88,7 +88,7 @@ func (d *TerminateClusterEMR) Terminate(params map[string]interface{}) error {
 	var cancel context.CancelFunc
 	ttr := 30
 
-	for _, k := range []string{"ClusterId", "clusterID", "ClusterID", "clusterId",
+	for _, k := range []string{"ClusterId", "Clusterid", "clusterID", "ClusterID", "clusterId",
 		"clusterid", "JobFlowID", "JobFlowId", "JobflowID", "jobFlowId"} {
 		if _, ok := params[k]; ok {
 			ClusterId = params[k].(string)
@@ -124,10 +124,12 @@ func (d *TerminateClusterEMR) Terminate(params map[string]interface{}) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
+	utils.EmrClusterTerminate(params, d.getemr)
+	log.Tracef("Terminate Cluster %v", ClusterId)
+
 	for _, comm := range d.comms {
 		comm.Configure(params)
 		res, err := comm.Fetch(clusterCtx, param)
-		utils.EmrClusterTerminate(params, d.getemr)
 		if err != nil {
 			log.Tracef("Can't Terminate %v %v %v", ClusterId, err, res)
 			continue

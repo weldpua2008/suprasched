@@ -19,6 +19,7 @@ import (
 // 4. Reassign Jobs (ext)
 // 5. Unlock Cluster & sub jobs
 func ClusterTermination(e *bus.Event) {
+
 	if cl, err := eventGetCLuster(e); err == nil {
 		if model.IsTerminalStatus(cl.Status) {
 			if err := eventCLusterRunComms(e); err != nil {

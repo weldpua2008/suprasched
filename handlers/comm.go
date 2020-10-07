@@ -3,7 +3,9 @@ package handlers
 import (
 	"github.com/mustafaturan/bus"
 	config "github.com/weldpua2008/suprasched/config"
+	metrics "github.com/weldpua2008/suprasched/metrics"
 	model "github.com/weldpua2008/suprasched/model"
+	"time"
 )
 
 // Init registers all handlers.
@@ -12,6 +14,15 @@ func Init() {
 	Start("cluster_termination", ClusterTermination, config.MATCHER_CLUSTER_TERMINATING)
 	Start("cluster_is_empty", EmptyCluster, config.MATCHER_CLUSTER_IS_EMPTY)
 
+}
+
+func wrapMetrics(f func(e *bus.Event)) func(e *bus.Event) {
+	return func(e *bus.Event) {
+		start := time.Now()
+		defer metrics.EventBusmessagesProcessed.WithLabelValues(e.Topic,
+			"wraped").Observe(float64(time.Now().Sub(start).Milliseconds()))
+		f(e)
+	}
 }
 
 // Deregister all handlers.
@@ -25,7 +36,7 @@ func Deregister() {
 // Start registers the handler
 func Start(name string, f func(e *bus.Event), Matcher string) {
 	b := config.Bus
-	h := bus.Handler{Handle: f, Matcher: Matcher}
+	h := bus.Handler{Handle: wrapMetrics(f), Matcher: Matcher}
 	b.RegisterHandler(name, &h)
 	log.Tracef("Registered %v handler...", name)
 }

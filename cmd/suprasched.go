@@ -124,7 +124,7 @@ var rootCmd = &cobra.Command{
 		// section="cluster.update.ondemand.communicators"
 		//
 		// from := map[string]string{
-		//     "ClusterId": "ClusterId",
+		//     "ClusterId": "ClusterId", "Clusterid",
 		//     "ClusterPool": "ClusterPool",
 		// }
 		//

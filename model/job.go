@@ -226,7 +226,7 @@ func NewJobFromMap(v map[string]interface{}) *Job {
 	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobId", "jobId", "Job_ID", "Job_Id", "job_Id", "job_id", "Id", "id"}); ok {
 		j.Id = found_val
 	}
-	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterId", "clusterId", "Cluster_Id", "Cluster_ID", "Cluster", "cluster", "clusterid"}); ok {
+	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterId", "Clusterid", "clusterId", "Cluster_Id", "Cluster_ID", "Cluster", "cluster", "clusterid"}); ok {
 		j.ClusterId = found_val
 	}
 
@@ -239,6 +239,16 @@ func NewJobFromMap(v map[string]interface{}) *Job {
 		"job_extra_run_uid", "extra_run_uid"}); ok {
 		j.ExtraRunUID = found_val
 	}
+	ClusterPool := ""
+	ClusterProfile := ""
+	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"clusterPool", "ClusterPool", "Pool", "pool"}); ok {
+		ClusterPool = found_val
+	}
+	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"clusterProfile", "ClusterProfile", "AWSProfile", "AWS_Profile", "AWS_PROFILE"}); ok {
+		ClusterProfile = found_val
+	}
+
+	j.ClusterStoreKey = ClusterStoreKey(j.ClusterId, ClusterPool, ClusterProfile)
 
 	return j
 }

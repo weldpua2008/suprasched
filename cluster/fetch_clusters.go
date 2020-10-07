@@ -77,12 +77,17 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 								} else {
 
 									// config.ClusterRegistry.MarkFree(cls.StoreKey())
+									// log.Tracef("Cluster %v TimeOutAt %v", cls.ClusterId, cls.TimeOutAt)
 									topic = config.TOPIC_CLUSTER_CREATED
 									rec, exist = config.ClusterRegistry.Record(cls.StoreKey())
 									if !exist {
 										log.Tracef("Skip !config.ClusterRegistry.Record %v", cls)
 										continue
 									}
+									// if rec.IsFree() {
+									//
+									// }
+
 									clustersFetched.Inc()
 									j += 1
 								}
@@ -92,6 +97,14 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 							} else if rec.UpdateStatus(cls.Status) {
 								topic = strings.ToLower(fmt.Sprintf("cluster.%v", rec.Status))
 							}
+							if (rec != nil) && (rec.ClusterType != model.CLUSTER_TYPE_ON_DEMAND) && (len(rec.StoreKey()) > 0) {
+								clusterEventMetadata := map[string]string{"StoreKey": rec.StoreKey()}
+								_, err := config.Bus.Emit(ctx, config.TOPIC_CLUSTER_IS_EMPTY, clusterEventMetadata)
+								if err != nil {
+									log.Tracef("%v", err)
+								}
+							}
+
 							if len(topic) > 1 {
 								_, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())
 								if err != nil {

@@ -20,6 +20,7 @@ type ClusterRegistry struct {
 	all        map[string]*Cluster
 	unoccupied map[string]*Cluster
 	mu         sync.RWMutex
+	muFree     sync.RWMutex
 	byType     map[string][]*Cluster
 }
 
@@ -43,8 +44,8 @@ func (r *ClusterRegistry) Add(rec *Cluster) bool {
 
 // FilterFree cluster list by cluster types.
 func (r *ClusterRegistry) FilterFree(cluster_types []string) []*Cluster {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.muFree.RLock()
+	defer r.muFree.RUnlock()
 	ret := make([]*Cluster, 0)
 	for _, cl := range r.unoccupied {
 		for _, clustertype := range cluster_types {
@@ -62,13 +63,13 @@ func (r *ClusterRegistry) MarkFree(storeKey string) bool {
 	if len(storeKey) < 1 {
 		return false
 	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.muFree.Lock()
+	defer r.muFree.Unlock()
 
 	if _, ok := r.unoccupied[storeKey]; ok {
 		return false
-	} else if _, ok := r.all[storeKey]; ok {
-		r.unoccupied[storeKey] = r.all[storeKey]
+	} else if val, ok := r.all[storeKey]; ok {
+		r.unoccupied[storeKey] = val
 		return true
 	}
 	return false
@@ -80,8 +81,8 @@ func (r *ClusterRegistry) UnMarkFree(storeKey string) bool {
 	if len(storeKey) < 1 {
 		return false
 	}
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.muFree.Lock()
+	defer r.muFree.Unlock()
 
 	if _, ok := r.unoccupied[storeKey]; ok {
 		delete(r.unoccupied, storeKey)

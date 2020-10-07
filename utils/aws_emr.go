@@ -96,7 +96,7 @@ func EmrClusterStatus(params map[string]interface{}, getemr func(*session.Sessio
 	var cancel context.CancelFunc
 	ttr := 30
 
-	for _, k := range []string{"ClusterId", "clusterID", "ClusterID", "clusterId",
+	for _, k := range []string{"ClusterId", "Clusterid", "clusterID", "ClusterID", "clusterId",
 		"clusterid", "JobFlowID", "JobFlowId", "JobflowID", "jobFlowId"} {
 		if _, ok := params[k]; ok {
 			ClusterId = params[k].(string)
@@ -159,7 +159,7 @@ func EmrClusterTerminate(params map[string]interface{}, getemr func(*session.Ses
 	var cancel context.CancelFunc
 	ttr := 30
 
-	for _, k := range []string{"ClusterId", "clusterID", "ClusterID", "clusterId",
+	for _, k := range []string{"ClusterId", "Clusterid", "clusterID", "ClusterID", "clusterId",
 		"clusterid", "JobFlowID", "JobFlowId", "JobflowID", "jobFlowId"} {
 		if _, ok := params[k]; ok {
 			ClusterId = params[k].(string)

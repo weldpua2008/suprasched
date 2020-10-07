@@ -77,7 +77,7 @@ func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (stri
 	var cancel context.CancelFunc
 	ttr := 30
 
-	for _, k := range []string{"ClusterId", "clusterID", "ClusterID", "clusterId",
+	for _, k := range []string{"ClusterId", "Clusterid", "clusterID", "ClusterID", "clusterId",
 		"clusterid", "JobFlowID", "JobFlowId", "JobflowID", "jobFlowId"} {
 		if _, ok := params[k]; ok {
 			ClusterId = params[k].(string)

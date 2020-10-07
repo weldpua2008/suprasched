@@ -159,7 +159,7 @@ func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, erro
 	var cancel context.CancelFunc
 	ttr := 30
 
-	for _, k := range []string{"ClusterId", "clusterID", "ClusterID", "clusterId",
+	for _, k := range []string{"ClusterId", "Clusterid", "clusterID", "ClusterID", "clusterId",
 		"clusterid", "JobFlowID", "JobFlowId", "JobflowID", "jobFlowId"} {
 		if _, ok := params[k]; ok {
 			ClusterId = params[k].(string)
@@ -216,7 +216,7 @@ func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, erro
 func (c *DescribeEMR) DescribeClusterRequest(params map[string]interface{}) (out *emr.DescribeClusterOutput, err error) {
 	var ClusterId string
 
-	for _, k := range []string{"ClusterId", "clusterID", "ClusterID", "clusterId",
+	for _, k := range []string{"ClusterId", "Clusterid", "clusterID", "ClusterID", "clusterId",
 		"clusterid", "JobFlowID", "JobFlowId", "JobflowID", "jobFlowId"} {
 		if _, ok := params[k]; ok {
 			ClusterId = params[k].(string)

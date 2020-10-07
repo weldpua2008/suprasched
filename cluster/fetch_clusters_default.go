@@ -85,7 +85,7 @@ func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 				continue
 			}
 			var cl *model.Cluster
-			if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterId", "clusterID", "ClusterID", "clusterId",
+			if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterId", "Clusterid", "clusterID", "ClusterID", "clusterId",
 				"clusterid", "JobFlowID", "JobFlowId", "JobflowID", "jobFlowId"}); ok {
 				cl = model.NewCluster(found_val)
 			} else {
@@ -125,7 +125,7 @@ func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 			if found_val, ok := utils.GetFirstTimeFromMap(v, []string{"lastUpdated", "lastUpdated", "LastActivityAt", "lastActivityAt"}); ok {
 				cl.LastActivityAt = found_val
 			}
-			cl.TimeOutDuration = time.Minute * 20
+			cl.TimeOutDuration = time.Minute * 22
 			cl.LastSyncedAt = time.Now()
 			cl.RefreshTimeout()
 
