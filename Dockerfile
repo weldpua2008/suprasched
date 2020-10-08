@@ -43,16 +43,24 @@ LABEL \
 # Default image environment variable settings
 ENV org.opencontainers.image.created=$IMAGE_CREATED \
     org.opencontainers.image.revision=$IMAGE_REVISION \
-    org.opencontainers.image.version=$IMAGE_VERSION
+    org.opencontainers.image.version=$IMAGE_VERSION \
+    NEWUSER=runner \
+    NEWUSERHOME="/home/runner" \
+    PATH=$PATH:${NEWUSERHOME}
 
 
-WORKDIR /root/
+RUN adduser -D --shell /bin/bash --home ${NEWUSERHOME} runner && \
+    apk --no-cache add curl bash && \
+    date > /opt/build_date
+
+WORKDIR ${NEWUSERHOME}
 
 # Copy source
 COPY --from=build-env /root/suprasched .
 
-RUN adduser -D --shell /bin/bash hadoop && \
-    apk --no-cache add curl bash
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
+EXPOSE 8080 8084
+USER runner
 # Set entrypoint
-ENTRYPOINT ["/root/suprasched"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
