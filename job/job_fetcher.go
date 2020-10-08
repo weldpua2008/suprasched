@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	config "github.com/weldpua2008/suprasched/config"
+	metrics "github.com/weldpua2008/suprasched/metrics"
 	model "github.com/weldpua2008/suprasched/model"
 	"strings"
 	"time"
@@ -76,6 +77,8 @@ func StartFetchJobs(ctx context.Context, jobs chan bool, interval time.Duration)
 				log.Debug("Jobs fetch finished [ SUCCESSFULLY ]")
 				return
 			case <-tickerPullJobs.C:
+				start := time.Now()
+
 				for _, fetcher := range fetchers {
 
 					jobs_slice, err := fetcher.Fetch()
@@ -112,21 +115,37 @@ func StartFetchJobs(ctx context.Context, jobs chan bool, interval time.Duration)
 						}
 
 						if len(topic) > 1 {
-							if rec.ClusterType != model.CLUSTER_TYPE_ON_DEMAND {
+                            _, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())
+                            if err != nil {
+                                log.Tracef("%v", err)
+                            }
+
+							if (rec != nil) && (rec.ClusterType != model.CLUSTER_TYPE_ON_DEMAND) && (len(rec.ClusterId) > 0) {
+                                // log.Warningf("Send update for %v",  rec.GetClusterStoreKey())
 								clusterEventMetadata := map[string]string{"StoreKey": rec.GetClusterStoreKey()}
-								_, err := config.Bus.Emit(ctx, config.TOPIC_CLUSTER_IS_EMPTY, clusterEventMetadata)
+                                _, err := config.Bus.Emit(ctx, config.TOPIC_CLUSTER_REFRESH_TIMEOUT, clusterEventMetadata)
 								if err != nil {
 									log.Tracef("%v", err)
 								}
-							}
-							_, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())
-							if err != nil {
-								log.Tracef("%v", err)
+
+                                if model.IsTerminalStatus(rec.Status) {
+                                    _, err := config.Bus.Emit(ctx, config.TOPIC_CLUSTER_IS_EMPTY, clusterEventMetadata)
+                                    if err != nil {
+                                        log.Tracef("%v", err)
+                                    }
+                                }
+
+
 							}
 						}
+						metrics.FetchMetadataLatency.WithLabelValues("fetch_jobs",
+							"single").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+
 					}
 
 				}
+				metrics.FetchMetadataLatency.WithLabelValues("fetch_jobs",
+					"whole").Observe(float64(time.Now().Sub(start).Nanoseconds()))
 			}
 		}
 	}()

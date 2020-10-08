@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	config "github.com/weldpua2008/suprasched/config"
+	metrics "github.com/weldpua2008/suprasched/metrics"
 	model "github.com/weldpua2008/suprasched/model"
 	utils "github.com/weldpua2008/suprasched/utils"
 	"strings"
@@ -76,6 +77,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interv
 				log.Debug("Clusters description finished [ SUCCESSFULLY ]")
 				return
 			case <-tickerGenerateClusters.C:
+				start := time.Now()
 				isDelayed := utils.RandomBoolean()
 				for _, describer := range describers_instances {
 					if isDelayed {
@@ -141,10 +143,19 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interv
 							reqClustersFailDescribed.Inc()
 							log.Tracef("Failed to describe cluster status '%v', failed with %v", cluster_status, err)
 						}
+						metrics.FetchMetadataLatency.WithLabelValues("describe_clusters",
+							"single").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+
 					}
-					config.ClusterRegistry.DumpMetrics(clusterStatuses)
-					// clusterStatuses
 				}
+
+				if !isDelayed {
+					config.ClusterRegistry.DumpMetrics(clusterStatuses)
+					metrics.FetchMetadataLatency.WithLabelValues("describe_clusters",
+						"whole").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+
+				}
+
 			}
 		}
 	}()

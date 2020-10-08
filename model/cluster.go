@@ -31,6 +31,8 @@ type Cluster struct {
 	LastSyncedDuration time.Duration
 
 	LastActivityAt time.Time // When cluster metadata last changed
+    JobsLastActivityAt time.Time // When last job metadata changed
+
 	PreviousStatus string    // Previous Status
 	Status         string    // Currentl status
 	// MaxAttempts    int       // Absoulute max num of attempts.
@@ -49,17 +51,26 @@ func NewCluster(clusterId string) *Cluster {
 		ClusterId:          clusterId,
 		all:                make(map[string]*Job),
 		ClusterType:        CLUSTER_TYPE_EMR,
-		TimeOutDuration:    time.Minute * 30,
+		TimeOutDuration:    time.Minute * 60,
 		LastSyncedAt:       time.Now(),
 		LastSyncedDuration: time.Second * 30,
+        JobsLastActivityAt: time.Now(),
 	}
 }
 
 func (c *Cluster) RefreshTimeout() time.Duration {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.TimeOutStartAt = time.Now()
-	c.TimeOutAt = c.TimeOutStartAt.Add(c.TimeOutDuration)
+    if time.Now().After(c.TimeOutStartAt) {
+    //     log.Warningf("time.Now() %v -> %v",time.Now(), c.TimeOutStartAt)
+    // }else {
+    //     log.Warningf("!time.Now() %v -> %v",time.Now(), c.TimeOutStartAt)
+    //
+    // }
+    	c.TimeOutStartAt = time.Now()
+    }
+    c.TimeOutAt = c.TimeOutStartAt.Add(c.TimeOutDuration)
+    // log.Warningf("RefreshTimeout %v TimeOutAt -> [%v]", c.ClusterId, c.TimeOutAt)
 
 	return c.TimeOutDuration
 }
@@ -110,6 +121,10 @@ func (c *Cluster) Add(rec *Job) bool {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
+    if c.JobsLastActivityAt.Before(rec.LastActivityAt) {
+        c.JobsLastActivityAt = rec.LastActivityAt
+    }
+
 	if _, ok := c.all[rec.StoreKey()]; ok {
 		return false
 	}
@@ -117,6 +132,30 @@ func (c *Cluster) Add(rec *Job) bool {
 	c.all[rec.StoreKey()] = rec
 	return true
 }
+
+
+// UpdateJobsLastActivity updates TimeOutAt
+// Returns false on duplicate or invalid job id.
+func (c *Cluster) UpdateJobsLastActivity() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+    for _, j := range c.all {
+
+    if c.JobsLastActivityAt.Before(j.LastActivityAt) {
+        c.JobsLastActivityAt = j.LastActivityAt
+        // log.Warningf("UpdateJobsLastActivity %v JobsLastActivityAt -> [%v]", c.ClusterId, c.JobsLastActivityAt)
+    }
+}
+
+    if c.TimeOutStartAt.Before(c.JobsLastActivityAt) {
+        c.TimeOutStartAt = c.JobsLastActivityAt
+        c.TimeOutAt = c.TimeOutStartAt.Add(c.TimeOutDuration)
+
+        // log.Warningf("UpdateJobsLastActivity %v TimeOutAt -> [%v]", c.ClusterId, c.TimeOutAt)
+    }
+
+}
+
 
 // Len returns length of Jobs on cluster.
 func (c *Cluster) Len() int {
@@ -149,6 +188,10 @@ func (c *Cluster) IsEmpty() bool {
 func (c *Cluster) IsFree() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+    // if time.Now().Sub(c.JobsLastActivityAt).Seconds() < 60 {
+    //     return false
+    // }
+
 	for _, j := range c.all {
 		if !IsTerminalStatus(j.GetStatus()) {
 			return false
@@ -162,10 +205,14 @@ func (c *Cluster) IsFree() bool {
 func (c *Cluster) Delete(jid string) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	_, ok := c.all[jid]
+	val, ok := c.all[jid]
 	if !ok {
 		return false
-	}
+	}else {
+        if c.JobsLastActivityAt.Before(val.LastActivityAt) {
+            c.JobsLastActivityAt = val.LastActivityAt
+        }
+    }
 	delete(c.all, jid)
 	return true
 }

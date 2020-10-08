@@ -13,6 +13,8 @@ func Init() {
 	// Start("tracing", Trace, ".*")
 	Start("cluster_termination", ClusterTermination, config.MATCHER_CLUSTER_TERMINATING)
 	Start("cluster_is_empty", EmptyCluster, config.MATCHER_CLUSTER_IS_EMPTY)
+    Start("cluster_refresh_timeout", RefreshTimeoutCluster, config.MATCHER_CLUSTER_REFRESH_TIMEOUT)
+
 
 }
 
@@ -30,6 +32,7 @@ func Deregister() {
 	// Stop("tracing")
 	Stop("cluster_termination")
 	Stop("cluster_is_empty")
+    Stop("cluster_refresh_timeout")
 
 }
 

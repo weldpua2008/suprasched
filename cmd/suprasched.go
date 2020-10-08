@@ -118,7 +118,7 @@ var rootCmd = &cobra.Command{
 		metrics.AddPrometheusMetricsHandler(prometheus_addr, prometheus_uri)
 		metrics.StartAll()
 		defer metrics.StopAll(ctx)
-		// Init Bus & Handlers
+        // Init Bus & Handlers
 		handlers.Init()
 		defer handlers.Deregister()
 		defer config.EvenBusTearDown()
@@ -157,13 +157,24 @@ var rootCmd = &cobra.Command{
 		}()
 
 		go func() {
-			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
+            terminationDelay :=  2 * config.GetTimeDuration(
+				fmt.Sprintf(
+					"%s.%s",
+					config.CFG_PREFIX_JOBS,
+					config.CFG_PREFIX_JOBS_FETCHER,
+				)) + 2 * config.GetTimeDuration(
+    				fmt.Sprintf(
+    					"%s.fetch",
+    					config.CFG_PREFIX_CLUSTER,
+    				))
+
 			if err := cluster.StartTerminateClusters(ctx, terminators, config.GetTimeDuration(
 				fmt.Sprintf(
 					"%s.%s",
 					config.CFG_PREFIX_CLUSTER,
 					config.CFG_PREFIX_TERMINATORS,
-				))); err != nil {
+				)),
+                terminationDelay); err != nil {
 				log.Warningf("StartTerminateClusters returned error %v", err)
 			}
 		}()

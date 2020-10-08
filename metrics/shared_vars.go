@@ -15,6 +15,14 @@ var (
 	},
 		[]string{"topic", "type"},
 	)
+	FetchMetadataLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "suprasched",
+		Subsystem: "functions_tracing",
+		Name:      "latency_ns",
+		Help:      "The latency distribution of functions processed",
+	},
+		[]string{"function", "type"},
+	)
 
 	ApiCallsStatistics = promauto.NewCounterVec(
 		prometheus.CounterOpts{
