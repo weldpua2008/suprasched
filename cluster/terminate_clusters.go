@@ -2,14 +2,11 @@ package cluster
 
 import (
 	"context"
-	// "math/rand"
 	"errors"
 	"fmt"
 	config "github.com/weldpua2008/suprasched/config"
 	metrics "github.com/weldpua2008/suprasched/metrics"
-	model "github.com/weldpua2008/suprasched/model"
 	utils "github.com/weldpua2008/suprasched/utils"
-
 	"strings"
 	"time"
 )
@@ -53,11 +50,10 @@ func GetSectionClustersTerminator(section string) ([]ClustersTerminator, error) 
 }
 
 // StartTerminateClusters goroutine for terminatting clusters & updating API with internal
-func StartTerminateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error {
+func StartTerminateClusters(ctx context.Context, clusters chan bool, interval time.Duration) error {
 	terminators_instances, err := GetSectionClustersTerminator(config.CFG_PREFIX_CLUSTER)
 
 	if err != nil || terminators_instances == nil || len(terminators_instances) == 0 {
-		close(clusters)
 		return fmt.Errorf("Failed to start StartTerminateClusters %v", err)
 	}
 	notValidClusterIds := make(map[string]struct{}, 0)
@@ -67,6 +63,7 @@ func StartTerminateClusters(ctx context.Context, clusters chan *model.Cluster, i
 	tickerTerminateClusters := time.NewTicker(interval)
 	defer func() {
 		tickerTerminateClusters.Stop()
+		close(clusters)
 	}()
 
 	go func() {
@@ -74,7 +71,6 @@ func StartTerminateClusters(ctx context.Context, clusters chan *model.Cluster, i
 		for {
 			select {
 			case <-ctx.Done():
-				close(clusters)
 				doneNumClusters <- cntr
 				log.Debug("Clusters termination finished [ SUCCESSFULLY ]")
 				return

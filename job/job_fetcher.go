@@ -53,10 +53,9 @@ func GetJobsFetchersFromSection(section string) ([]JobsFetcher, error) {
 
 // StartFetchJobs goroutine for getting jobs from API with internal
 // exists on kill
-func StartFetchJobs(ctx context.Context, jobs chan *model.Job, interval time.Duration) error {
+func StartFetchJobs(ctx context.Context, jobs chan bool, interval time.Duration) error {
 	fetchers, err := GetJobsFetchersFromSection(config.CFG_PREFIX_JOBS)
 	if err != nil || fetchers == nil || len(fetchers) == 0 {
-		close(jobs)
 		return fmt.Errorf("Failed to start StartFetchJobs %v", err)
 	}
 
@@ -64,6 +63,7 @@ func StartFetchJobs(ctx context.Context, jobs chan *model.Job, interval time.Dur
 	log.Infof("Pulling Jobs Metadata with delay %v", interval)
 	tickerPullJobs := time.NewTicker(interval)
 	defer func() {
+		close(jobs)
 		tickerPullJobs.Stop()
 	}()
 
@@ -72,7 +72,6 @@ func StartFetchJobs(ctx context.Context, jobs chan *model.Job, interval time.Dur
 		for {
 			select {
 			case <-ctx.Done():
-				close(jobs)
 				doneNumJobs <- cntr
 				log.Debug("Jobs fetch finished [ SUCCESSFULLY ]")
 				return

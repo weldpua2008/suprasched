@@ -20,7 +20,7 @@ import (
 	handlers "github.com/weldpua2008/suprasched/handlers"
 	job "github.com/weldpua2008/suprasched/job"
 	metrics "github.com/weldpua2008/suprasched/metrics"
-	model "github.com/weldpua2008/suprasched/model"
+	// model "github.com/weldpua2008/suprasched/model"
 
 	// worker "github.com/weldpua2008/suprasched/worker"
 	"time"
@@ -74,10 +74,10 @@ var rootCmd = &cobra.Command{
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel() // cancel when we are getting the kill signal or exit
-		jobs := make(chan *model.Job, 1)
-		clusters := make(chan *model.Cluster, 1)
-		describers := make(chan *model.Cluster, 1)
-		terminators := make(chan *model.Cluster, 1)
+		jobs := make(chan bool)
+		clusters := make(chan bool)
+		describers := make(chan bool)
+		terminators := make(chan bool)
 		// var wg sync.WaitGroup
 		// jobs := make(chan *model.Job, 1)
 		log.Infof("Starting suprasched\n")
@@ -118,25 +118,12 @@ var rootCmd = &cobra.Command{
 		metrics.AddPrometheusMetricsHandler(prometheus_addr, prometheus_uri)
 		metrics.StartAll()
 		defer metrics.StopAll(ctx)
-
-		// log.Trace("Config file:", viper.ConfigFileUsed())
-		// section:= fmt.Sprintf("%v.%v.ondemand.%v",config.CFG_PREFIX_CLUSTER,config.CFG_PREFIX_UPDATE, config.CFG_PREFIX_COMMUNICATORS )
-		// section="cluster.update.ondemand.communicators"
-		//
-		// from := map[string]string{
-		//     "ClusterId": "ClusterId", "Clusterid",
-		//     "ClusterPool": "ClusterPool",
-		// }
-		//
-		//     cfg_params := config.GetStringMapStringTemplatedFromMap(section, config.CFG_COMMUNICATOR_PARAMS_KEY, from)
-		// log.Fatalf("%v\n%v - %v",viper.GetStringMapString(section), section, cfg_params)
-		// log.Fatalf("%v", viper.GetStringSlice("cluster.describe.bi-use1.supported"))
+		// Init Bus & Handlers
 		handlers.Init()
 		defer handlers.Deregister()
 		defer config.EvenBusTearDown()
 
 		go func() {
-			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
 			if err := cluster.StartGenerateClusters(ctx, clusters, config.GetTimeDuration(
 				fmt.Sprintf(
 					"%s.fetch",
@@ -181,57 +168,23 @@ var rootCmd = &cobra.Command{
 			}
 		}()
 
-		// ctx, cancel := context.WithCancel(context.Background())
-		// defer cancel()
-
-		// if true {
-		// 	cl1 := cluster.NewDescriberEMR()
-		//     // cl2:= cl1
-		//     cl:=cl1.(*cluster.DescribeEMR)
-		// 	params := make(map[string]interface{})
-		// 	params["ClusterID"] = "j-3E4VH5S1ALOYJ"
-		// 	params["aws_profile"] = "bi-use1"
-		// 	params["ctx"] = ctx
-		//
-		// 	// clusterId, _ := cl.ClusterStatus(params)
-		//     // req, resp :=cl.DescribeClusterRequest(params)
-		//     // err := req.Send()
-		//     resp, err :=cl.DescribeClusterRequest(params)
-		// 	log.Fatalf("%v -- %v", resp, err )
-		//
-		// }
-		//
-		// f, _ := cluster.NewFetchClustersDefault()
-		// // params :=make(map[string]interface{})
-		//
-		// cl, err := f.Fetch()
-		// if err == nil {
-		// 	for _, v := range cl {
-		// 		log.Infof("%v", v)
-		// 	}
-		//
-		// } else {
-		// 	log.Infof("%v, %v", cl, err)
-		//
-		// }
-
-		//
-		// for w := 1; w <= numWorkers; w++ {
-		// 	wg.Add(1)
-		// 	go worker.StartWorker(w, jobs, &wg)
-		// }
-		//
-		// wg.Wait()
-		// time.Sleep(150 * time.Millisecond)
-		// time.Sleep(65000 * time.Millisecond)
-		timeoutCtx, _ := context.WithTimeout(ctx, 5000*time.Second)
-
 		select {
-		case <-timeoutCtx.Done():
+		case <-jobs:
+			log.Infof("Jobs stopped")
+		case <-clusters:
+			log.Infof("Clusters stopped")
+		case <-describers:
+			log.Infof("Describers stopped")
+		case <-terminators:
+			log.Infof("Terminators stopped")
+
+		case <-ctx.Done():
 			if ctx.Err() != nil {
 				log.Tracef("Context cancelled")
 			}
 		}
+		log.Infof("Gracefully Shutdown")
+		time.Sleep(150 * time.Millisecond)
 
 	},
 }

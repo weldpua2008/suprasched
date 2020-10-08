@@ -2,13 +2,11 @@ package cluster
 
 import (
 	"context"
-	// "math/rand"
 	"errors"
 	"fmt"
 	config "github.com/weldpua2008/suprasched/config"
 	model "github.com/weldpua2008/suprasched/model"
 	utils "github.com/weldpua2008/suprasched/utils"
-
 	"strings"
 	"time"
 )
@@ -53,11 +51,10 @@ func GetSectionClustersDescriber(section string) ([]ClustersDescriber, error) {
 
 // StartUpdateClustersMetadata goroutine for getting clusters from API with internal
 // exists on kill
-func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error {
+func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interval time.Duration) error {
 	describers_instances, err := GetSectionClustersDescriber(config.CFG_PREFIX_CLUSTER)
 
 	if err != nil || describers_instances == nil || len(describers_instances) == 0 {
-		close(clusters)
 		return fmt.Errorf("Failed to start StartUpdateClustersMetadata %v", err)
 	}
 	notValidClusterIds := make(map[string]struct{}, 0)
@@ -66,6 +63,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 	log.Infof("Starting update Clusters with delay %v", interval)
 	tickerGenerateClusters := time.NewTicker(interval)
 	defer func() {
+		close(clusters)
 		tickerGenerateClusters.Stop()
 	}()
 
@@ -74,7 +72,6 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan *model.Clust
 		for {
 			select {
 			case <-ctx.Done():
-				close(clusters)
 				doneNumClusters <- cntr
 				log.Debug("Clusters description finished [ SUCCESSFULLY ]")
 				return

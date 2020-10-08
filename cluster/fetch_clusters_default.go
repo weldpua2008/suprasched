@@ -125,9 +125,9 @@ func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 			if found_val, ok := utils.GetFirstTimeFromMap(v, []string{"lastUpdated", "lastUpdated", "LastActivityAt", "lastActivityAt"}); ok {
 				cl.LastActivityAt = found_val
 			}
-			cl.TimeOutDuration = time.Minute * 120
-			cl.LastSyncedAt = time.Now()
-			cl.RefreshTimeout()
+			// // cl.TimeOutDuration = time.Minute * 120
+			// cl.LastSyncedAt = time.Now()
+			// cl.RefreshTimeout()
 
 			for _, k := range []string{"jobs_info", "job_info", "job_ids"} {
 				if value_of_slice, ok := v[k].([]interface{}); ok {

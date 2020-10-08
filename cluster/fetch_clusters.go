@@ -31,7 +31,7 @@ func GetSectionClustersFetcher(section string) (ClustersFetcher, error) {
 
 // StartGenerateClusters goroutine for getting clusters from API with internal
 // exists on kill
-func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error {
+func StartGenerateClusters(ctx context.Context, clusters chan bool, interval time.Duration) error {
 	single_fetcher, err := GetSectionClustersFetcher(config.CFG_PREFIX_CLUSTER)
 
 	fetchers := make([]ClustersFetcher, 0)
@@ -46,6 +46,7 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 	tickerGenerateClusters := time.NewTicker(interval)
 	defer func() {
 		tickerGenerateClusters.Stop()
+		close(clusters)
 	}()
 
 	go func() {
@@ -53,7 +54,6 @@ func StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, in
 		for {
 			select {
 			case <-ctx.Done():
-				close(clusters)
 				doneNumClusters <- j
 				log.Debug("Clusters fetch finished [ SUCCESSFULLY ]")
 				return
