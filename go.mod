@@ -1,6 +1,6 @@
 module github.com/weldpua2008/suprasched
 
-go 1.12
+go 1.15
 
 require (
 	github.com/aws/aws-sdk-go v1.34.18
