@@ -1,6 +1,6 @@
 language: go
 go:
-  - 1.12.x
+  - 1.15.x
 
 # Don't email me the results of the test runs.
 notifications:
