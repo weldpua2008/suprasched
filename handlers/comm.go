@@ -13,15 +13,15 @@ func Init() {
 	// Start("tracing", Trace, ".*")
 	Start("cluster_termination", ClusterTermination, config.MATCHER_CLUSTER_TERMINATING)
 	Start("cluster_is_empty", EmptyCluster, config.MATCHER_CLUSTER_IS_EMPTY)
-    Start("cluster_refresh_timeout", RefreshTimeoutCluster, config.MATCHER_CLUSTER_REFRESH_TIMEOUT)
-
+	Start("cluster_refresh_timeout", RefreshTimeoutCluster, config.MATCHER_CLUSTER_REFRESH_TIMEOUT)
+	Start("job_force_timeout", CancelTimeoutJobs, config.MATCHER_JOB_FORCE_TIMEOUT)
 
 }
 
 func wrapMetrics(f func(e *bus.Event)) func(e *bus.Event) {
 	return func(e *bus.Event) {
 		start := time.Now()
-		defer metrics.EventBusmessagesProcessed.WithLabelValues(e.Topic,
+		defer metrics.EventBusMessageProcessed.WithLabelValues(e.Topic,
 			"wraped").Observe(float64(time.Now().Sub(start).Nanoseconds()))
 		f(e)
 	}
@@ -32,7 +32,8 @@ func Deregister() {
 	// Stop("tracing")
 	Stop("cluster_termination")
 	Stop("cluster_is_empty")
-    Stop("cluster_refresh_timeout")
+	Stop("cluster_refresh_timeout")
+	Stop("job_force_timeout")
 
 }
 
@@ -61,7 +62,7 @@ func stopTestingHandler() {
 	Stop(name)
 }
 
-// Stop deregisters the handler
+// Stop is the deregister handler
 func Stop(name string) {
 	defer log.Tracef("Deregistered %v handler...", name)
 	b := config.Bus

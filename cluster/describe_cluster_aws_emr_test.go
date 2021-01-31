@@ -67,9 +67,9 @@ func MockGetEMR(sess *session.Session) emriface.EMRAPI {
 
 func TestEMRClusterStatus(t *testing.T) {
 	d := &DescribeEMR{
-		aws_sessions: make(map[string]*session.Session),
-		t:            "DescribeEMR",
-		getemr:       MockGetEMR,
+		awsSessions: make(map[string]*session.Session),
+		t:           "DescribeEMR",
+		getEmrSvc:   MockGetEMR,
 	}
 	cases := []struct {
 		clusterId string

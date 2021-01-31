@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/emr/emriface"
-	//
 	"github.com/weldpua2008/suprasched/metrics"
+
 	//
 	"os"
 	"strings"
@@ -20,8 +20,8 @@ func GetCachedAwsSession(key string) (*session.Session, error) {
 
 	mu.RLock()
 	defer mu.RUnlock()
-	if aws_sessions != nil {
-		if val, ok := aws_sessions[key]; ok {
+	if awsSessions != nil {
+		if val, ok := awsSessions[key]; ok {
 			return val, nil
 		}
 	}
@@ -48,9 +48,9 @@ func GetAwsSession(params map[string]interface{}) (*session.Session, error) {
 			break
 		}
 	}
-	session_key := fmt.Sprintf("%v%v", Profile, Region)
+	sessionKey := fmt.Sprintf("%v%v", Profile, Region)
 
-	if val, err := GetCachedAwsSession(session_key); err == nil {
+	if val, err := GetCachedAwsSession(sessionKey); err == nil {
 		return val, nil
 	}
 	// Creating & adding the session to the cache
@@ -67,21 +67,21 @@ func GetAwsSession(params map[string]interface{}) (*session.Session, error) {
 		// Force enable Shared Config support
 		SharedConfigState: session.SharedConfigEnable,
 	})
-	sess.Handlers.Send.PushFront(func(r *aws_request.Request) {
-		// Log every request made and its payload
-		metrics.ApiCallsStatistics.WithLabelValues(
-			"aws",
-			fmt.Sprintf("%v.%v", Profile, Region),
-			"emr",
-			strings.ToLower(r.Operation.Name),
-		).Inc()
-	})
 
-	if aws_sessions == nil {
-		aws_sessions = make(map[string]*session.Session)
+	if awsSessions == nil {
+		awsSessions = make(map[string]*session.Session)
+		sess.Handlers.Send.PushFront(func(r *aws_request.Request) {
+			// Log every request made and its payload
+			metrics.ApiCallsStatistics.WithLabelValues(
+				"aws",
+				fmt.Sprintf("%v.%v", Profile, Region),
+				"emr",
+				strings.ToLower(r.Operation.Name),
+			).Inc()
+		})
 	}
 	if err == nil {
-		aws_sessions[session_key] = sess
+		awsSessions[sessionKey] = sess
 	}
 	return sess, err
 }

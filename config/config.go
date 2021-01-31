@@ -32,7 +32,7 @@ func RefreshRegistries() {
 
 // Config is top level Configuration structure
 type Config struct {
-	// Indentification for the process
+	// Identification for the process
 	ClientId    string `mapstructure:"clientId"`
 	ClusterId   string
 	ClusterPool string
@@ -46,7 +46,7 @@ type Config struct {
 var (
 	// CfgFile defines Path to the config
 	CfgFile string
-	// ClientId defines Indentification for the instance.
+	// ClientId defines Identification for the instance.
 	ClientId string
 	// C defines main configuration structure.
 	C Config = Config{
@@ -311,7 +311,7 @@ func GetTimeDurationDefault(section string, param string, def time.Duration) (in
 	var comp time.Duration
 
 	for _, k := range []string{fmt.Sprintf("%v.%v.%v", section, param, CFG_INTERVAL_PARAMETER),
-		fmt.Sprintf("%v.%v", section, param), section, CFG_INTERVAL_PARAMETER} {
+		fmt.Sprintf("%v.%v", section, param), section} {
 		delay := viper.GetDuration(k)
 		if delay > comp && delay.Milliseconds() > 0 {
 			return delay

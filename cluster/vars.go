@@ -66,6 +66,6 @@ var (
 		Help: "The total number of fetched clusters",
 	})
 
-	log                 = logrus.WithFields(logrus.Fields{"package": "cluster"})
-	empty_clusters_chan = make(chan *model.Cluster, 1)
+	log               = logrus.WithFields(logrus.Fields{"package": "cluster"})
+	emptyClustersChan = make(chan *model.Cluster, 1)
 )

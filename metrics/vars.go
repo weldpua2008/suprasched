@@ -9,7 +9,7 @@ import (
 
 var (
 	log                  = logrus.WithFields(logrus.Fields{"package": "communicator"})
-	ErrServerListenError = errors.New("Error HTTP server ListenAndServe:")
+	ErrServerListenError = errors.New("HTTP server ListenAndServe:")
 	listenServersStore   = make(map[string]*SrvSession, 0)
 	mu                   sync.RWMutex
 )

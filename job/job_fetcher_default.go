@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	Constructors[ConstructorsJobsFetcherRest] = JobTypeSpec{
+	Constructors[ConstructorsJobsFetcherRest] = TypeSpec{
 		instance:    NewFetchJobsRest,
 		constructor: NewFetchJobsDefault,
 		Summary: `
@@ -63,12 +63,12 @@ func (f *FetchJobsDefault) Fetch() ([]*model.Job, error) {
 
 	var results []*model.Job
 
-	var ctx context.Context
+	//var ctx context.Context
 	var fetchCtx context.Context
 	var cancel context.CancelFunc
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	//if ctx == nil {
+	var ctx = context.Background()
+	//}
 	ttr := 30
 	fetchCtx, cancel = context.WithTimeout(ctx, time.Duration(ttr)*time.Second)
 	defer cancel() // cancel when we are getting the kill signal or exit

@@ -15,7 +15,7 @@ type Response struct {
 }
 
 var (
-	globalGot string
+	//globalGot string
 	responses []Response
 )
 
@@ -32,7 +32,7 @@ func in() interface{} {
 }
 
 func out(in string) {
-	globalGot = in
+	//globalGot = in
 }
 
 func TestMain(m *testing.M) {
@@ -108,7 +108,7 @@ func TestClusterStatus(t *testing.T) {
 	config.C = C
 	config.C.URL = srv.URL
 	defer func() {
-		globalGot = ""
+		//globalGot = ""
 		srv.Close()
 		responses = []Response{}
 

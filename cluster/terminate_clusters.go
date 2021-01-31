@@ -6,6 +6,7 @@ import (
 	"fmt"
 	config "github.com/weldpua2008/suprasched/config"
 	metrics "github.com/weldpua2008/suprasched/metrics"
+	model "github.com/weldpua2008/suprasched/model"
 	utils "github.com/weldpua2008/suprasched/utils"
 	"strings"
 	"time"
@@ -20,24 +21,24 @@ func GetSectionClustersTerminator(section string) ([]ClustersTerminator, error) 
 
 	def := make(map[string]string)
 
-	terminators_cfgs := config.GetMapStringMapStringTemplatedDefault(section, config.CFG_PREFIX_TERMINATORS, def)
+	terminatorsCfgs := config.GetMapStringMapStringTemplatedDefault(section, config.CFG_PREFIX_TERMINATORS, def)
 	res := make([]ClustersTerminator, 0)
-	for subsection, comm := range terminators_cfgs {
+	for subsection, comm := range terminatorsCfgs {
 		if comm == nil {
 			continue
 		}
-		terminator_type := ConstructorsTerminaterTypeEMR
-		if term_type, ok := comm["type"]; ok {
-			terminator_type = term_type
+		terminatorType := ConstructorsTerminatorTypeEMR
+		if termType, ok := comm["type"]; ok {
+			terminatorType = termType
 		}
-		k := strings.ToUpper(terminator_type)
-		if type_struct, ok := TerminatorConstructors[k]; ok {
-			terminator_instance, err := type_struct.constructor(fmt.Sprintf("%v", subsection))
+		k := strings.ToUpper(terminatorType)
+		if typeStruct, ok := TerminatorConstructors[k]; ok {
+			terminatorInstance, err := typeStruct.constructor(fmt.Sprintf("%v", subsection))
 			if err != nil {
 				log.Tracef("Can't get terminator %v", err)
 				continue
 			}
-			res = append(res, terminator_instance)
+			res = append(res, terminatorInstance)
 
 		}
 
@@ -51,9 +52,9 @@ func GetSectionClustersTerminator(section string) ([]ClustersTerminator, error) 
 
 // StartTerminateClusters goroutine for terminatting clusters & updating API with internal
 func StartTerminateClusters(ctx context.Context, clusters chan bool, interval time.Duration, delay time.Duration) error {
-	terminators_instances, err := GetSectionClustersTerminator(config.CFG_PREFIX_CLUSTER)
+	terminatorsInstances, err := GetSectionClustersTerminator(config.CFG_PREFIX_CLUSTER)
 
-	if err != nil || terminators_instances == nil || len(terminators_instances) == 0 {
+	if err != nil || terminatorsInstances == nil || len(terminatorsInstances) == 0 {
 		return fmt.Errorf("Failed to start StartTerminateClusters %v", err)
 	}
 	notValidClusterIds := make(map[string]struct{}, 0)
@@ -66,7 +67,7 @@ func StartTerminateClusters(ctx context.Context, clusters chan bool, interval ti
 		close(clusters)
 	}()
 
-    time.Sleep(delay)
+	time.Sleep(delay)
 	go func() {
 		cntr := 0
 		for {
@@ -78,7 +79,7 @@ func StartTerminateClusters(ctx context.Context, clusters chan bool, interval ti
 			case <-tickerTerminateClusters.C:
 				isDelayed := utils.RandomBoolean()
 				start := time.Now()
-				for _, terminator := range terminators_instances {
+				for _, terminator := range terminatorsInstances {
 					if isDelayed {
 						break
 					}
@@ -89,17 +90,18 @@ func StartTerminateClusters(ctx context.Context, clusters chan bool, interval ti
 						if !ok {
 							continue
 						}
+						if model.IsTerminalStatus(rec.Status) {
+							continue
+						}
 						if !rec.IsFree() {
-                            // log.Warningf(" !IsFree UnMarkFree cluster %v", rec.StoreKey())
-
 							config.ClusterRegistry.UnMarkFree(rec.StoreKey())
 							rec.RefreshTimeout()
 							continue
 						}
 						if !rec.IsTimeout() {
-                            if rec.TimeOutAt.Sub(time.Now()).Seconds() < (time.Duration(interval * 10).Seconds()+60) {
-                                log.Tracef(" Cluster %v will be terminated in %vs",  rec.StoreKey(), rec.TimeOutAt.Sub(time.Now()).Seconds())
-                            }
+							if rec.TimeOutAt.Sub(time.Now()).Seconds() < (time.Duration(interval*10).Seconds() + 60) {
+								log.Tracef(" Cluster %v will be terminated in %vs", rec.StoreKey(), rec.TimeOutAt.Sub(time.Now()).Seconds())
+							}
 							continue
 						}
 

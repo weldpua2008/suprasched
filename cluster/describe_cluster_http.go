@@ -65,8 +65,8 @@ func NewDescribeClusterHttpBySection(section string) (ClustersDescriber, error) 
 //                 - "HTTP"
 func (d *DescribeClusterHttp) SupportedClusters() []*model.Cluster {
 	def := []string{ConstructorsDescriberTypeRest}
-	cluster_types := config.GetGetStringSliceDefault(fmt.Sprintf("%v.%v", d.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES), def)
-	return config.ClusterRegistry.Filter(cluster_types)
+	clusterTypes := config.GetGetStringSliceDefault(fmt.Sprintf("%v.%v", d.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES), def)
+	return config.ClusterRegistry.Filter(clusterTypes)
 }
 
 // ClusterStatus by the Cluster Id from HTTP rest API.

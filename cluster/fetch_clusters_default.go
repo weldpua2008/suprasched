@@ -63,12 +63,12 @@ func NewFetchClusterHttp() ClustersFetcher {
 func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 	var results []*model.Cluster
 
-	var ctx context.Context
+	//var ctx context.Context
 	var fetchCtx context.Context
 	var cancel context.CancelFunc
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	//if ctx == nil {
+	var ctx = context.Background()
+	//}
 	ttr := 30
 	fetchCtx, cancel = context.WithTimeout(ctx, time.Duration(ttr)*time.Second)
 	defer cancel() // cancel when we are getting the kill signal or exit
@@ -85,15 +85,15 @@ func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 				continue
 			}
 			var cl *model.Cluster
-			if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterId", "Clusterid", "clusterID", "ClusterID", "clusterId",
+			if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"ClusterId", "Clusterid", "clusterID", "ClusterID", "clusterId",
 				"clusterid", "JobFlowID", "JobFlowId", "JobflowID", "jobFlowId"}); ok {
-				cl = model.NewCluster(found_val)
+				cl = model.NewCluster(foundVal)
 			} else {
 				continue
 			}
 
-			if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterStatus", "clusterStatus", "Cluster_Status", "Status", "status"}); ok {
-				cl.Status = found_val
+			if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"ClusterStatus", "clusterStatus", "Cluster_Status", "Status", "status"}); ok {
+				cl.Status = foundVal
 				switch cl.Status {
 				case "NOTREADY":
 					cl.Status = model.CLUSTER_STATUS_STARTING
@@ -101,40 +101,40 @@ func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 					cl.Status = model.CLUSTER_STATUS_RUNNING
 				}
 			}
-			if found_val, ok := utils.GetFirstStringFromMap(v, []string{"clusterPool", "ClusterPool", "Pool", "pool"}); ok {
-				cl.ClusterPool = found_val
+			if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"clusterPool", "ClusterPool", "Pool", "pool"}); ok {
+				cl.ClusterPool = foundVal
 			}
 
-			if found_val, ok := utils.GetFirstStringFromMap(v, []string{"clusterProfile", "ClusterProfile", "AWSProfile", "AWS_Profile", "AWS_PROFILE"}); ok {
-				cl.ClusterProfile = found_val
+			if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"clusterProfile", "ClusterProfile", "AWSProfile", "AWS_Profile", "AWS_PROFILE"}); ok {
+				cl.ClusterProfile = foundVal
 			}
-			if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterRegion", "clusterRegion", "AWSRegion", "AWS_Region", "AWS_REGION"}); ok {
-				cl.ClusterRegion = found_val
-			}
-
-			if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterType", "clusterType"}); ok {
-				cl.ClusterType = found_val
+			if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"ClusterRegion", "clusterRegion", "AWSRegion", "AWS_Region", "AWS_REGION"}); ok {
+				cl.ClusterRegion = foundVal
 			}
 
-			if found_val, ok := utils.GetFirstTimeFromMap(v, []string{"CreateAt", "createAt", "Created", "createDate", "CreateDate"}); ok {
-				cl.CreateAt = found_val
+			if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"ClusterType", "clusterType"}); ok {
+				cl.ClusterType = foundVal
 			}
-			if found_val, ok := utils.GetFirstTimeFromMap(v, []string{"StartAt", "startAt", "StartDate", "startDate"}); ok {
-				cl.StartAt = found_val
+
+			if foundVal, ok := utils.GetFirstTimeFromMap(v, []string{"CreateAt", "createAt", "Created", "createDate", "CreateDate"}); ok {
+				cl.CreateAt = foundVal
 			}
-			if found_val, ok := utils.GetFirstTimeFromMap(v, []string{"lastUpdated", "lastUpdated", "LastActivityAt", "lastActivityAt"}); ok {
-				cl.LastActivityAt = found_val
+			if foundVal, ok := utils.GetFirstTimeFromMap(v, []string{"StartAt", "startAt", "StartDate", "startDate"}); ok {
+				cl.StartAt = foundVal
+			}
+			if foundVal, ok := utils.GetFirstTimeFromMap(v, []string{"lastUpdated", "lastUpdated", "LastActivityAt", "lastActivityAt"}); ok {
+				cl.LastActivityAt = foundVal
 			}
 			// // cl.TimeOutDuration = time.Minute * 120
 			// cl.LastSyncedAt = time.Now()
 			// cl.RefreshTimeout()
 
 			for _, k := range []string{"jobs_info", "job_info", "job_ids"} {
-				if value_of_slice, ok := v[k].([]interface{}); ok {
-					for _, elem := range value_of_slice {
-						if value_map, ok1 := elem.(map[string]interface{}); ok1 {
+				if valueOfSlice, ok := v[k].([]interface{}); ok {
+					for _, elem := range valueOfSlice {
+						if valueMap, ok1 := elem.(map[string]interface{}); ok1 {
 
-							j := model.NewJobFromMap(value_map)
+							j := model.NewJobFromMap(valueMap)
 							j.ClusterId = cl.ClusterId
 							if len(j.Id) < 1 {
 								continue
@@ -145,8 +145,8 @@ func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 								topic = config.TOPIC_JOB_CREATED
 								log.Tracef("Job %v added ", j.StoreKey())
 							}
-							if job_on_cluster, ok := config.JobsRegistry.Record(j.StoreKey()); ok {
-								cl.Add(job_on_cluster)
+							if jobOnCluster, ok := config.JobsRegistry.Record(j.StoreKey()); ok {
+								cl.Add(jobOnCluster)
 								if len(topic) > 0 {
 									_, err := config.Bus.Emit(ctx, topic, j.EventMetadata())
 									if err != nil {
@@ -168,7 +168,7 @@ func (f *FetchClustersDefault) Fetch() ([]*model.Cluster, error) {
 							// }
 							// if !config.ClusterRegistry.Add(cls) {
 							//     if rec, exist := config.ClusterRegistry.Record(cls.StoreKey()); exist {
-							//         if rec.UseExternaleStatus(cls) {
+							//         if rec.UseExternalStatus(cls) {
 							//             topic = strings.ToLower(fmt.Sprintf("cluster.%v", cls.Status))
 							//         }
 							//

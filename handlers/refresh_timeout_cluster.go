@@ -9,7 +9,7 @@ import (
 // RefreshTimeoutCluster handler when the cluster has jobs.
 func RefreshTimeoutCluster(e *bus.Event) {
 	if cl, err := eventGetCLuster(e); err == nil {
-        cl.UpdateJobsLastActivity()
+		cl.UpdateJobsLastActivity()
 		cl.RefreshTimeout()
 	}
 }

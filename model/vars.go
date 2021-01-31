@@ -5,13 +5,14 @@ import (
 )
 
 var (
-	log           = logrus.WithFields(logrus.Fields{"package": "model"})
-	previousLevel logrus.Level
+	log = logrus.WithFields(logrus.Fields{"package": "model"})
+	//previousLevel logrus.Level
 )
 
 const (
 	JOB_STATUS_PENDING     = "pending"
 	JOB_STATUS_IN_PROGRESS = "in_progress"
+	JOB_STATUS_RUNNING     = "running"
 	JOB_STATUS_SUCCESS     = "success"
 	JOB_STATUS_ERROR       = "error"
 	JOB_STATUS_CANCELED    = "canceled"
@@ -29,7 +30,3 @@ const (
 	CLUSTER_TYPE_ON_DEMAND = "on-demand"
 	CLUSTER_TYPE_EMR       = "EMR"
 )
-
-func init() {
-	previousLevel = logrus.GetLevel()
-}

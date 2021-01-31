@@ -22,24 +22,24 @@ import (
 func GetJobsFetchersFromSection(section string) ([]JobsFetcher, error) {
 
 	def := make(map[string]string)
-	fetchers_cfgs := config.GetSliceStringMapStringTemplatedDefault(section, config.CFG_PREFIX_JOBS_FETCHER, def)
+	fetchersCfgs := config.GetSliceStringMapStringTemplatedDefault(section, config.CFG_PREFIX_JOBS_FETCHER, def)
 	res := make([]JobsFetcher, 0)
-	for _, comm := range fetchers_cfgs {
+	for _, comm := range fetchersCfgs {
 		if comm == nil {
 			continue
 		}
-		describer_type := ConstructorsJobsFetcherRest
-		if descr_type, ok := comm["type"]; ok {
-			describer_type = descr_type
+		describerType := ConstructorsJobsFetcherRest
+		if tmpDescriberType, ok := comm["type"]; ok {
+			describerType = tmpDescriberType
 		}
-		k := strings.ToUpper(describer_type)
-		if type_struct, ok := Constructors[k]; ok {
-			describer_instance, err := type_struct.constructor(section)
+		k := strings.ToUpper(describerType)
+		if typeStruct, ok := Constructors[k]; ok {
+			describerInstance, err := typeStruct.constructor(section)
 			if err != nil {
 				log.Tracef("Can't get fetcher %v", err)
 				continue
 			}
-			res = append(res, describer_instance)
+			res = append(res, describerInstance)
 
 		}
 
@@ -81,12 +81,12 @@ func StartFetchJobs(ctx context.Context, jobs chan bool, interval time.Duration)
 
 				for _, fetcher := range fetchers {
 
-					jobs_slice, err := fetcher.Fetch()
+					jobsSlice, err := fetcher.Fetch()
 					if err != nil {
-						log.Tracef("Fetch job metadata '%v', but failed with %v", jobs_slice, err)
+						log.Tracef("Fetch job metadata '%v', but failed with %v", jobsSlice, err)
 						continue
 					}
-					for _, j := range jobs_slice {
+					for _, j := range jobsSlice {
 						storeKey := j.StoreKey()
 						if len(storeKey) < 1 {
 							continue
@@ -115,26 +115,25 @@ func StartFetchJobs(ctx context.Context, jobs chan bool, interval time.Duration)
 						}
 
 						if len(topic) > 1 {
-                            _, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())
-                            if err != nil {
-                                log.Tracef("%v", err)
-                            }
+							_, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())
+							if err != nil {
+								log.Tracef("%v", err)
+							}
 
 							if (rec != nil) && (rec.ClusterType != model.CLUSTER_TYPE_ON_DEMAND) && (len(rec.ClusterId) > 0) {
-                                // log.Warningf("Send update for %v",  rec.GetClusterStoreKey())
+								// log.Warningf("Send update for %v",  rec.GetClusterStoreKey())
 								clusterEventMetadata := map[string]string{"StoreKey": rec.GetClusterStoreKey()}
-                                _, err := config.Bus.Emit(ctx, config.TOPIC_CLUSTER_REFRESH_TIMEOUT, clusterEventMetadata)
+								_, err := config.Bus.Emit(ctx, config.TOPIC_CLUSTER_REFRESH_TIMEOUT, clusterEventMetadata)
 								if err != nil {
 									log.Tracef("%v", err)
 								}
 
-                                if model.IsTerminalStatus(rec.Status) {
-                                    _, err := config.Bus.Emit(ctx, config.TOPIC_CLUSTER_IS_EMPTY, clusterEventMetadata)
-                                    if err != nil {
-                                        log.Tracef("%v", err)
-                                    }
-                                }
-
+								if model.IsTerminalStatus(rec.Status) {
+									_, err := config.Bus.Emit(ctx, config.TOPIC_CLUSTER_IS_EMPTY, clusterEventMetadata)
+									if err != nil {
+										log.Tracef("%v", err)
+									}
+								}
 
 							}
 						}

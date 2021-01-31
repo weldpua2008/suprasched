@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	TerminatorConstructors[ConstructorsTerminaterTypeEMR] = TerminatorTypeSpec{
+	TerminatorConstructors[ConstructorsTerminatorTypeEMR] = TerminatorTypeSpec{
 		instance:    NewTerminateClusterEMR,
 		constructor: NewTerminateClusterEMRBySection,
 		Summary: `
@@ -30,18 +30,18 @@ It supports the following params:
 
 type TerminateClusterEMR struct {
 	ClustersTerminator
-	section string
-	mu      sync.RWMutex
-	comm    communicator.Communicator
-	comms   []communicator.Communicator
-	t       string
-	getemr  func(*session.Session) emriface.EMRAPI
+	section   string
+	mu        sync.RWMutex
+	comm      communicator.Communicator
+	comms     []communicator.Communicator
+	t         string
+	getEmrApi func(*session.Session) emriface.EMRAPI
 }
 
 // NewTerminateEMR prepare struct communicator for EMR
 func NewTerminateClusterEMR() ClustersTerminator {
 	return &TerminateClusterEMR{
-		getemr: DefaultGetEMR,
+		getEmrApi: DefaultGetEMR,
 	}
 }
 
@@ -56,11 +56,11 @@ func NewTerminateClusterEMRBySection(section string) (ClustersTerminator, error)
 			comms := make([]communicator.Communicator, 0)
 			comms = append(comms, comm)
 			return &TerminateClusterEMR{
-				comm:    comm,
-				comms:   comms,
-				t:       "TerminateClusterEMR",
-				section: section,
-				getemr:  DefaultGetEMR,
+				comm:      comm,
+				comms:     comms,
+				t:         "TerminateClusterEMR",
+				section:   section,
+				getEmrApi: DefaultGetEMR,
 			}, nil
 
 		}
@@ -76,8 +76,8 @@ func NewTerminateClusterEMRBySection(section string) (ClustersTerminator, error)
 //                 - "EMR"
 func (d *TerminateClusterEMR) SupportedClusters() []*model.Cluster {
 	def := []string{ConstructorsFetcherTypeRest}
-	cluster_types := config.GetGetStringSliceDefault(fmt.Sprintf("%v.%v", d.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES), def)
-	return config.ClusterRegistry.FilterFree(cluster_types)
+	clusterTypes := config.GetGetStringSliceDefault(fmt.Sprintf("%v.%v", d.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES), def)
+	return config.ClusterRegistry.FilterFree(clusterTypes)
 }
 
 // ClusterStatus by the Cluster Id from HTTP rest API.
@@ -124,7 +124,7 @@ func (d *TerminateClusterEMR) Terminate(params map[string]interface{}) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	utils.EmrClusterTerminate(params, d.getemr)
+	utils.EmrClusterTerminate(params, d.getEmrApi)
 	log.Tracef("Terminate Cluster %v", ClusterId)
 
 	for _, comm := range d.comms {

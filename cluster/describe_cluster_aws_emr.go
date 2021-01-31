@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/emr/emriface"
+	"github.com/weldpua2008/suprasched/metrics"
 
 	config "github.com/weldpua2008/suprasched/config"
-	metrics "github.com/weldpua2008/suprasched/metrics"
 	model "github.com/weldpua2008/suprasched/model"
 	"os"
 	"strings"
@@ -34,11 +34,11 @@ It supports the following params:
 
 type DescribeEMR struct {
 	ClustersDescriber
-	aws_sessions map[string]*session.Session
-	mu           sync.RWMutex
-	t            string
-	section      string
-	getemr       func(*session.Session) emriface.EMRAPI
+	awsSessions map[string]*session.Session
+	mu          sync.RWMutex
+	t           string
+	section     string
+	getEmrSvc   func(*session.Session) emriface.EMRAPI
 }
 
 // DefaultGetEMR implements EMR Api wrapper for tests.
@@ -49,9 +49,9 @@ func DefaultGetEMR(sess *session.Session) emriface.EMRAPI {
 // NewDescriberEMR prepare struct communicator for EMR
 func NewDescriberEMR() ClustersDescriber {
 	return &DescribeEMR{
-		aws_sessions: make(map[string]*session.Session),
-		t:            "DescribeEMR",
-		getemr:       DefaultGetEMR,
+		awsSessions: make(map[string]*session.Session),
+		t:           "DescribeEMR",
+		getEmrSvc:   DefaultGetEMR,
 	}
 }
 
@@ -60,10 +60,10 @@ func NewDescriberEMRFromSection(section string) (ClustersDescriber, error) {
 	s := make(map[string]*session.Session)
 	// log.Warningf("NewDescriberEMRFromSection %v", section)
 	return &DescribeEMR{
-		aws_sessions: s,
-		t:            "DescribeEMR",
-		section:      section,
-		getemr:       DefaultGetEMR,
+		awsSessions: s,
+		t:           "DescribeEMR",
+		section:     section,
+		getEmrSvc:   DefaultGetEMR,
 	}, nil
 
 }
@@ -72,8 +72,8 @@ func (c *DescribeEMR) getCachedAwsSession(key string) (*session.Session, error) 
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	if c.aws_sessions != nil {
-		if val, ok := c.aws_sessions[key]; ok {
+	if c.awsSessions != nil {
+		if val, ok := c.awsSessions[key]; ok {
 			return val, nil
 		}
 	}
@@ -82,12 +82,12 @@ func (c *DescribeEMR) getCachedAwsSession(key string) (*session.Session, error) 
 
 func (c *DescribeEMR) SupportedClusters() []*model.Cluster {
 	def := []string{ConstructorsDescriberTypeAwsEMR}
-	cfg_section := fmt.Sprintf("%v.%v", c.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES)
-	cluster_types := config.GetGetStringSliceDefault(cfg_section, def)
+	cfgSection := fmt.Sprintf("%v.%v", c.section, config.CFG_PREFIX_CLUSTER_SUPPORTED_TYPES)
+	clusterTypes := config.GetGetStringSliceDefault(cfgSection, def)
 
 	// log.Infof("GetGetStringSliceDefault %v cfg_section %v: %v", cluster_types, cfg_section, config.ClusterRegistry.Filter(cluster_types))
 
-	return config.ClusterRegistry.Filter(cluster_types)
+	return config.ClusterRegistry.Filter(clusterTypes)
 }
 
 // getAwsSession
@@ -111,9 +111,9 @@ func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Ses
 			break
 		}
 	}
-	session_key := fmt.Sprintf("%v%v", Profile, Region)
+	sessionKey := fmt.Sprintf("%v%v", Profile, Region)
 
-	if val, err := c.getCachedAwsSession(session_key); err == nil {
+	if val, err := c.getCachedAwsSession(sessionKey); err == nil {
 		return val, nil
 	}
 	// Creating & adding the session to the cache
@@ -130,21 +130,21 @@ func (c *DescribeEMR) getAwsSession(params map[string]interface{}) (*session.Ses
 		// Force enable Shared Config support
 		SharedConfigState: session.SharedConfigEnable,
 	})
-	sess.Handlers.Send.PushFront(func(r *aws_request.Request) {
-		// Log every request made and its payload
-		metrics.ApiCallsStatistics.WithLabelValues(
-			"aws",
-			fmt.Sprintf("%v.%v", Profile, Region),
-			"emr",
-			strings.ToLower(r.Operation.Name),
-		).Inc()
-	})
 
-	if c.aws_sessions == nil {
-		c.aws_sessions = make(map[string]*session.Session)
+	if c.awsSessions == nil {
+		c.awsSessions = make(map[string]*session.Session)
 	}
 	if err == nil {
-		c.aws_sessions[session_key] = sess
+		sess.Handlers.Send.PushFront(func(r *aws_request.Request) {
+			// Log every request made and its payload
+			metrics.ApiCallsStatistics.WithLabelValues(
+				"aws",
+				fmt.Sprintf("%v.%v", Profile, Region),
+				"emr",
+				strings.ToLower(r.Operation.Name),
+			).Inc()
+		})
+		c.awsSessions[sessionKey] = sess
 	}
 	return sess, err
 }
@@ -186,7 +186,7 @@ func (c *DescribeEMR) ClusterStatus(params map[string]interface{}) (string, erro
 	if err != nil {
 		return "", err
 	}
-	svc := c.getemr(sess)
+	svc := c.getEmrSvc(sess)
 	clusterInput := &emr.DescribeClusterInput{
 		ClusterId: aws.String(ClusterId),
 	}

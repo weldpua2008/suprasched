@@ -12,11 +12,11 @@ import (
 
 // Cluster public structure
 type Cluster struct {
-	ClusterId      string // Identificator for Cluster
-	ClusterPool    string // Identificator for Cluster Pool
-	ClusterProfile string // Identificator for Cluster Profile
-	ClusterRegion  string // Identificator for Cluster Region
-	ClusterType    string // Identificator for Cluster Type
+	ClusterId      string // Identification for Cluster
+	ClusterPool    string // Identification for Cluster Pool
+	ClusterProfile string // Identification for Cluster Profile
+	ClusterRegion  string // Identification for Cluster Region
+	ClusterType    string // Identification for Cluster Type
 
 	ClusterConfig  map[string]interface{}
 	CreateAt       time.Time // When cluster was created
@@ -30,12 +30,12 @@ type Cluster struct {
 	LastSyncedAt       time.Time     // When cluster metadata last changed
 	LastSyncedDuration time.Duration
 
-	LastActivityAt time.Time // When cluster metadata last changed
-    JobsLastActivityAt time.Time // When last job metadata changed
+	LastActivityAt     time.Time // When cluster metadata last changed
+	JobsLastActivityAt time.Time // When last job metadata changed
 
-	PreviousStatus string    // Previous Status
-	Status         string    // Currentl status
-	// MaxAttempts    int       // Absoulute max num of attempts.
+	PreviousStatus string // Previous Status
+	Status         string // Current status
+	// MaxAttempts    int       // Absolute max num of attempts.
 	// MaxFails       int       // Absolute max number of failures.
 	// TTR            uint64    // Time-to-run in Millisecond
 	mu           sync.RWMutex
@@ -54,24 +54,17 @@ func NewCluster(clusterId string) *Cluster {
 		TimeOutDuration:    time.Minute * 60,
 		LastSyncedAt:       time.Now(),
 		LastSyncedDuration: time.Second * 30,
-        JobsLastActivityAt: time.Now(),
+		JobsLastActivityAt: time.Now(),
 	}
 }
 
 func (c *Cluster) RefreshTimeout() time.Duration {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-    if time.Now().After(c.TimeOutStartAt) {
-    //     log.Warningf("time.Now() %v -> %v",time.Now(), c.TimeOutStartAt)
-    // }else {
-    //     log.Warningf("!time.Now() %v -> %v",time.Now(), c.TimeOutStartAt)
-    //
-    // }
-    	c.TimeOutStartAt = time.Now()
-    }
-    c.TimeOutAt = c.TimeOutStartAt.Add(c.TimeOutDuration)
-    // log.Warningf("RefreshTimeout %v TimeOutAt -> [%v]", c.ClusterId, c.TimeOutAt)
-
+	if time.Now().After(c.TimeOutStartAt) {
+		c.TimeOutStartAt = time.Now()
+	}
+	c.TimeOutAt = c.TimeOutStartAt.Add(c.TimeOutDuration)
 	return c.TimeOutDuration
 }
 
@@ -121,9 +114,9 @@ func (c *Cluster) Add(rec *Job) bool {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-    if c.JobsLastActivityAt.Before(rec.LastActivityAt) {
-        c.JobsLastActivityAt = rec.LastActivityAt
-    }
+	if c.JobsLastActivityAt.Before(rec.LastActivityAt) {
+		c.JobsLastActivityAt = rec.LastActivityAt
+	}
 
 	if _, ok := c.all[rec.StoreKey()]; ok {
 		return false
@@ -133,29 +126,27 @@ func (c *Cluster) Add(rec *Job) bool {
 	return true
 }
 
-
 // UpdateJobsLastActivity updates TimeOutAt
 // Returns false on duplicate or invalid job id.
 func (c *Cluster) UpdateJobsLastActivity() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-    for _, j := range c.all {
+	for _, j := range c.all {
 
-    if c.JobsLastActivityAt.Before(j.LastActivityAt) {
-        c.JobsLastActivityAt = j.LastActivityAt
-        // log.Warningf("UpdateJobsLastActivity %v JobsLastActivityAt -> [%v]", c.ClusterId, c.JobsLastActivityAt)
-    }
+		if c.JobsLastActivityAt.Before(j.LastActivityAt) {
+			c.JobsLastActivityAt = j.LastActivityAt
+			// log.Warningf("UpdateJobsLastActivity %v JobsLastActivityAt -> [%v]", c.ClusterId, c.JobsLastActivityAt)
+		}
+	}
+
+	if c.TimeOutStartAt.Before(c.JobsLastActivityAt) {
+		c.TimeOutStartAt = c.JobsLastActivityAt
+		c.TimeOutAt = c.TimeOutStartAt.Add(c.TimeOutDuration)
+
+		// log.Warningf("UpdateJobsLastActivity %v TimeOutAt -> [%v]", c.ClusterId, c.TimeOutAt)
+	}
+
 }
-
-    if c.TimeOutStartAt.Before(c.JobsLastActivityAt) {
-        c.TimeOutStartAt = c.JobsLastActivityAt
-        c.TimeOutAt = c.TimeOutStartAt.Add(c.TimeOutDuration)
-
-        // log.Warningf("UpdateJobsLastActivity %v TimeOutAt -> [%v]", c.ClusterId, c.TimeOutAt)
-    }
-
-}
-
 
 // Len returns length of Jobs on cluster.
 func (c *Cluster) Len() int {
@@ -164,7 +155,7 @@ func (c *Cluster) Len() int {
 	return len(c.all)
 }
 
-// IsFull returns true if cluster reched maximum capacity for Jobs.
+// IsFull returns true if cluster reached maximum capacity for Jobs.
 func (c *Cluster) IsFull() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -188,9 +179,9 @@ func (c *Cluster) IsEmpty() bool {
 func (c *Cluster) IsFree() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-    // if time.Now().Sub(c.JobsLastActivityAt).Seconds() < 60 {
-    //     return false
-    // }
+	// if time.Now().Sub(c.JobsLastActivityAt).Seconds() < 60 {
+	//     return false
+	// }
 
 	for _, j := range c.all {
 		if !IsTerminalStatus(j.GetStatus()) {
@@ -208,11 +199,11 @@ func (c *Cluster) Delete(jid string) bool {
 	val, ok := c.all[jid]
 	if !ok {
 		return false
-	}else {
-        if c.JobsLastActivityAt.Before(val.LastActivityAt) {
-            c.JobsLastActivityAt = val.LastActivityAt
-        }
-    }
+	} else {
+		if c.JobsLastActivityAt.Before(val.LastActivityAt) {
+			c.JobsLastActivityAt = val.LastActivityAt
+		}
+	}
 	delete(c.all, jid)
 	return true
 }
@@ -267,9 +258,9 @@ func (c *Cluster) EventMetadata() map[string]string {
 // 	return comms, err
 // }
 
-// UseExternaleStatus compare with another cluster status.
+// UseExternalStatus compare with another cluster status.
 // returns true if the cluster need update the status
-func (c *Cluster) UseExternaleStatus(ext *Cluster) bool {
+func (c *Cluster) UseExternalStatus(ext *Cluster) bool {
 	if ext.StoreKey() != c.StoreKey() {
 		c.mu.RLock()
 		defer c.mu.RUnlock()
@@ -286,9 +277,9 @@ func (c *Cluster) UseExternaleStatus(ext *Cluster) bool {
 	return false
 }
 
-// UseExternaleStatusString compare with cluster status string.
+// UseExternalStatusString compare with cluster status string.
 // returns true if the cluster need update the status
-func (c *Cluster) UseExternaleStatusString(ext string) bool {
+func (c *Cluster) UseExternalStatusString(ext string) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {

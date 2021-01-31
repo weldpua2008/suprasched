@@ -1,7 +1,7 @@
 package job
 
 // JobTypeSpec is a constructor and a usage description for each JobsFetcher type.
-type JobTypeSpec struct {
+type TypeSpec struct {
 	constructor func(string) (JobsFetcher, error)
 	instance    func() JobsFetcher
 	Summary     string
@@ -11,7 +11,7 @@ type JobTypeSpec struct {
 }
 
 // Constructors is a map of all JobFetcher types with their specs.
-var Constructors = map[string]JobTypeSpec{}
+var Constructors = map[string]TypeSpec{}
 
 // String constants representing each communicator type.
 const (

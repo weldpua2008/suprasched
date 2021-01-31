@@ -21,24 +21,24 @@ func GetSectionClustersDescriber(section string) ([]ClustersDescriber, error) {
 
 	def := make(map[string]string)
 
-	describers_cfgs := config.GetMapStringMapStringTemplatedDefault(section, config.CFG_PREFIX_DESCRIBERS, def)
+	describersCfgs := config.GetMapStringMapStringTemplatedDefault(section, config.CFG_PREFIX_DESCRIBERS, def)
 	res := make([]ClustersDescriber, 0)
-	for subsection, comm := range describers_cfgs {
+	for subsection, comm := range describersCfgs {
 		if comm == nil {
 			continue
 		}
-		describer_type := ConstructorsDescriberTypeRest
-		if descr_type, ok := comm["type"]; ok {
-			describer_type = descr_type
+		describerType := ConstructorsDescriberTypeRest
+		if descrType, ok := comm["type"]; ok {
+			describerType = descrType
 		}
-		k := strings.ToUpper(describer_type)
-		if type_struct, ok := DescriberConstructors[k]; ok {
-			describer_instance, err := type_struct.constructor(fmt.Sprintf("%v", subsection))
+		k := strings.ToUpper(describerType)
+		if typeStruct, ok := DescriberConstructors[k]; ok {
+			describerInstance, err := typeStruct.constructor(fmt.Sprintf("%v", subsection))
 			if err != nil {
 				log.Tracef("Can't get describer %v", err)
 				continue
 			}
-			res = append(res, describer_instance)
+			res = append(res, describerInstance)
 
 		}
 
@@ -53,9 +53,9 @@ func GetSectionClustersDescriber(section string) ([]ClustersDescriber, error) {
 // StartUpdateClustersMetadata goroutine for getting clusters from API with internal
 // exists on kill
 func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interval time.Duration) error {
-	describers_instances, err := GetSectionClustersDescriber(config.CFG_PREFIX_CLUSTER)
+	describersInstances, err := GetSectionClustersDescriber(config.CFG_PREFIX_CLUSTER)
 
-	if err != nil || describers_instances == nil || len(describers_instances) == 0 {
+	if err != nil || describersInstances == nil || len(describersInstances) == 0 {
 		return fmt.Errorf("Failed to start StartUpdateClustersMetadata %v", err)
 	}
 	notValidClusterIds := make(map[string]struct{}, 0)
@@ -79,7 +79,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interv
 			case <-tickerGenerateClusters.C:
 				start := time.Now()
 				isDelayed := utils.RandomBoolean()
-				for _, describer := range describers_instances {
+				for _, describer := range describersInstances {
 					if isDelayed {
 						break
 					}
@@ -100,7 +100,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interv
 						}
 
 						params := rec.GetParams()
-						cluster_status, err := describer.ClusterStatus(params)
+						clusterStatus, err := describer.ClusterStatus(params)
 						if err == nil {
 							reqClustersDescribed.Inc()
 							var topic string
@@ -108,20 +108,20 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interv
 								continue
 							}
 							rec.SyncedWithExternalAPI()
-							if rec.UpdateStatus(cluster_status) {
+							if rec.UpdateStatus(clusterStatus) {
 								// log.Tracef("=> %v %v", rec.ClusterId, cluster_status)
-								if model.IsTerminalStatus(cluster_status) {
+								if model.IsTerminalStatus(clusterStatus) {
 									rec.PutInTransition()
 								}
 								clustersDescribed.Inc()
 								cntr += 1
-								topic = strings.ToLower(fmt.Sprintf("cluster.%v", cluster_status))
+								topic = strings.ToLower(fmt.Sprintf("cluster.%v", clusterStatus))
 								_, err := config.Bus.Emit(ctx, topic, rec.EventMetadata())
 								if err != nil {
 									log.Tracef("%v", err)
 								}
-								if rec.Status != cluster_status {
-									log.Tracef("rec.Status %v != %v", rec.Status, cluster_status)
+								if rec.Status != clusterStatus {
+									log.Tracef("rec.Status %v != %v", rec.Status, clusterStatus)
 
 								}
 							}
@@ -141,7 +141,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interv
 
 						} else {
 							reqClustersFailDescribed.Inc()
-							log.Tracef("Failed to describe cluster status '%v', failed with %v", cluster_status, err)
+							log.Tracef("Failed to describe cluster status '%v', failed with %v", clusterStatus, err)
 						}
 						metrics.FetchMetadataLatency.WithLabelValues("describe_clusters",
 							"single").Observe(float64(time.Now().Sub(start).Nanoseconds()))

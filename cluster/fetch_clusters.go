@@ -16,26 +16,26 @@ import (
 //     section:
 //         type: "HTTP"
 func GetSectionClustersFetcher(section string) (ClustersFetcher, error) {
-	fetcher_type := config.GetStringDefault(fmt.Sprintf("%s.type", section), ConstructorsFetcherTypeRest)
-	k := strings.ToUpper(fetcher_type)
-	if type_struct, ok := FetcherConstructors[k]; ok {
-		if comm, err := type_struct.constructor(fmt.Sprintf("%s.%s", section, config.CFG_PREFIX_FETCHER)); err == nil {
+	fetcherType := config.GetStringDefault(fmt.Sprintf("%s.type", section), ConstructorsFetcherTypeRest)
+	k := strings.ToUpper(fetcherType)
+	if typeStruct, ok := FetcherConstructors[k]; ok {
+		if comm, err := typeStruct.constructor(fmt.Sprintf("%s.%s", section, config.CFG_PREFIX_FETCHER)); err == nil {
 			return comm, nil
 		} else {
 			return nil, err
 		}
 
 	}
-	return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableClustersFetcher, fetcher_type)
+	return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableClustersFetcher, fetcherType)
 }
 
 // StartGenerateClusters goroutine for getting clusters from API with internal
 // exists on kill
 func StartGenerateClusters(ctx context.Context, clusters chan bool, interval time.Duration) error {
-	single_fetcher, err := GetSectionClustersFetcher(config.CFG_PREFIX_CLUSTER)
+	singleFetcher, err := GetSectionClustersFetcher(config.CFG_PREFIX_CLUSTER)
 
 	fetchers := make([]ClustersFetcher, 0)
-	fetchers = append(fetchers, single_fetcher)
+	fetchers = append(fetchers, singleFetcher)
 	if err != nil || fetchers == nil || len(fetchers) == 0 {
 		close(clusters)
 		return fmt.Errorf("Failed to start StartGenerateClusters %v", err)
@@ -64,9 +64,9 @@ func StartGenerateClusters(ctx context.Context, clusters chan bool, interval tim
 					if isDelayed {
 						break
 					}
-					clusters_slice, err := fetcher.Fetch()
+					clustersSlice, err := fetcher.Fetch()
 					if err == nil {
-						for _, cls := range clusters_slice {
+						for _, cls := range clustersSlice {
 							var topic string
 							rec, exist := config.ClusterRegistry.Record(cls.StoreKey())
 							// log.Tracef("rec  %v %v %v", cls.ClusterId, cls.ClusterType, cls.Status)
@@ -114,7 +114,7 @@ func StartGenerateClusters(ctx context.Context, clusters chan bool, interval tim
 						}
 
 					} else {
-						log.Tracef("Fetch cluster metadata '%v', but failed with %v", clusters_slice, err)
+						log.Tracef("Fetch cluster metadata '%v', but failed with %v", clustersSlice, err)
 
 					}
 				}

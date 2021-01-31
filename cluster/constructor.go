@@ -45,5 +45,5 @@ const (
 	ConstructorsFetcherTypeRest     = "HTTP"
 	ConstructorsDescriberTypeAwsEMR = "EMR"
 	ConstructorsDescriberTypeRest   = "HTTP"
-	ConstructorsTerminaterTypeEMR   = "EMR"
+	ConstructorsTerminatorTypeEMR   = "EMR"
 )

@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	utils "github.com/weldpua2008/suprasched/utils"
+	// communicator "github.com/weldpua2008/suprasched/communicator"
+	// config "github.com/weldpua2008/suprasched/config"
+
 	"strings"
 	"sync"
 	"time"
@@ -11,20 +14,20 @@ import (
 
 // Job public structure
 type Job struct {
-	Id                      string    // Identificator for Job
-	RunUID                  string    // Running indentification
-	ExtraRunUID             string    // Extra indentification
+	Id                      string    // Identification for Job
+	RunUID                  string    // Running Identification
+	ExtraRunUID             string    // Extra Identification
 	Priority                int64     // Priority for a Job
 	CreateAt                time.Time // When Job was created
 	StartAt                 time.Time // When command started
 	LastActivityAt          time.Time // When job metadata last changed
 	PreviousStatus          string    // Previous Status
-	Status                  string    // Currentl status
-	MaxAttempts             int       // Absoulute max num of attempts.
+	Status                  string    // Current status
+	MaxAttempts             int       // Absolute max num of attempts.
 	MaxFails                int       // Absolute max number of failures.
 	TTR                     uint64    // Time-to-run in Millisecond
-	ClusterId               string    // Identificator for ClusterId
-	ClusterType             string    // Identificator for Cluster Type
+	ClusterId               string    // Identification for ClusterId
+	ClusterType             string    // Identification for Cluster Type
 	ClusterStoreKey         string    // Cluster UUID for Registry
 	PreviousClusterStoreKey string    // Previous Cluster UUID
 	ClusterConfig           map[string]interface{}
@@ -32,7 +35,7 @@ type Job struct {
 	exitError               error
 	ExitCode                int // Exit code
 	ctx                     context.Context
-	inTransition            bool // wether Job in some transaction
+	inTransition            bool // whether Job in some transaction
 	ExtraSendParams         map[string]string
 }
 
@@ -126,15 +129,15 @@ func (j *Job) EventMetadata() map[string]string {
 
 // updateStatus job status
 func (j *Job) updateStatus(status string) error {
-    clusterId :=j.ClusterStoreKey
+	clusterId := j.ClusterStoreKey
 
-    if len(j.ClusterStoreKey) > 0 {
-        clusterId=j.ClusterId
-    }
+	if len(j.ClusterStoreKey) > 0 {
+		clusterId = j.ClusterId
+	}
 	log.Trace(fmt.Sprintf("Job %s status %s -> %s [%v %v]", j.Id, j.Status, status, clusterId, j.ClusterType))
 	j.PreviousStatus = j.Status
 	j.Status = status
-    j.updatelastActivity()
+	j.updatelastActivity()
 	return nil
 }
 
@@ -201,6 +204,12 @@ func (j *Job) Cancel() error {
 	return nil
 }
 
+//
+//
+// func (j *Job) communicator(section string) error {
+// 	return nil
+// }
+
 // NewJob return Job with defaults
 func NewJob(id string) *Job {
 	return &Job{
@@ -219,39 +228,39 @@ func NewEmptyJob() *Job {
 }
 func NewJobFromMap(v map[string]interface{}) *Job {
 	j := NewJob("")
-	if found_val, ok := utils.GetFirstTimeFromMap(v, []string{"StartAt", "startAt", "StartDate", "startDate"}); ok {
-		j.StartAt = found_val
+	if foundVal, ok := utils.GetFirstTimeFromMap(v, []string{"StartAt", "startAt", "StartDate", "startDate"}); ok {
+		j.StartAt = foundVal
 	}
 
-	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobStatus", "jobStatus", "Job_Status", "Status", "status"}); ok {
-		j.Status = found_val
+	if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"JobStatus", "jobStatus", "Job_Status", "Status", "status"}); ok {
+		j.Status = foundVal
 	}
-	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"previousJobStatus", "PreviousJobStatus", "Previous_Job_Status", "PreviousStatus", "previousstatus"}); ok {
-		j.PreviousStatus = found_val
+	if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"previousJobStatus", "PreviousJobStatus", "Previous_Job_Status", "PreviousStatus", "previousstatus"}); ok {
+		j.PreviousStatus = foundVal
 	}
-	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobId", "jobId", "Job_ID", "Job_Id", "job_Id", "job_id", "Id", "id"}); ok {
-		j.Id = found_val
+	if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"JobId", "jobId", "Job_ID", "Job_Id", "job_Id", "job_id", "Id", "id"}); ok {
+		j.Id = foundVal
 	}
-	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"ClusterId", "Clusterid", "clusterId", "Cluster_Id", "Cluster_ID", "Cluster", "cluster", "clusterid"}); ok {
-		j.ClusterId = found_val
+	if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"ClusterId", "Clusterid", "clusterId", "Cluster_Id", "Cluster_ID", "Cluster", "cluster", "clusterid"}); ok {
+		j.ClusterId = foundVal
 	}
 
-	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobRunId", "jobRunId", "Job_RUN_ID", "Job_Run_Id", "job_run_id", "run_id",
+	if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"JobRunId", "jobRunId", "Job_RUN_ID", "Job_Run_Id", "job_run_id", "run_id",
 		"run_uid", "RunId", "RunUID"}); ok {
-		j.RunUID = found_val
+		j.RunUID = foundVal
 	}
 
-	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"JobExtraRunId", "jobExtraRunId", "JOB_EXTRA_RUN_ID", "Job_Extra_Run_Id", "job_extra_run_id", "extra_run_id",
+	if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"JobExtraRunId", "jobExtraRunId", "JOB_EXTRA_RUN_ID", "Job_Extra_Run_Id", "job_extra_run_id", "extra_run_id",
 		"job_extra_run_uid", "extra_run_uid"}); ok {
-		j.ExtraRunUID = found_val
+		j.ExtraRunUID = foundVal
 	}
 	ClusterPool := ""
 	ClusterProfile := ""
-	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"clusterPool", "ClusterPool", "Pool", "pool"}); ok {
-		ClusterPool = found_val
+	if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"clusterPool", "ClusterPool", "Pool", "pool"}); ok {
+		ClusterPool = foundVal
 	}
-	if found_val, ok := utils.GetFirstStringFromMap(v, []string{"clusterProfile", "ClusterProfile", "AWSProfile", "AWS_Profile", "AWS_PROFILE"}); ok {
-		ClusterProfile = found_val
+	if foundVal, ok := utils.GetFirstStringFromMap(v, []string{"clusterProfile", "ClusterProfile", "AWSProfile", "AWS_Profile", "AWS_PROFILE"}); ok {
+		ClusterProfile = foundVal
 	}
 
 	j.ClusterStoreKey = ClusterStoreKey(j.ClusterId, ClusterPool, ClusterProfile)

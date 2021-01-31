@@ -8,14 +8,16 @@ import (
 // NewRegistry returns a new Registry.
 func NewRegistry() *Registry {
 	return &Registry{
-		all: make(map[string]*Job),
+		all:     make(map[string]*Job),
+		pending: make(map[string]*Job),
 	}
 }
 
 // Registry holds all Job Records.
 type Registry struct {
-	all map[string]*Job
-	mu  sync.RWMutex
+	all     map[string]*Job
+	pending map[string]*Job
+	mu      sync.RWMutex
 }
 
 // Add a job.
@@ -28,6 +30,9 @@ func (r *Registry) Add(rec *Job) bool {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if rec.Status == JOB_STATUS_PENDING {
+		r.pending[rec.StoreKey()] = rec
+	}
 	if _, ok := r.all[rec.StoreKey()]; ok {
 		return false
 	}
@@ -49,6 +54,9 @@ func (r *Registry) Len() int {
 func (r *Registry) Delete(id string) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if _, ok := r.pending[id]; ok {
+		delete(r.pending, id)
+	}
 	_, ok := r.all[id]
 	if !ok {
 		return false
@@ -107,6 +115,9 @@ func (r *Registry) CleanupBatch(slice []string) (num int) {
 					}
 				}
 				delete(r.all, k)
+				if _, ok := r.pending[k]; ok {
+					delete(r.pending, k)
+				}
 				num += 1
 			}
 
@@ -144,12 +155,12 @@ func (r *Registry) All() []*Job {
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	slicecopy := make([]*Job, 0, len(r.all))
+	sliceCopy := make([]*Job, 0, len(r.all))
 	for _, j := range r.all {
-		slicecopy = append(slicecopy, j)
+		sliceCopy = append(sliceCopy, j)
 	}
-	// slicecopy := append(make([]*Job, 0, len( r.all)), r.all...)
-	return slicecopy
+	// sliceCopy := append(make([]*Job, 0, len( r.all)), r.all...)
+	return sliceCopy
 }
 
 // Record fetch job by Job ID.

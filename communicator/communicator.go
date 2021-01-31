@@ -24,17 +24,17 @@ type Communicator interface {
 }
 
 // GetCommunicator returns Communicator by type.
-func GetCommunicator(communicator_type string) (Communicator, error) {
-	k := strings.ToUpper(communicator_type)
-	if type_struct, ok := Constructors[k]; ok {
-		if comm := type_struct.instance(); comm != nil {
+func GetCommunicator(communicatorType string) (Communicator, error) {
+	k := strings.ToUpper(communicatorType)
+	if typeStruct, ok := Constructors[k]; ok {
+		if comm := typeStruct.instance(); comm != nil {
 			return comm, nil
 		} else {
-			return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicator_type)
+			return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicatorType)
 		}
 	}
 
-	return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicator_type)
+	return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicatorType)
 }
 
 // GetSectionCommunicator returns communicator from configuration file.
@@ -44,17 +44,17 @@ func GetCommunicator(communicator_type string) (Communicator, error) {
 //         communicator:
 //             type: "HTTP"
 func GetSectionCommunicator(section string) (Communicator, error) {
-	communicator_type := config.GetStringDefault(fmt.Sprintf("%s.%s.type", section, config.CFG_PREFIX_COMMUNICATOR), "http")
-	k := strings.ToUpper(communicator_type)
-	if type_struct, ok := Constructors[k]; ok {
-		if comm, err := type_struct.constructor(section); err == nil {
+	communicatorType := config.GetStringDefault(fmt.Sprintf("%s.%s.type", section, config.CFG_PREFIX_COMMUNICATOR), "http")
+	k := strings.ToUpper(communicatorType)
+	if typeStruct, ok := Constructors[k]; ok {
+		if comm, err := typeStruct.constructor(section); err == nil {
 			return comm, nil
 		} else {
 			return nil, err
 		}
 
 	}
-	return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicator_type)
+	return nil, fmt.Errorf("%w for %s.\n", ErrNoSuitableCommunicator, communicatorType)
 }
 
 // GetCommunicatorsFromSection returns multiple communicators from configuration file.
@@ -77,25 +77,25 @@ func GetCommunicatorsFromSection(section string) ([]Communicator, error) {
 		if comm == nil {
 			continue
 		}
-		communicator_type := ConstructorsTypeRest
-		if comm_type, ok := comm["type"]; ok {
-			communicator_type = comm_type
+		communicatorType := ConstructorsTypeRest
+		if commType, ok := comm["type"]; ok {
+			communicatorType = commType
 		}
 		comm["section"] = section
 		if _, ok := comm["param"]; !ok {
 			comm["param"] = config.CFG_COMMUNICATOR_PARAMS_KEY
 		}
 
-		k := strings.ToUpper(communicator_type)
-		if type_struct, ok := Constructors[k]; ok {
+		k := strings.ToUpper(communicatorType)
+		if typeStruct, ok := Constructors[k]; ok {
 			// if comm, err := type_struct.constructor(section); err == nil {
-			communicator_instance := type_struct.instance()
+			communicatorInstance := typeStruct.instance()
 			// log.Warningf("comm %v", comm)
-			if err1 := communicator_instance.Configure(config.ConvertMapStringToInterface(comm)); err1 != nil {
-				log.Tracef("Can't configure %v communicator, got %v", communicator_type, comm)
+			if err1 := communicatorInstance.Configure(config.ConvertMapStringToInterface(comm)); err1 != nil {
+				log.Tracef("Can't configure %v communicator, got %v", communicatorType, comm)
 				return nil, err1
 			}
-			res = append(res, communicator_instance)
+			res = append(res, communicatorInstance)
 		}
 	}
 	if len(res) > 0 {

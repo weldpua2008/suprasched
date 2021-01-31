@@ -18,11 +18,25 @@ func eventDataStringMapString(e *bus.Event) (res map[string]string) {
 	return res
 }
 
-func eventGetCLuster(e *bus.Event) (*model.Cluster, error) {
+// eventGetJob returns job from event.
+func eventGetJob(e *bus.Event) (*model.Job, error) {
 	res := eventDataStringMapString(e)
 	if storeKey, ok := res["StoreKey"]; ok {
-		if rec, ok := config.ClusterRegistry.Record(storeKey); ok {
+		if rec, ok := config.JobsRegistry.Record(storeKey); ok {
 			return rec, nil
+		}
+	}
+	return nil, fmt.Errorf("%w", ErrNoClusterFound)
+}
+
+// eventGetCLuster returns Cluster from event.
+func eventGetCLuster(e *bus.Event) (*model.Cluster, error) {
+	res := eventDataStringMapString(e)
+	for _, k := range []string{"StoreKey", "ClusterStoreKey"} {
+		if storeKey, ok := res[k]; ok {
+			if rec, ok := config.ClusterRegistry.Record(storeKey); ok {
+				return rec, nil
+			}
 		}
 	}
 	return nil, fmt.Errorf("%w", ErrNoClusterFound)

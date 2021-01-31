@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	EventBusmessagesProcessed = promauto.NewHistogramVec(prometheus.HistogramOpts{
+	EventBusMessageProcessed = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "suprasched",
 		Subsystem: "eventbus",
 		Name:      "latency_ns",

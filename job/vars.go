@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrNoSuitableJobsFetcher = errors.New("No suitable communicator found")
+	ErrNoSuitableJobsFetcher = errors.New("no suitable communicator found")
 	// internal
 	jobsFetched = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "suprasched_jobs_fetch_total",

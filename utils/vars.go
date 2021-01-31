@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	aws_sessions           = make(map[string]*session.Session, 0)
+	awsSessions            = make(map[string]*session.Session, 0)
 	mu                     sync.RWMutex
 	ErrEmptyClusterId      = errors.New("Cluster Id is empty")
 	ErrClusterIdIsNotValid = errors.New("InvalidRequestException: Cluster id is not valid")

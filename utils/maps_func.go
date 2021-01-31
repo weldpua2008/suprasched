@@ -43,6 +43,6 @@ func GetFirstTimeFromMap(v map[string]interface{}, keys []string) (time.Time, bo
 			}
 		}
 	}
-	var temp_time time.Time
-	return temp_time, false
+	var tempTime time.Time
+	return tempTime, false
 }

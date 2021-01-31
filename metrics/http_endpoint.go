@@ -18,7 +18,7 @@ type SrvSession struct {
 	mu         sync.RWMutex
 }
 
-// IsStarted return wether it was started
+// IsStarted return whether it was started
 func (s *SrvSession) IsStarted() bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

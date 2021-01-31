@@ -33,11 +33,11 @@ import (
 )
 
 var (
-	verbose                 bool
-	traceFlag               bool
-	enableHealthcheckServer bool
-	log                         = logrus.WithFields(logrus.Fields{"package": "cmd"})
-	numWorkers              int = 5
+	verbose              bool
+	traceFlag            bool
+	enableHealthCheckUri bool
+	log                  = logrus.WithFields(logrus.Fields{"package": "cmd"})
+	//numWorkers           int = 5
 )
 
 func init() {
@@ -46,7 +46,7 @@ func init() {
 	// will be global for application.
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose")
 	rootCmd.PersistentFlags().BoolVarP(&traceFlag, "trace", "t", false, "trace")
-	rootCmd.PersistentFlags().BoolVarP(&enableHealthcheckServer, "healthcheck", "p", true, "healthcheck")
+	rootCmd.PersistentFlags().BoolVarP(&enableHealthCheckUri, "healthcheck", "p", true, "healthcheck")
 
 	// rootCmd.PersistentFlags().StringVar(&config.ClientId, "clientId", "", "ClientId (default is suprasched)")
 
@@ -70,11 +70,12 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		rand.Seed(time.Now().UnixNano())
 		sigs := make(chan os.Signal, 1)
-		shutchan := make(chan bool, 1)
+		shutdownChan := make(chan bool, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel() // cancel when we are getting the kill signal or exit
 		jobs := make(chan bool)
+		jobsTimeOut := make(chan bool)
 		clusters := make(chan bool)
 		describers := make(chan bool)
 		terminators := make(chan bool)
@@ -85,7 +86,7 @@ var rootCmd = &cobra.Command{
 			sig := <-sigs
 			log.Infof("Shutting down - got %v signal", sig)
 			cancel()
-			shutchan <- true
+			shutdownChan <- true
 		}()
 
 		if traceFlag {
@@ -107,18 +108,18 @@ var rootCmd = &cobra.Command{
 			// }
 			config.ReinitializeConfig()
 		})
-		if enableHealthcheckServer {
+		if enableHealthCheckUri {
 			addr := config.GetStringTemplatedDefault("healthcheck.listen", ":8080")
-			metrics_uri := config.GetStringTemplatedDefault("healthcheck.uri", "/health/is_alive")
-			metrics.StartHealthCheck(addr, metrics_uri)
+			metricsUri := config.GetStringTemplatedDefault("healthcheck.uri", "/health/is_alive")
+			metrics.StartHealthCheck(addr, metricsUri)
 
 		}
-		prometheus_addr := config.GetStringTemplatedDefault("prometheus.listen", ":8080")
-		prometheus_uri := config.GetStringTemplatedDefault("prometheus.uri", "/metrics")
-		metrics.AddPrometheusMetricsHandler(prometheus_addr, prometheus_uri)
+		prometheusAddr := config.GetStringTemplatedDefault("prometheus.listen", ":8080")
+		prometheusUri := config.GetStringTemplatedDefault("prometheus.uri", "/metrics")
+		metrics.AddPrometheusMetricsHandler(prometheusAddr, prometheusUri)
 		metrics.StartAll()
 		defer metrics.StopAll(ctx)
-        // Init Bus & Handlers
+		// Init Bus & Handlers
 		handlers.Init()
 		defer handlers.Deregister()
 		defer config.EvenBusTearDown()
@@ -145,7 +146,6 @@ var rootCmd = &cobra.Command{
 		}()
 
 		go func() {
-			// StartGenerateClusters(ctx context.Context, clusters chan *model.Cluster, interval time.Duration) error
 			if err := cluster.StartUpdateClustersMetadata(ctx, describers, config.GetTimeDuration(
 				fmt.Sprintf(
 					"%s.%s",
@@ -157,16 +157,16 @@ var rootCmd = &cobra.Command{
 		}()
 
 		go func() {
-            terminationDelay :=  2 * config.GetTimeDuration(
+			terminationDelay := 2*config.GetTimeDuration(
 				fmt.Sprintf(
 					"%s.%s",
 					config.CFG_PREFIX_JOBS,
 					config.CFG_PREFIX_JOBS_FETCHER,
-				)) + 2 * config.GetTimeDuration(
-    				fmt.Sprintf(
-    					"%s.fetch",
-    					config.CFG_PREFIX_CLUSTER,
-    				))
+				)) + 2*config.GetTimeDuration(
+				fmt.Sprintf(
+					"%s.fetch",
+					config.CFG_PREFIX_CLUSTER,
+				))
 
 			if err := cluster.StartTerminateClusters(ctx, terminators, config.GetTimeDuration(
 				fmt.Sprintf(
@@ -174,12 +174,34 @@ var rootCmd = &cobra.Command{
 					config.CFG_PREFIX_CLUSTER,
 					config.CFG_PREFIX_TERMINATORS,
 				)),
-                terminationDelay); err != nil {
+				terminationDelay); err != nil {
 				log.Warningf("StartTerminateClusters returned error %v", err)
+			}
+		}()
+		go func() {
+			if err := job.CancelTimeoutJobs(ctx, jobsTimeOut,
+				config.GetTimeDuration(
+					fmt.Sprintf(
+						"%s.%s",
+						config.CFG_PREFIX_JOBS,
+						config.CFG_PREFIX_JOBS_TIMEOUT,
+					)),
+				config.GetTimeDurationDefault(
+					fmt.Sprintf(
+						"%s.%s",
+						config.CFG_PREFIX_JOBS,
+						config.CFG_PREFIX_JOBS_TIMEOUT,
+					),
+					config.CFG_PREFIX_JOB_TIMEOUT_DURATION,
+					time.Duration(30)*time.Minute)); err != nil {
+				log.Warningf("CancelTimeoutJobs returned error %v", err)
 			}
 		}()
 
 		select {
+		case <-jobsTimeOut:
+			log.Infof("Jobs Timeout stopped")
+
 		case <-jobs:
 			log.Infof("Jobs stopped")
 		case <-clusters:
