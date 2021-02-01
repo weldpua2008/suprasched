@@ -1,7 +1,6 @@
 package model
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -38,9 +37,9 @@ type Cluster struct {
 	// MaxAttempts    int       // Absolute max num of attempts.
 	// MaxFails       int       // Absolute max number of failures.
 	// TTR            uint64    // Time-to-run in Millisecond
-	mu           sync.RWMutex
-	ExitCode     int // Exit code
-	ctx          context.Context
+	mu       sync.RWMutex
+	ExitCode int // Exit code
+	//ctx          context.Context
 	all          map[string]*Job
 	inTransition bool // if cluster is modified
 }
@@ -270,7 +269,7 @@ func (c *Cluster) UseExternalStatus(ext *Cluster) bool {
 	}
 	if GetClusterStatusWeight(ext.Status) > GetClusterStatusWeight(c.Status) {
 		return true
-	} else if strings.ToLower(c.Status) != strings.ToLower(ext.Status) {
+	} else if !strings.EqualFold(c.Status, ext.Status) {
 		return true
 	}
 
@@ -284,7 +283,7 @@ func (c *Cluster) UseExternalStatusString(ext string) bool {
 	defer c.mu.Unlock()
 	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
 		return true
-	} else if strings.ToLower(c.Status) != strings.ToLower(ext) {
+	} else if !strings.EqualFold(c.Status, ext) {
 		return true
 	}
 
@@ -328,7 +327,7 @@ func (c *Cluster) UpdateStatus(ext string) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
-		c.updateStatus(ext)
+		_ = c.updateStatus(ext)
 		return true
 	}
 	// else if strings.ToLower(c.Status) != strings.ToLower(ext) {
@@ -352,11 +351,11 @@ func (c *Cluster) UpdateStatusInTransition(ext string) bool {
 	defer c.mu.Unlock()
 	if !c.inTransition {
 		if GetClusterStatusWeight(ext) > GetClusterStatusWeight(c.Status) {
-			c.updateStatus(ext)
+			_ = c.updateStatus(ext)
 			c.inTransition = true
 			return true
 		} else if c.Status != ext {
-			c.updateStatus(ext)
+			_ = c.updateStatus(ext)
 			c.inTransition = true
 			return true
 		}

@@ -43,13 +43,13 @@ func (r *ClusterRegistry) Add(rec *Cluster) bool {
 }
 
 // FilterFree cluster list by cluster types.
-func (r *ClusterRegistry) FilterFree(cluster_types []string) []*Cluster {
+func (r *ClusterRegistry) FilterFree(clusterTypes []string) []*Cluster {
 	r.muFree.RLock()
 	defer r.muFree.RUnlock()
 	ret := make([]*Cluster, 0)
 	for _, cl := range r.unoccupied {
-		for _, clustertype := range cluster_types {
-			if strings.ToLower(cl.ClusterType) == strings.ToLower(clustertype) {
+		for _, clusterType := range clusterTypes {
+			if strings.EqualFold(cl.ClusterType, clusterType) {
 				ret = append(ret, cl)
 			}
 		}
@@ -111,7 +111,7 @@ func (r *ClusterRegistry) Delete(id string) bool {
 	}
 	delete(r.all, id)
 	idx := -1
-	for i, _ := range r.byType[rec.ClusterType] {
+	for i := range r.byType[rec.ClusterType] {
 		idx = i
 		if r.byType[rec.ClusterType][idx] == rec {
 			break
@@ -160,22 +160,22 @@ func (r *ClusterRegistry) DumpMetrics(in *prometheus.GaugeVec) {
 	r.mu.RLock()
 	// defer r.mu.RUnlock()
 	// Cluster profile -> type ->  status
-	temp_cnt := make(map[string]map[string]map[string]int, 0)
+	tempCnt := make(map[string]map[string]map[string]int)
 	for _, cls := range r.all {
-		if _, ok := temp_cnt[cls.ClusterProfile]; !ok {
-			temp_cnt[cls.ClusterProfile] = make(map[string]map[string]int, 0)
+		if _, ok := tempCnt[cls.ClusterProfile]; !ok {
+			tempCnt[cls.ClusterProfile] = make(map[string]map[string]int)
 		}
 
-		if _, ok := temp_cnt[cls.ClusterProfile][cls.ClusterType]; !ok {
-			temp_cnt[cls.ClusterProfile][cls.ClusterType] = make(map[string]int, 0)
+		if _, ok := tempCnt[cls.ClusterProfile][cls.ClusterType]; !ok {
+			tempCnt[cls.ClusterProfile][cls.ClusterType] = make(map[string]int)
 
 		}
-		temp_cnt[cls.ClusterProfile][cls.ClusterType][cls.Status] += 1
+		tempCnt[cls.ClusterProfile][cls.ClusterType][cls.Status] += 1
 
 	}
 	r.mu.RUnlock()
 	// log.Warning(temp_cnt)
-	for clusterProfile, val := range temp_cnt {
+	for clusterProfile, val := range tempCnt {
 		for clusterType, val1 := range val {
 			for status, val2 := range val1 {
 				in.WithLabelValues(strings.ToLower(clusterProfile), strings.ToLower(clusterType), strings.ToLower(status)).Set(float64(val2))

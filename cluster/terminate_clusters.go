@@ -99,8 +99,8 @@ func StartTerminateClusters(ctx context.Context, clusters chan bool, interval ti
 							continue
 						}
 						if !rec.IsTimeout() {
-							if rec.TimeOutAt.Sub(time.Now()).Seconds() < (time.Duration(interval*10).Seconds() + 60) {
-								log.Tracef(" Cluster %v will be terminated in %vs", rec.StoreKey(), rec.TimeOutAt.Sub(time.Now()).Seconds())
+							if time.Until(rec.TimeOutAt).Seconds() < (time.Duration(interval*10).Seconds() + 60) {
+								log.Tracef(" Cluster %v will be terminated in %vs", rec.StoreKey(), time.Until(rec.TimeOutAt).Seconds())
 							}
 							continue
 						}
@@ -141,13 +141,13 @@ func StartTerminateClusters(ctx context.Context, clusters chan bool, interval ti
 							log.Tracef("Failed to terminate cluster status '%v', failed with %v", rec.ClusterId, err)
 						}
 						metrics.FetchMetadataLatency.WithLabelValues("terminate_clusters",
-							"single").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+							"single").Observe(float64(time.Since(start).Nanoseconds()))
 
 					}
 				}
 				if !isDelayed {
 					metrics.FetchMetadataLatency.WithLabelValues("terminate_clusters",
-						"whole").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+						"whole").Observe(float64(time.Since(start).Nanoseconds()))
 				}
 
 			}

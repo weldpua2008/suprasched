@@ -124,11 +124,16 @@ func (d *TerminateClusterEMR) Terminate(params map[string]interface{}) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	utils.EmrClusterTerminate(params, d.getEmrApi)
-	log.Tracef("Terminate Cluster %v", ClusterId)
+	if ok, err := utils.EmrClusterTerminate(params, d.getEmrApi); !ok {
+		log.Tracef("Failed to Terminate Cluster %v %v", ClusterId, err)
+	} else {
+		log.Tracef("Terminated cluster %v", ClusterId)
+	}
 
 	for _, comm := range d.comms {
-		comm.Configure(params)
+		if err := comm.Configure(params); err != nil {
+			log.Tracef("Can't configure communicator %v", err)
+		}
 		res, err := comm.Fetch(clusterCtx, param)
 		if err != nil {
 			log.Tracef("Can't Terminate %v %v %v", ClusterId, err, res)

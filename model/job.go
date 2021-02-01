@@ -1,7 +1,6 @@
 package model
 
 import (
-	"context"
 	"fmt"
 	utils "github.com/weldpua2008/suprasched/utils"
 	// communicator "github.com/weldpua2008/suprasched/communicator"
@@ -32,11 +31,11 @@ type Job struct {
 	PreviousClusterStoreKey string    // Previous Cluster UUID
 	ClusterConfig           map[string]interface{}
 	mu                      sync.RWMutex
-	exitError               error
-	ExitCode                int // Exit code
-	ctx                     context.Context
-	inTransition            bool // whether Job in some transaction
-	ExtraSendParams         map[string]string
+	//exitError               error
+	ExitCode int // Exit code
+	//ctx                     context.Context
+	inTransition    bool // whether Job in some transaction
+	ExtraSendParams map[string]string
 }
 
 // StoreKey returns Job unique store key
@@ -56,8 +55,8 @@ func (j *Job) GetStatus() string {
 	return j.Status
 }
 
-// updatelastActivity for the Job
-func (j *Job) updatelastActivity() {
+// updatesLastActivity for the Job
+func (j *Job) updatesLastActivity() {
 	j.LastActivityAt = time.Now()
 }
 
@@ -92,8 +91,10 @@ func (j *Job) UpdateStatus(ext string) bool {
 	j.mu.Lock()
 	defer j.mu.Unlock()
 
-	if strings.ToLower(j.Status) != strings.ToLower(ext) {
-		j.updateStatus(ext)
+	if !strings.EqualFold(j.Status, ext) {
+		if err := j.updateStatus(ext); err != nil {
+			log.Tracef("Failed to update %v %v => %v", j.Id, j.Status, ext)
+		}
 		return true
 	}
 
@@ -135,7 +136,7 @@ func (j *Job) updateStatus(status string) error {
 	log.Trace(fmt.Sprintf("Job %s status %s -> %s [%v %v]", j.Id, j.Status, status, clusterId, j.ClusterType))
 	j.PreviousStatus = j.Status
 	j.Status = status
-	j.updatelastActivity()
+	j.updatesLastActivity()
 	return nil
 }
 
@@ -194,7 +195,7 @@ func (j *Job) Cancel() error {
 		if errUpdate := j.updateStatus(JOB_STATUS_CANCELED); errUpdate != nil {
 			log.Tracef("failed to change job %s status '%s' -> '%s'", j.Id, j.Status, JOB_STATUS_CANCELED)
 		}
-		j.updatelastActivity()
+		j.updatesLastActivity()
 
 	} else {
 		log.Trace(fmt.Sprintf("Job %s in terminal '%s' status ", j.Id, j.Status))

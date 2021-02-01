@@ -69,7 +69,7 @@ func (r *Registry) Cleanup() (num int) {
 	n := r.Len()
 	slice := make([]string, n)
 	i := 0
-	for k, _ := range r.all {
+	for k := range r.all {
 		if i > n {
 			slice = append(slice, k)
 		} else {
@@ -113,9 +113,7 @@ func (r *Registry) CleanupBatch(slice []string) (num int) {
 					}
 				}
 				delete(r.all, k)
-				if _, ok := r.pending[k]; ok {
-					delete(r.pending, k)
-				}
+				delete(r.pending, k)
 				num += 1
 			}
 

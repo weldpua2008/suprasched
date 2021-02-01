@@ -10,6 +10,6 @@ import (
 var (
 	log                  = logrus.WithFields(logrus.Fields{"package": "communicator"})
 	ErrServerListenError = errors.New("HTTP server ListenAndServe:")
-	listenServersStore   = make(map[string]*SrvSession, 0)
+	listenServersStore   = make(map[string]*SrvSession)
 	mu                   sync.RWMutex
 )

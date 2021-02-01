@@ -24,7 +24,7 @@ func CancelTimeoutJobs(ctx context.Context, jobs chan bool, interval time.Durati
 			select {
 			case <-ctx.Done():
 				doneCancelJobs <- counter
-				log.Debug("Jobs timeout cancelation finished [ SUCCESSFULLY ]")
+				log.Debug("Jobs timeout cancellation finished [ SUCCESSFULLY ]")
 				return
 			case <-tickerPullJobs.C:
 				start := time.Now()
@@ -36,7 +36,7 @@ func CancelTimeoutJobs(ctx context.Context, jobs chan bool, interval time.Durati
 					if j.IsInTransition() {
 						continue
 					}
-					if strings.ToUpper(j.Status) == strings.ToUpper(model.JOB_STATUS_PENDING) {
+					if strings.EqualFold(j.Status, model.JOB_STATUS_PENDING) {
 						counter += 1
 						pendingDelay := j.CreateAt.Add(pendingTimeOut)
 						if time.Now().After(pendingDelay) {
@@ -44,17 +44,17 @@ func CancelTimeoutJobs(ctx context.Context, jobs chan bool, interval time.Durati
 							if err != nil {
 								log.Tracef("%v", err)
 							}
-							// log.Tracef("Job  %v is timeouted %v", j.StoreKey(),pending_delay)
+							// log.Tracef("Job  %v timeout %v", j.StoreKey(),pending_delay)
 
 						}
 					}
 
 					metrics.FetchMetadataLatency.WithLabelValues("timeout_jobs",
-						"single").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+						"single").Observe(float64(time.Since(start).Nanoseconds()))
 				}
 
 				metrics.FetchMetadataLatency.WithLabelValues("timeout_jobs",
-					"whole").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+					"whole").Observe(float64(time.Since(start).Nanoseconds()))
 			}
 		}
 

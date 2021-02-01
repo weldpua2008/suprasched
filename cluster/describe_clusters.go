@@ -144,7 +144,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interv
 							log.Tracef("Failed to describe cluster status '%v', failed with %v", clusterStatus, err)
 						}
 						metrics.FetchMetadataLatency.WithLabelValues("describe_clusters",
-							"single").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+							"single").Observe(float64(time.Since(start).Nanoseconds()))
 
 					}
 				}
@@ -152,7 +152,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interv
 				if !isDelayed {
 					config.ClusterRegistry.DumpMetrics(clusterStatuses)
 					metrics.FetchMetadataLatency.WithLabelValues("describe_clusters",
-						"whole").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+						"whole").Observe(float64(time.Since(start).Nanoseconds()))
 
 				}
 

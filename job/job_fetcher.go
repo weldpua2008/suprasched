@@ -138,13 +138,13 @@ func StartFetchJobs(ctx context.Context, jobs chan bool, interval time.Duration)
 							}
 						}
 						metrics.FetchMetadataLatency.WithLabelValues("fetch_jobs",
-							"single").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+							"single").Observe(float64(time.Since(start).Nanoseconds()))
 
 					}
 
 				}
 				metrics.FetchMetadataLatency.WithLabelValues("fetch_jobs",
-					"whole").Observe(float64(time.Now().Sub(start).Nanoseconds()))
+					"whole").Observe(float64(time.Since(start).Nanoseconds()))
 			}
 		}
 	}()

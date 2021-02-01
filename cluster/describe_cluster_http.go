@@ -115,11 +115,11 @@ func (d *DescribeClusterHttp) ClusterStatus(params map[string]interface{}) (stri
 	result := "UNKNOWN"
 
 	for _, comm := range d.comms {
-		comm.Configure(param)
-		// if err:=comm.Configure(param);err != nil {
-		//     log.Tracef("comm.Configure %v => %v", comm, err)
-		//
-		// }
+
+		if err := comm.Configure(param); err != nil {
+			log.Tracef("comm.Configure %v => %v", comm, err)
+
+		}
 		res, err := comm.Fetch(clusterCtx, param)
 		if err != nil {
 			log.Tracef("Can't Describe %v %v", ClusterId, err)

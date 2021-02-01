@@ -152,7 +152,7 @@ func EmrClusterStatus(params map[string]interface{}, getemr func(*session.Sessio
 // EmrClusterTerminate return true if AWS EMR was terminated.
 // TODO:
 // * Support multiple AWS Profiles.
-func EmrClusterTerminate(params map[string]interface{}, getemr func(*session.Session) emriface.EMRAPI) (bool, error) {
+func EmrClusterTerminate(params map[string]interface{}, getEmrFunc func(*session.Session) emriface.EMRAPI) (bool, error) {
 	var ClusterId string
 	var ctx context.Context
 	var clusterCtx context.Context
@@ -186,7 +186,7 @@ func EmrClusterTerminate(params map[string]interface{}, getemr func(*session.Ses
 	if err != nil {
 		return false, err
 	}
-	svc := getemr(sess)
+	svc := getEmrFunc(sess)
 	clusterInput := &emr.TerminateJobFlowsInput{
 		JobFlowIds: []*string{&ClusterId},
 	}
