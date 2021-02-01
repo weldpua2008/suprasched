@@ -7,7 +7,7 @@ import (
 	//"time"
 )
 
-// CancelTimeoutJobs handler when the job is timeout.
+// CancelTimeoutJobs handler when the job reached timeout.
 func CancelTimeoutJobs(e *bus.Event) {
 	if j, err := eventGetJob(e); err == nil {
 		j.PutInTransition()
