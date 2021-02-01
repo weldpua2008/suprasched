@@ -122,13 +122,13 @@ func initConfig() {
 // GetSliceStringMapStringTemplatedDefault returns slice of [string]string maps templated & enriched by default.
 func GetSliceStringMapStringTemplatedDefault(section string, param string, def map[string]string) []map[string]string {
 	ret := make([]map[string]string, 0)
-	sections_values := viper.GetStringMap(fmt.Sprintf("%s.%s", section, param))
-	for _, section_value := range sections_values {
-		if section_value == nil {
+	sectionsValues := viper.GetStringMap(fmt.Sprintf("%s.%s", section, param))
+	for _, sectionValue := range sectionsValues {
+		if sectionValue == nil {
 			continue
 		}
 		// log.Infof("%s.%s => %v",  section, param,k1)
-		if params, ok := section_value.(map[string]interface{}); ok {
+		if params, ok := sectionValue.(map[string]interface{}); ok {
 			c := make(map[string]string)
 			for k, v := range def {
 				c[k] = v
@@ -157,13 +157,13 @@ func GetSliceStringMapStringTemplatedDefault(section string, param string, def m
 // GetMapStringMapStringTemplatedDefault returns map of [string]string maps templated & enriched by default.
 func GetMapStringMapStringTemplatedDefault(section string, param string, def map[string]string) map[string]map[string]string {
 	ret := make(map[string]map[string]string, 0)
-	sections_values := viper.GetStringMap(fmt.Sprintf("%s.%s", section, param))
-	for subsection, section_value := range sections_values {
-		if section_value == nil {
+	sectionsValues := viper.GetStringMap(fmt.Sprintf("%s.%s", section, param))
+	for subsection, sectionValue := range sectionsValues {
+		if sectionValue == nil {
 			continue
 		}
 		// log.Infof("%s.%s => %v",  section, param,k1)
-		if params, ok := section_value.(map[string]interface{}); ok {
+		if params, ok := sectionValue.(map[string]interface{}); ok {
 			c := make(map[string]string)
 			for k, v := range def {
 				c[k] = v

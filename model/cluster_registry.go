@@ -244,15 +244,15 @@ func (r *ClusterRegistry) DumpMetrics(in *prometheus.GaugeVec) {
 // 	return num
 // }
 
-// GracefullShutdown is used when we stop the ClusterRegistry.
+// GracefullyShutdown is used when we stop the ClusterRegistry.
 // cancel all running & pending cluster
 // return false if we can't cancel any cluster
-// func (r *ClusterRegistry) GracefullShutdown() bool {
+// func (r *ClusterRegistry) GracefullyShutdown() bool {
 // 	r.Cleanup()
 // 	r.mu.Lock()
 // 	defer r.mu.Unlock()
 // 	failed := false
-// 	// log.Debug("start GracefullShutdown")
+// 	// log.Debug("start GracefullyShutdown")
 // 	// for k, v := range r.all {
 // 	// 	if !IsTerminalStatus(v.Status) {
 // 	// 		if err := v.Cancel(); err != nil {

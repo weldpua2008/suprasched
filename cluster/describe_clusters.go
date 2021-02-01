@@ -21,15 +21,15 @@ func GetSectionClustersDescriber(section string) ([]ClustersDescriber, error) {
 
 	def := make(map[string]string)
 
-	describersCfgs := config.GetMapStringMapStringTemplatedDefault(section, config.CFG_PREFIX_DESCRIBERS, def)
+	describersCFGs := config.GetMapStringMapStringTemplatedDefault(section, config.CFG_PREFIX_DESCRIBERS, def)
 	res := make([]ClustersDescriber, 0)
-	for subsection, comm := range describersCfgs {
+	for subsection, comm := range describersCFGs {
 		if comm == nil {
 			continue
 		}
 		describerType := ConstructorsDescriberTypeRest
-		if descrType, ok := comm["type"]; ok {
-			describerType = descrType
+		if tmpDescribeType, ok := comm["type"]; ok {
+			describerType = tmpDescribeType
 		}
 		k := strings.ToUpper(describerType)
 		if typeStruct, ok := DescriberConstructors[k]; ok {
@@ -58,7 +58,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interv
 	if err != nil || describersInstances == nil || len(describersInstances) == 0 {
 		return fmt.Errorf("Failed to start StartUpdateClustersMetadata %v", err)
 	}
-	notValidClusterIds := make(map[string]struct{}, 0)
+	notValidClusterIds := make(map[string]struct{})
 
 	doneNumClusters := make(chan int, 1)
 	log.Infof("Starting update Clusters with delay %v", interval)
@@ -131,7 +131,7 @@ func StartUpdateClustersMetadata(ctx context.Context, clusters chan bool, interv
 							*/
 							clusterIdsAreNotValid.Set(float64(len(notValidClusterIds)))
 							if len(notValidClusterIds) > 4096 {
-								notValidClusterIds = make(map[string]struct{}, 0)
+								notValidClusterIds = make(map[string]struct{})
 							}
 							notValidClusterIds[rec.ClusterId] = struct{}{}
 							if config.ClusterRegistry.Delete(cls.StoreKey()) {

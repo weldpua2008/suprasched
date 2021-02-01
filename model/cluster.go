@@ -294,10 +294,7 @@ func (c *Cluster) UseExternalStatusString(ext string) bool {
 func (c *Cluster) IsInTransition() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	if c.inTransition {
-		return true
-	}
-	return false
+	return c.inTransition
 }
 
 func (c *Cluster) PutInTransition() bool {

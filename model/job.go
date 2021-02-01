@@ -64,10 +64,8 @@ func (j *Job) updatelastActivity() {
 func (j *Job) IsInTransition() bool {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
-	if j.inTransition {
-		return true
-	}
-	return false
+
+	return j.inTransition
 }
 func (j *Job) PutInTransition() bool {
 	j.mu.Lock()

@@ -57,7 +57,7 @@ func StartTerminateClusters(ctx context.Context, clusters chan bool, interval ti
 	if err != nil || terminatorsInstances == nil || len(terminatorsInstances) == 0 {
 		return fmt.Errorf("Failed to start StartTerminateClusters %v", err)
 	}
-	notValidClusterIds := make(map[string]struct{}, 0)
+	notValidClusterIds := make(map[string]struct{})
 
 	doneNumClusters := make(chan int, 1)
 	log.Infof("Starting terminate Clusters every %v after %v", interval, delay)
@@ -128,7 +128,7 @@ func StartTerminateClusters(ctx context.Context, clusters chan bool, interval ti
 							*/
 							clusterIdsAreNotValid.Set(float64(len(notValidClusterIds)))
 							if len(notValidClusterIds) > 4096 {
-								notValidClusterIds = make(map[string]struct{}, 0)
+								notValidClusterIds = make(map[string]struct{})
 							}
 							notValidClusterIds[rec.ClusterId] = struct{}{}
 							if config.ClusterRegistry.Delete(cls.StoreKey()) {

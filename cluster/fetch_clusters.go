@@ -128,9 +128,9 @@ func StartGenerateClusters(ctx context.Context, clusters chan bool, interval tim
 	return nil
 }
 
-// // GracefullShutdown cancel all running clusters
+// // GracefullyShutdown cancel all running clusters
 // // returns error in case any job failed to cancel
-// func GracefullShutdown(clusters <-chan *model.Job) bool {
+// func GracefullyShutdown(clusters <-chan *model.Job) bool {
 // 	// empty clusters channel
 // 	if len(clusters) > 0 {
 // 		log.Trace(fmt.Sprintf("clusters chan still has size %v, empty it", len(clusters)))
@@ -138,9 +138,9 @@ func StartGenerateClusters(ctx context.Context, clusters chan bool, interval tim
 // 			<-clusters
 // 		}
 // 	}
-// 	ClustersRegistry.GracefullShutdown()
+// 	ClustersRegistry.GracefullyShutdown()
 // 	if ClustersRegistry.Len() > 0 {
-// 		log.Trace(fmt.Sprintf("GracefullShutdown failed, '%v' clusters left ", ClustersRegistry.Len()))
+// 		log.Trace(fmt.Sprintf("GracefullyShutdown failed, '%v' clusters left ", ClustersRegistry.Len()))
 // 		return false
 // 	}
 // 	return true
