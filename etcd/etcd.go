@@ -1,18 +1,18 @@
-package main
+package etcd
 
 import (
 	"context"
 	"fmt"
-	"go.etcd.io/etcd/client/v3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"log"
 	"time"
 )
 
 type TempObj struct {
-	Name string
-	Age int
+	Name        string
+	Age         int
 	Designation string
-	Salary int
+	Salary      int
 }
 
 var (
@@ -24,7 +24,7 @@ func EtcdConnection() {
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	KVClient, err := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints: []string{"127.0.0.1:2379"},
+		Endpoints:   []string{"127.0.0.1:2379"},
 	})
 	if err != nil {
 		log.Fatalf("Cannot start etcd client, got %s", err)
@@ -36,12 +36,12 @@ func EtcdConnection() {
 	defer KVClient.Close()
 
 	// context = Go feature that allows code across a goroutine to access shared information in a safe manner and cancel operations
-	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
-	// releases resources if slowOperation completes before timeout elapses
-	defer cancel()
+	//ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	//// releases resources if slowOperation completes before timeout elapses
+	//defer cancel()
 
 	// NewKV wraps a KV instance so that all requests are prefixed with a given string.
-	kv := clientv3.NewKV(KVClient)
+	//kv := clientv3.NewKV(KVClient)
 }
 
 func GetValue(ctx context.Context, kv clientv3.KV, key string) {
@@ -58,7 +58,7 @@ func GetValue(ctx context.Context, kv clientv3.KV, key string) {
 	}
 
 	for _, item := range gr.Kvs {
-		fmt.Println("Value:", string(item.Key), ",Value:" ,string(item.Value), ",Revision:", string(gr.Header.Revision))
+		fmt.Println("Value:", string(item.Key), ",Value:", string(item.Value), ",Revision:", string(gr.Header.Revision))
 	}
 }
 
@@ -68,7 +68,7 @@ func GetPastValueFromRevision(ctx context.Context, kv clientv3.KV, key string, r
 	fmt.Println("Historical version of the value:", string(gr.Kvs[0].Value), ",Past revision:", rev, ",Revision: ", gr.Header.Revision)
 }
 
-func InsertsSingleValue(ctx context.Context, kv clientv3.KV, key string, val string ){
+func InsertsSingleValue(ctx context.Context, kv clientv3.KV, key string, val string) {
 	// Inserts a key value pair "key", "value" via the Put() method. the keys and values must be strings!
 	pr, err := kv.Put(ctx, key, val)
 	if err != nil {
