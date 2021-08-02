@@ -65,7 +65,7 @@ func GetValue(ctx context.Context, kv clientv3.KV, key string) {
 func GetPastValueFromRevision(ctx context.Context, kv clientv3.KV, key string, rev int64) {
 	// WithRev() returns the historical version of the value for the target key, but the header's revision will always contain the current revision!.
 	gr, _ := kv.Get(ctx, key, clientv3.WithRev(rev))
-	fmt.Println("Historical version of the value:", string(gr.Kvs[0].Value), ",Past revision:", rev, ",Revision: ", gr.Header.Revision)
+	fmt.Println("Historical version of the value:", string(gr.Kvs[0].Value), ",Past revision:", rev, ",Revision: ", fmt.Sprint(gr.Header.Revision))
 }
 
 func InsertsSingleValue(ctx context.Context, kv clientv3.KV, key string, val string) {
