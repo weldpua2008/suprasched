@@ -5,7 +5,7 @@ import (
 )
 
 func TestNothing(t *testing.T) {
-	if false {
+	if true {
 		t.Fail()
 	}
 }
