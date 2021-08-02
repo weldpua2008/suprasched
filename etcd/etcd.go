@@ -1,9 +1,9 @@
-package main
+package etcd
 
 import (
 	"context"
 	"fmt"
-	"go.etcd.io/etcd/client/v3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"log"
 	"time"
 )
@@ -36,12 +36,12 @@ func EtcdConnection() {
 	defer KVClient.Close()
 
 	// context = Go feature that allows code across a goroutine to access shared information in a safe manner and cancel operations
-	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
-	// releases resources if slowOperation completes before timeout elapses
-	defer cancel()
+	//ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	//// releases resources if slowOperation completes before timeout elapses
+	//defer cancel()
 
 	// NewKV wraps a KV instance so that all requests are prefixed with a given string.
-	kv := clientv3.NewKV(KVClient)
+	//kv := clientv3.NewKV(KVClient)
 }
 
 func GetValue(ctx context.Context, kv clientv3.KV, key string) {
