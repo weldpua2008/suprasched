@@ -1,0 +1,25 @@
+clientId: "clientId"
+version: "1.0"
+
+cluster:
+    describe:
+        communicators:
+            method: "get"
+            url: "{{.URL}}"
+            type: HTTP
+
+        test_supported_clusters:
+            type: "on-demand"
+            communicators:
+                method: "get"
+                url: "{{.URL}}"
+                type: HTTP
+        supported:
+            - "on-demand"
+            - "HTTP"
+
+
+    # supported:
+    #     - "on-demand"
+    #     - "HTTP"
+empty:

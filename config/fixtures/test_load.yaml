@@ -1,0 +1,22 @@
+clientId: "clientId"
+version: "1.0"
+TestGetStringMapStringTemplatedDefault:
+    param:
+        a: "a"
+        c: 1
+        clientid: "{{.ClientId}}"
+TestGetStringMapStringTemplatedFromMap:
+    param:
+        a: "a"
+        c: 1
+        clientid: "{{.ClientId}}"
+        example: "{{ .Example}}"
+
+interval: "100s"
+TestGetTimeDuration:
+    one:
+        interval: "15s"
+    two:
+        interval: "15h"
+    three:
+        x: 1

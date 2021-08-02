@@ -1,0 +1,40 @@
+clientId: "clientId"
+version: "1.0"
+interval: 1s
+jobs:
+    update:
+        communicators:
+            one:
+                method: get
+                type: HTTP
+                url: "{{.URL}}"
+                params:
+                    job_uid: "{{ .JobId }}"
+                    run_uid: "{{ .RunUID}}"
+                    job_status: "{{.Status}}"
+                    extra_run_id: "{{.ExtraRunUID}}"
+                    previous_job_status: "{{.PreviousStatus}}"
+                    type: "typejob"
+                codes:
+                    - 200
+
+cluster:
+    update:
+        on-demand: &on-demand
+            communicators:
+                one:
+                    method: get
+                    url: "{{.URL}}"
+
+                    params:
+                        cluster_id: "{{ .ClusterId }}"
+                        cluster_pool: "{{ .ClusterPool}}"
+                        cluster_status: "{{ .ClusterStatus}}"
+                        type: "typecluster"
+                    codes:
+                        - 200
+                        - 201
+                    backoff:
+                        maxelapsedtime: 3s
+                        maxinterval: 2s
+                        initialinterval: 1s
