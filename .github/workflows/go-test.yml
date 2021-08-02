@@ -1,4 +1,6 @@
 jobs:
+  on: [ push, pull_request ]
+  name: Test
   build:
     runs-on: ubuntu-16.04
     strategy:
