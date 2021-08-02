@@ -59,7 +59,7 @@ func GetValue(ctx context.Context, kv clientv3.KV, key string) {
 	}
 
 	for _, item := range gr.Kvs {
-		fmt.Println("Value:", string(item.Key), ",Value:", string(item.Value), ",Revision:", string(gr.Header.Revision))
+		fmt.Println("Value:", string(item.Key), ",Value:", string(item.Value), ",Revision:", strconv.FormatInt(gr.Header.Revision, 10))
 	}
 }
 
