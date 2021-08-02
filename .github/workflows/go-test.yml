@@ -1,11 +1,12 @@
 name: build-tests
+on: pull_request
 jobs:
   on: [ push, pull_request ]
   name: Test
   build:
     # Check if the PR is not from a fork
     if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         go: [ '1.15' ]
