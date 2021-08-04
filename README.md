@@ -7,7 +7,7 @@ Suprasched is schduler  for Supra Platform
 Suprasched is using [etcd](https://etcd.io/).
 You can bring from one to three instances. Only one will be active. 
 
-### Use cses
+### Use cases
 a). Assigning Jobs
 Once we have a new job it should be assigned ASAP to a cluster
 1. Get notifications about new Unassigned Job from Storage Layer - enrich the metadata: 
