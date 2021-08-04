@@ -64,6 +64,8 @@ func KV_getExampleWithFlag(){ // Get function for example, with external values
 
 	flagKey := flag.String("key", "tempKeyValue", "key for Get KeyValue function in etcd")
 
+	flag.Parse()
+
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	client, err := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
