@@ -1,10 +1,11 @@
-package main
+package etcd
 
 import (
 	"context"
 	"fmt"
-	"go.etcd.io/etcd/client/v3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -17,7 +18,7 @@ func KV_getExample(){
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	client, err := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints: []string{"127.0.0.1:2379"},
+		Endpoints:   []string{"127.0.0.1:2379"},
 	})
 
 	if err != nil {
@@ -29,10 +30,12 @@ func KV_getExample(){
 	defer client.Close()
 
 	// context = Go feature that allows code across a goroutine to access shared information in a safe manner and cancel operations
+
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 
 	// NewKV wraps a KV instance so that all requests are prefixed with a given string.
 	kvClient := clientv3.NewKV(client)
+
 
 	// releases resources if slowOperation completes before timeout elapses
 	defer cancel()
@@ -57,3 +60,4 @@ func KV_getExample(){
 		fmt.Println("Value:", string(ev.Key), ",Value:" ,string(ev.Value), ",Revision:", rev)
 	}
 }
+
