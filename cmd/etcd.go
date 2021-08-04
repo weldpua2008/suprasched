@@ -55,7 +55,6 @@ to quickly create a Cobra application.`,
 		etcdvalue := viper.GetString("env.value")
 		fmt.Println(etcdvalue)
 
-
 	},
 }
 
