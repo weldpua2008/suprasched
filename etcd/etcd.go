@@ -84,6 +84,20 @@ func KV_getExample() { // Get function for example, without accepting external v
 	for _, ev := range resp.Kvs {
 		fmt.Println("Key:", string(ev.Key), ",Value:", string(ev.Value), ",Revision:", rev)
 	}
+
+	rev := kvPut.Header.Revision
+	fmt.Println("Revision:", rev)
+
+	resp, err := kvClient.Get(ctx, *flagKey)
+
+	if err != nil {
+		log.Fatalf("Get Function: Cannot get value, got %s", err)
+	}
+
+	for _, ev := range resp.Kvs {
+		fmt.Println("Key:", string(ev.Key), ",Value:", string(ev.Value), ",Revision:", rev)
+	}
+
 }
 
 func KV_getExampleWithFlag() { // Get function for example, with external values
@@ -192,6 +206,7 @@ func KV_getExampleWithWriteToYaml(){ // Get function for example, write to yaml 
 			log.Fatal(err)
 		}
 		err2 := ioutil.WriteFile("etcd/etcdConfigFile.yaml", data, 0777)
+
 		if err2 != nil {
 
 			log.Fatal(err2)
@@ -288,3 +303,4 @@ func KV_getExampleWithWriteToYaml_two(){ // Get function for example, write to y
 
 	fmt.Println("data written")
 }
+
