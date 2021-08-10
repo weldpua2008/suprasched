@@ -108,6 +108,7 @@ to quickly create a Cobra application.`,
 		//etcdvalue := viper.GetString("kv.value")
 		//fmt.Println(etcdvalue)
 
+
 	},
 }
 
