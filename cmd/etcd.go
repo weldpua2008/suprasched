@@ -23,6 +23,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var OBJECTID string = "/ObjectID"
+var CLUSTERID string = "/ClusterID"
+var RETRY string = "/Retry"
+var REVISION string = "/Revision"
+var VALUE string= ".value"
+
 // etcdCmd represents the etcd command
 var etcdCmd = &cobra.Command{
 	Use:   "etcd",
@@ -35,10 +41,24 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("etcd called")
-		key, _ := cmd.Flags().GetString("key")
-		fmt.Println(key)
-		value, _ := cmd.Flags().GetString("value")
-		fmt.Println(value)
+		//prefixKey, _ := cmd.Flags().GetString("key")
+		clusterId, _ := cmd.Flags().GetString("clusterId")
+		objectId, _ := cmd.Flags().GetString("objectId")
+		revision, _ := cmd.Flags().GetString("revision")
+		retry, _ := cmd.Flags().GetString("retry")
+
+
+
+
+
+		//fmt.Println("the getKey value ", getKey)
+		//keyPath := "kv." + getKey
+		//fmt.Println("the keyPath value ", keyPath)
+		//getKey = viper.GetString(keyPath)
+		//fmt.Println(viper.GetString(keyPath))
+		//fmt.Println(viper.GetString("kv.key"))
+		//fmt.Println(getKey)
+
 		//getKey, _ := cmd.Flags().GetString("value")
 		//fmt.Println(getKey)
 		viper.SetConfigName("etcdConfigFile") //config file name
@@ -50,20 +70,55 @@ to quickly create a Cobra application.`,
 			fmt.Println("Fatal error config file: defualt \n", err)
 			os.Exit(1)
 		}
-		etcdkey := viper.GetString("env.key")
-		fmt.Println(etcdkey)
-		etcdvalue := viper.GetString("env.value")
-		fmt.Println(etcdvalue)
+		if cmd.Flags().Changed("clusterId") {
+		clusterIdPath := clusterId + CLUSTERID + VALUE
+		clusterIdValue := viper.GetString(clusterIdPath)
+		fmt.Println(clusterIdPath + ":" + clusterIdValue)
+		}
+		if cmd.Flags().Changed("objectId") {
+		objectIdPath := objectId + OBJECTID + VALUE
+		objectIdValue := viper.GetString(objectIdPath)
+		fmt.Println(objectIdPath + ":" + objectIdValue)
+		}
+		if cmd.Flags().Changed("revision") {
+		revisionPath := revision + REVISION + VALUE
+		revisionValue := viper.GetString(revisionPath)
+		fmt.Println(revisionPath + ":" + revisionValue)
+		}
+		if cmd.Flags().Changed("retry") {
+		retryPath := retry + RETRY + VALUE
+		retryValue := viper.GetString(retryPath)
+		fmt.Println(retryPath + ":" + retryValue)
+		}
+
+		//getKey, _:= cmd.Flags().GetString("key")
+		//fmt.Println(getKey)
+		//obj1 := getKey + ".key"
+		//result := viper.GetString(obj1)
+		//fmt.Println("result is: ", result)
+		//obj2 := viper.GetString("kv")
+		//fmt.Println("the obj2: ", obj2)
+		//obj3 := viper.GetString("kv.key")
+		//fmt.Println("the obj3: ", obj3)
+
+		//getKey()
+		//getObject()
+		//etcdkey := viper.GetString("kv.key")
+		//fmt.Println(etcdkey)
+		//etcdvalue := viper.GetString("kv.value")
+		//fmt.Println(etcdvalue)
+
 
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(etcdCmd)
-	etcdCmd.Flags().StringP("key", "k", "", "Set your Key")
-	etcdCmd.Flags().StringP("value", "v", "", "Set your value")
-	//etcdCmd.Flags().StringP("getkey", "g", viper.GetString("env.key"), "Get key")
-
+	//etcdCmd.Flags().StringP("key", "k", "", "Get all values of key")
+	etcdCmd.Flags().StringP("clusterId", "c", "", "get clusterId of key")
+	etcdCmd.Flags().StringP("objectId", "o", "", "get objectId of key")
+	etcdCmd.Flags().StringP("retry", "r", "", "get retry count of key")
+	etcdCmd.Flags().StringP("revision", "n", "", "get revision of key")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
@@ -74,3 +129,32 @@ func init() {
 	// is called directly, e.g.:
 	// etcdCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
+
+type eventObject struct {
+	KEY string
+	VALUE string
+	//CLUSTER_ID string
+	REVISION string
+}
+
+
+
+
+//func newObject(key string)  *eventObject {
+
+//	obj := eventObject{KEY: key}
+//	obj.VALUE = "null"
+//	obj.REVISION = "null"
+
+//	return &obj
+
+	//obj := eventObject{}
+	//obj.KEY := viper.GetString("kv.key")
+	//fmt.Println("Key: %v", obj.KEY)
+	//obj.VALUE := viper.GetString("kv.value")
+	//fmt.Println("Value: %v", obj.VALUE)
+	//obj.REVISION := viper.GetString("kv.revision")
+	//fmt.Println("Revision: %v", obj.REVISION)
+	//fmt.Println(obj)
+
+//}

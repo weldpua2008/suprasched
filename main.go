@@ -17,8 +17,10 @@ package main
 
 import (
 	"github.com/weldpua2008/suprasched/cmd"
+
 )
 
 func main() {
 	cmd.Execute()
+
 }
