@@ -17,10 +17,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
-
-	"github.com/spf13/cobra"
 )
 
 var OBJECTID string = "/ObjectID"
@@ -46,7 +45,6 @@ to quickly create a Cobra application.`,
 		objectId, _ := cmd.Flags().GetString("objectId")
 		revision, _ := cmd.Flags().GetString("revision")
 		retry, _ := cmd.Flags().GetString("retry")
-
 
 
 
