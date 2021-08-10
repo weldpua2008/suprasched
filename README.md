@@ -48,7 +48,8 @@ Control plane components can be run on any machine. However, for simplicity, set
 Consistent and highly-available key value store used as Suprascheduler' backing store for all cluster data.
 Make sure you have a [back up plan for those data](https://etcd.io/docs/v2.3/admin_guide/#backing-up-the-datastore).
 
-#### Joblet
+#### joblet
+The joblet takes a set of JobSpecs that are provided through various mechanisms and ensures that the jobs described in those JobSpecs are running and healthy. 
 
 #### apiserver
 The API server is a front end component of the control plane that exposes the API. 
