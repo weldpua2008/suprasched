@@ -11,7 +11,6 @@ type JobStatusType string
 // UID is a type that holds unique ID values, including UUIDs.
 type UID string
 
-
 // These are valid conditions of job.
 const (
 	JobStatusPending    JobStatusType = "PENDING"
@@ -31,14 +30,14 @@ type Job struct {
 	Affinity *Affinity
 	// Priority for a Job. The higher the value, the higher the priority.
 	// +optional
-	Priority                int64
-	CreateAt                time.Time     // When Job was created
-	StartAt                 time.Time     // When command started
-	LastActivityAt          time.Time     // When job metadata last changed
-	Status                  JobStatusType // Current status
-	TTR                     uint64        // Time-to-run in Millisecond
-	ClusterId               string        // Identification for ClusterId
-	mu                      sync.RWMutex
+	Priority       int64
+	CreateAt       time.Time     // When Job was created
+	StartAt        time.Time     // When command started
+	LastActivityAt time.Time     // When job metadata last changed
+	Status         JobStatusType // Current status
+	TTR            uint64        // Time-to-run in Millisecond
+	ClusterId      string        // Identification for ClusterId
+	mu             sync.RWMutex
 	// Note that this is calculated from dead Jobs. But those jobs are subject to
 	// garbage collection.  This value will get capped at 5 by GC.
 	RestartCount int32

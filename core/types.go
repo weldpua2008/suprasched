@@ -42,6 +42,7 @@ type ObjectMeta struct {
 	// +optional
 	UID UID `json:"uid,omitempty" protobuf:"bytes,5,opt,name=uid"`
 }
+
 // ClusterSelectorOperator is the set of operators that can be used in
 // a node selector requirement.
 type ClusterSelectorOperator string
@@ -62,8 +63,6 @@ type ClusterSelectorRequirement struct {
 	// +optional
 	Values []string
 }
-
-
 
 // ClusterSelectorTerm represents expressions and fields required to select nodes.
 // A null or empty node selector term matches no objects. The requirements of
@@ -141,7 +140,6 @@ type JobAntiAffinity struct {
 	PreferredDuringSchedulingIgnoredDuringExecution []PreferredSchedulingTerm
 }
 
-
 // Affinity is a group of affinity scheduling rules.
 type Affinity struct {
 	// Describes cluster affinity scheduling rules for the job.
@@ -154,4 +152,3 @@ type Affinity struct {
 	// +optional
 	JobAntiAffinity *JobAntiAffinity
 }
-

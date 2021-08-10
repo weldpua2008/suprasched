@@ -30,4 +30,3 @@ type Object interface {
 	GetClusterName() string
 	SetClusterName(clusterName string)
 }
-
