@@ -37,3 +37,33 @@ c). Scale up/down cluster's size
 Each job has its requrements. And the cluster has its capacity.
 We should scale in/out the cluster in regards to the job that are running and queued one.
 
+
+### Control Plane Components 
+The control plane's components make global decisions about the clusters (for example, scheduling), as well as detecting 
+and responding to cluster events (for example, starting up a new cluster when all current are overprovisioned).
+
+Control plane components can be run on any machine. However, for simplicity, set up scripts typically start all control plane components on the same machine. 
+
+#### etcd
+Consistent and highly-available key value store used as Suprascheduler' backing store for all cluster data.
+Make sure you have a [back up plan for those data](https://etcd.io/docs/v2.3/admin_guide/#backing-up-the-datastore).
+
+#### Joblet
+
+#### apiserver
+The API server is a front end component of the control plane that exposes the API. 
+
+#### scheduler
+Control plane component that watches for newly created Jobs with no assigned cluster, and selects a cluster for them to run on.
+
+Factors taken into account for scheduling decisions include: individual and collective resource requirements, hardware/software/policy constraints, 
+affinity and anti-affinity specifications, regions, inter-workload interference, and deadlines.
+
+#### controller-manager
+Control plane component that runs controller processes.
+
+Some types of these controllers are:
+* Cluster controller: Responsible for noticing and responding when cluster go down, has no sufficient resources.
+* Job controller: Creates and watches to completion for Job objects that represent one-off tasks.
+
+
