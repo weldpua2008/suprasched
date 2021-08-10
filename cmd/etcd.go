@@ -27,7 +27,7 @@ var OBJECTID string = "/ObjectID"
 var CLUSTERID string = "/ClusterID"
 var RETRY string = "/Retry"
 var REVISION string = "/Revision"
-var VALUE string= ".value"
+var VALUE string = ".value"
 
 // etcdCmd represents the etcd command
 var etcdCmd = &cobra.Command{
@@ -46,10 +46,6 @@ to quickly create a Cobra application.`,
 		objectId, _ := cmd.Flags().GetString("objectId")
 		revision, _ := cmd.Flags().GetString("revision")
 		retry, _ := cmd.Flags().GetString("retry")
-
-
-
-
 
 		//fmt.Println("the getKey value ", getKey)
 		//keyPath := "kv." + getKey
@@ -71,24 +67,24 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 		if cmd.Flags().Changed("clusterId") {
-		clusterIdPath := clusterId + CLUSTERID + VALUE
-		clusterIdValue := viper.GetString(clusterIdPath)
-		fmt.Println(clusterIdPath + ":" + clusterIdValue)
+			clusterIdPath := clusterId + CLUSTERID + VALUE
+			clusterIdValue := viper.GetString(clusterIdPath)
+			fmt.Println(clusterIdPath + ":" + clusterIdValue)
 		}
 		if cmd.Flags().Changed("objectId") {
-		objectIdPath := objectId + OBJECTID + VALUE
-		objectIdValue := viper.GetString(objectIdPath)
-		fmt.Println(objectIdPath + ":" + objectIdValue)
+			objectIdPath := objectId + OBJECTID + VALUE
+			objectIdValue := viper.GetString(objectIdPath)
+			fmt.Println(objectIdPath + ":" + objectIdValue)
 		}
 		if cmd.Flags().Changed("revision") {
-		revisionPath := revision + REVISION + VALUE
-		revisionValue := viper.GetString(revisionPath)
-		fmt.Println(revisionPath + ":" + revisionValue)
+			revisionPath := revision + REVISION + VALUE
+			revisionValue := viper.GetString(revisionPath)
+			fmt.Println(revisionPath + ":" + revisionValue)
 		}
 		if cmd.Flags().Changed("retry") {
-		retryPath := retry + RETRY + VALUE
-		retryValue := viper.GetString(retryPath)
-		fmt.Println(retryPath + ":" + retryValue)
+			retryPath := retry + RETRY + VALUE
+			retryValue := viper.GetString(retryPath)
+			fmt.Println(retryPath + ":" + retryValue)
 		}
 
 		//getKey, _:= cmd.Flags().GetString("key")
@@ -107,7 +103,6 @@ to quickly create a Cobra application.`,
 		//fmt.Println(etcdkey)
 		//etcdvalue := viper.GetString("kv.value")
 		//fmt.Println(etcdvalue)
-
 
 	},
 }
@@ -131,14 +126,11 @@ func init() {
 }
 
 type eventObject struct {
-	KEY string
+	KEY   string
 	VALUE string
 	//CLUSTER_ID string
 	REVISION string
 }
-
-
-
 
 //func newObject(key string)  *eventObject {
 
@@ -148,13 +140,13 @@ type eventObject struct {
 
 //	return &obj
 
-	//obj := eventObject{}
-	//obj.KEY := viper.GetString("kv.key")
-	//fmt.Println("Key: %v", obj.KEY)
-	//obj.VALUE := viper.GetString("kv.value")
-	//fmt.Println("Value: %v", obj.VALUE)
-	//obj.REVISION := viper.GetString("kv.revision")
-	//fmt.Println("Revision: %v", obj.REVISION)
-	//fmt.Println(obj)
+//obj := eventObject{}
+//obj.KEY := viper.GetString("kv.key")
+//fmt.Println("Key: %v", obj.KEY)
+//obj.VALUE := viper.GetString("kv.value")
+//fmt.Println("Value: %v", obj.VALUE)
+//obj.REVISION := viper.GetString("kv.revision")
+//fmt.Println("Revision: %v", obj.REVISION)
+//fmt.Println(obj)
 
 //}
