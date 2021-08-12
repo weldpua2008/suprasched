@@ -16,11 +16,15 @@ limitations under the License.
 package main
 
 import (
+<<<<<<< HEAD
 	"flag"
 	"fmt"
 	//"github.com/weldpua2008/suprasched/cmd"
 	etcd "github.com/weldpua2008/suprasched/etcd"
 	"os"
+=======
+	"github.com/weldpua2008/suprasched/cmd"
+>>>>>>> ad71868ab97ec80cde2074b95af826856e8d9962
 )
 
 func main() {
