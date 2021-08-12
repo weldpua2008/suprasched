@@ -46,12 +46,6 @@ to quickly create a Cobra application.`,
 		revision, _ := cmd.Flags().GetString("revision")
 		retry, _ := cmd.Flags().GetString("retry")
 
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> ad71868ab97ec80cde2074b95af826856e8d9962
 		//fmt.Println("the getKey value ", getKey)
 		//keyPath := "kv." + getKey
 		//fmt.Println("the keyPath value ", keyPath)
