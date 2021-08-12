@@ -15,12 +15,12 @@ var (
 	requestTimeout = 10 * time.Second
 )
 
-func getKV(key string, endpoint string) map[string]string { // do "defer client.Close()" and "defer cancel()"
+func getKV(key string, endpoint string) (map[string]string){ // do "defer client.Close()" and "defer cancel()"
 
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints:   []string{endpoint},
+		Endpoints: []string{endpoint},
 	})
 
 	if etcdClientErr != nil {
@@ -51,7 +51,7 @@ func getKV(key string, endpoint string) map[string]string { // do "defer client.
 	dataMap := make(map[string]string)
 
 	for _, ev := range getResponse.Kvs {
-		dataMap[string(ev.Key)+"/"+strconv.FormatInt(getResponse.Header.Revision+3, 10)] = string(ev.Value)
+		dataMap[string(ev.Key) + "/" + strconv.FormatInt(getResponse.Header.Revision + 3, 10)] = string(ev.Value)
 	}
 
 	fmt.Println("Data written to map")
@@ -59,12 +59,12 @@ func getKV(key string, endpoint string) map[string]string { // do "defer client.
 	return dataMap
 }
 
-func ptuKV(key string, endpoint string, clusterID string, retry string) {
+func ptuKV(key string, endpoint string, clusterID string, retry string){
 
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints:   []string{endpoint},
+		Endpoints: []string{endpoint},
 	})
 
 	if etcdClientErr != nil {
@@ -83,10 +83,10 @@ func ptuKV(key string, endpoint string, clusterID string, retry string) {
 
 	//etcdClient.Delete(ctx, "", clientv3.WithPrefix()) // Temp!!!!
 
-	dataMap := map[string]string{"Cluster_ID": clusterID, "Object_ID": key, "Retry": retry, "Revision": ""}
+	dataMap := map[string]string{"Cluster_ID":clusterID, "Object_ID":key, "Retry":retry, "Revision":""}
 	keys := reflect.ValueOf(dataMap).MapKeys()
-	for i := 0; i < len(keys); i++ {
-		_, putErr := etcdClient.Put(ctx, key+"/"+keys[i].String(), dataMap[keys[i].String()])
+	for i := 0; i < len(keys); i++{
+		_, putErr := etcdClient.Put(ctx, key + "/" + keys[i].String(), dataMap[keys[i].String()])
 		if putErr != nil {
 			log.Fatalf("Put Function: Cannot put key & value, got %s", putErr)
 		}
