@@ -8,9 +8,6 @@ import (
 // JobStatusType defines the condition of pod.
 type JobStatusType string
 
-// UID is a type that holds unique ID values, including UUIDs.
-type UID string
-
 // These are valid conditions of job.
 const (
 	JobStatusPending    JobStatusType = "PENDING"
