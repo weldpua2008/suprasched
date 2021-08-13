@@ -15,7 +15,7 @@ var (
 	requestTimeout = 10 * time.Second
 )
 
-func getKV(key string, endpoint string) map[string]string { // do "defer client.Close()" and "defer cancel()"
+func GetKV(key string, endpoint string) map[string]string { // do "defer client.Close()" and "defer cancel()"
 
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
