@@ -11,29 +11,29 @@ import (
 var testNamespace core.Namespace = "testNamespace"
 
 func TestGenericScheduler(t *testing.T) {
-	cl1:=core.NewCluster(
+	cl1 := core.NewCluster(
 		"test-cluster", testNamespace,
 		core.ClusterSpec{},
 		core.ClusterStatus{},
 	)
 	tests := []struct {
-		name     string
-		cache    internalcache.Cache
-		job      core.Job
-		clusters []core.Cluster
-		numFeasibleClusters int
+		name                 string
+		cache                internalcache.Cache
+		job                  core.Job
+		clusters             []core.Cluster
+		numFeasibleClusters  int
 		numEvaluatedClusters int
-		SuggestedCluster core.UID
-		err error
+		SuggestedCluster     core.UID
+		err                  error
 	}{
 		{
-			name:  "test one job and one cluster",
-			cache: internalcache.New(time.Minute),
-			job:   core.NewJob("test", testNamespace),
-			numFeasibleClusters: 1,
+			name:                 "test one job and one cluster",
+			cache:                internalcache.New(time.Minute),
+			job:                  core.NewJob("test", testNamespace),
+			numFeasibleClusters:  1,
 			numEvaluatedClusters: 1,
-			clusters: []core.Cluster{cl1},
-			SuggestedCluster: cl1.UID,
+			clusters:             []core.Cluster{cl1},
+			SuggestedCluster:     cl1.UID,
 		},
 	}
 
