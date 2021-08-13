@@ -9,6 +9,8 @@ import (
 )
 
 var ErrClusterAlreadyExists = fmt.Errorf("cluster already exists in the cache")
+var ErrClusterNotExists = fmt.Errorf("cluster not exists in the cache")
+var ErrEmptyCache = fmt.Errorf("no clusters in the cache")
 
 // New returns a Cache implementation.
 func New(ttl time.Duration) Cache {
@@ -71,9 +73,15 @@ func (cache *schedulerCache) AddCluster(cluster *core.Cluster) error {
 
 	if l, ok := cache.clusters[cluster.Namespace]; ok {
 		for e := l.Front(); e != nil; e = e.Next() {
-			cl := e.Value.(core.Cluster)
-			if cl.Name == cluster.Name {
-				return ErrClusterAlreadyExists
+			val := e.Value
+			if cl, ok := val.(core.Cluster); ok {
+				if cl.Name == cluster.Name {
+					return ErrClusterAlreadyExists
+				}
+			} else if cl, ok := val.(*core.Cluster); ok {
+				if cl.Name == cluster.Name {
+					return ErrClusterAlreadyExists
+				}
 			}
 		}
 		l.PushBack(cluster)
@@ -92,7 +100,25 @@ func (cache *schedulerCache) UpdateCluster(oldCluster, newCluster *core.Cluster)
 }
 
 func (cache *schedulerCache) RemoveCluster(cluster *core.Cluster) error {
-	panic("implement me")
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
+	if l, ok := cache.clusters[cluster.Namespace]; ok {
+		for e := l.Front(); e != nil; e = e.Next() {
+			val := e.Value
+			if cl, ok := val.(core.Cluster); ok {
+				if cl.Name == cluster.Name {
+					l.Remove(e)
+					return nil
+				}
+			} else if cl, ok := val.(*core.Cluster); ok {
+				if cl.Name == cluster.Name {
+					l.Remove(e)
+					return nil
+				}
+			}
+		}
+	}
+	return ErrClusterNotExists
 }
 
 func (cache *schedulerCache) Dump() *Dump {
@@ -102,16 +128,29 @@ func (cache *schedulerCache) Dump() *Dump {
 func (cache *schedulerCache) UpdateSnapshot(currSnapshot *Snapshot) error {
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
-
+	if cache.clusters == nil {
+		return ErrEmptyCache
+	}
+	if currSnapshot.clusters == nil {
+		currSnapshot.clusters = make(map[core.Namespace]*list.List, 0)
+	}
 	for ns, clustersList := range cache.clusters {
 		snapshotClusters, ok := currSnapshot.clusters[ns]
 		if !ok {
-			var t *list.List
-			currSnapshot.clusters[ns] = t
+			currSnapshot.clusters[ns] = list.New()
+			snapshotClusters = currSnapshot.clusters[ns]
+		}
+		if clustersList.Len() == 0 {
+			continue
 		}
 		for e := clustersList.Front(); e != nil; e = e.Next() {
-			cl := e.Value.(core.Cluster)
-			snapshotClusters.PushBack(cl)
+			val := e.Value
+			if cl, ok := val.(core.Cluster); ok {
+				snapshotClusters.PushBack(cl)
+			} else if cl, ok := val.(*core.Cluster); ok {
+				snapshotClusters.PushBack(*cl)
+			}
+			fmt.Println(val)
 		}
 
 	}

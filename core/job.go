@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/google/uuid"
 	"sync"
 	"time"
 )
@@ -10,6 +11,8 @@ type JobStatusType string
 
 // These are valid conditions of job.
 const (
+	JobStatusUnassigned JobStatusType = "UNASSIGNED"
+
 	JobStatusPending    JobStatusType = "PENDING"
 	JobStatusInProgress JobStatusType = "RUNNING"
 	JobStatusSuccess    JobStatusType = "SUCCESS"
@@ -40,4 +43,21 @@ type Job struct {
 	RestartCount int32
 	//exitError               error
 	ExitCode int // Exit code
+}
+
+// NewJob returns a new job
+func NewJob(name string, ns Namespace) Job {
+	return Job{
+		Status:   JobStatusUnassigned,
+		CreateAt: time.Now(),
+		ObjectMeta: ObjectMeta{
+			Name:      name,
+			Namespace: ns,
+			UID:       UID(uuid.New().String()),
+		},
+		TypeMeta: TypeMeta{
+			Kind:       "job",
+			APIVersion: LatestApi,
+		},
+	}
 }

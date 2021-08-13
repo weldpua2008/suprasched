@@ -14,11 +14,11 @@ const (
 	// that a certain minimum of clusters are checked for feasibility. This in turn
 	// helps ensure a minimum level of spreading.
 	minFeasibleClustersToFind = 10
-	// minFeasibleNodesPercentageToFind is the minimum percentage of cluster that
+	// minFeasibleClustersPercentageToFind is the minimum percentage of cluster that
 	// would be scored in each scheduling cycle. This is a semi-arbitrary value
 	// to ensure that a certain minimum of clusters are checked for feasibility.
 	// This in turn helps ensure a minimum level of spreading.
-	minFeasibleNodesPercentageToFind = 5
+	minFeasibleClustersPercentageToFind = 5
 )
 
 // ErrNoClusterAvailable is used to describe the error that no cluster available to
@@ -29,7 +29,7 @@ var ErrNoClusterAvailable = fmt.Errorf("no clusters available to schedule jobs")
 // the final selected Cluster, along with the selected intermediate information.
 type ScheduleResult struct {
 	// Name of the scheduler suggest host
-	SuggestedCluster string
+	SuggestedCluster core.UID
 	// Number of clusters scheduler evaluated on one job scheduled
 	EvaluatedClusters int
 	// Number of feasible clusters on one job scheduled
@@ -43,15 +43,18 @@ type ScheduleAlgorithm interface {
 }
 
 type genericScheduler struct {
-	cache                    internalcache.Cache
-	currentSnapshot          *internalcache.Snapshot
-	percentageOfNodesToScore int32
-	nextStartNodeIndex       int
+	cache                       internalcache.Cache
+	currentSnapshot             *internalcache.Snapshot
+	percentageOfClustersToScore int32
+	nextStartClusterIndex       int
 }
 
 // snapshot snapshots scheduler cache and cluster infos for all fit and priority
 // functions.
 func (g *genericScheduler) snapshot() error {
+	if g.cache == nil {
+		return fmt.Errorf("Cache is nil")
+	}
 	// Used for all fit and priority funcs.
 	return g.cache.UpdateSnapshot(g.currentSnapshot)
 }
@@ -67,37 +70,37 @@ func (g *genericScheduler) Schedule(ctx context.Context, job *core.Job) (result 
 	}
 	trace.Step("Snapshotting scheduler cache and cluster infos done")
 
-	feasibleNodes, err := g.findNodesThatFitJob(ctx, job)
+	feasibleClusters, err := g.findClustersThatFitJob(ctx, job)
 	if err != nil {
 		return result, err
 	}
 	trace.Step("Computing predicates done")
 
-	if len(feasibleNodes) == 0 {
+	if len(feasibleClusters) == 0 {
 		return result, ErrNoClusterAvailable
 	}
 
 	// When only one cluster after predicate, just use it.
-	if len(feasibleNodes) == 1 {
+	if len(feasibleClusters) == 1 {
 		return ScheduleResult{
-			SuggestedCluster:  feasibleNodes[0].Name,
+			SuggestedCluster:  feasibleClusters[0].UID,
 			EvaluatedClusters: g.currentSnapshot.NumClusters(job.Namespace),
 			FeasibleClusters:  1,
 		}, nil
 	}
 
-	host := feasibleNodes[0]
+	host := feasibleClusters[0]
 	trace.Step("Prioritizing done")
 
 	return ScheduleResult{
-		SuggestedCluster:  host.Name,
+		SuggestedCluster:  host.UID,
 		EvaluatedClusters: g.currentSnapshot.NumClusters(job.Namespace),
-		FeasibleClusters:  len(feasibleNodes),
+		FeasibleClusters:  len(feasibleClusters),
 	}, err
 }
 
 // Filters the clusters to find the ones that fit the job
-func (g *genericScheduler) findNodesThatFitJob(ctx context.Context, job *core.Job) ([]*core.Cluster, error) {
+func (g *genericScheduler) findClustersThatFitJob(ctx context.Context, job *core.Job) ([]*core.Cluster, error) {
 	for _, cl := range g.currentSnapshot.GetClustersFromNs(job.Namespace) {
 		return []*core.Cluster{&cl}, nil
 	}
@@ -108,10 +111,10 @@ func (g *genericScheduler) findNodesThatFitJob(ctx context.Context, job *core.Jo
 func NewGenericScheduler(
 	cache internalcache.Cache,
 	currentSnapshot *internalcache.Snapshot,
-	percentageOfNodesToScore int32) ScheduleAlgorithm {
+	percentageOfClustersToScore int32) ScheduleAlgorithm {
 	return &genericScheduler{
-		cache:                    cache,
-		currentSnapshot:          currentSnapshot,
-		percentageOfNodesToScore: percentageOfNodesToScore,
+		cache:                       cache,
+		currentSnapshot:             currentSnapshot,
+		percentageOfClustersToScore: percentageOfClustersToScore,
 	}
 }

@@ -19,7 +19,7 @@ type TypeMeta struct {
 
 	// APIVersion defines the versioned schema of this representation of an object.
 	// +optional
-	APIVersion string `json:"apiVersion,omitempty" protobuf:"bytes,2,opt,name=apiVersion"`
+	APIVersion APIVersion `json:"apiVersion,omitempty" protobuf:"bytes,2,opt,name=apiVersion"`
 }
 
 // ObjectMeta is metadata that all persisted resources must have, which includes all objects

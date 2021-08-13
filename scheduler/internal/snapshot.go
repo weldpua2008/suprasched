@@ -23,6 +23,9 @@ func (s *Snapshot) NumClusters(ns core.Namespace) int {
 
 // GetClustersFromNs returns the clusters in the snapshot.
 func (s *Snapshot) GetClustersFromNs(ns core.Namespace) (ret []core.Cluster) {
+	if s.clusters == nil {
+		return ret
+	}
 	if val, ok := s.clusters[ns]; ok {
 		for e := val.Front(); e != nil; e = e.Next() {
 			cl := e.Value.(core.Cluster)
