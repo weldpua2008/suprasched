@@ -150,7 +150,6 @@ func (cache *schedulerCache) UpdateSnapshot(currSnapshot *Snapshot) error {
 			} else if cl, ok := val.(*core.Cluster); ok {
 				snapshotClusters.PushBack(*cl)
 			}
-			fmt.Println(val)
 		}
 
 	}

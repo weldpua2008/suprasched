@@ -11,22 +11,29 @@ import (
 var testNamespace core.Namespace = "testNamespace"
 
 func TestGenericScheduler(t *testing.T) {
-
+	cl1:=core.NewCluster(
+		"test-cluster", testNamespace,
+		core.ClusterSpec{},
+		core.ClusterStatus{},
+	)
 	tests := []struct {
 		name     string
 		cache    internalcache.Cache
 		job      core.Job
 		clusters []core.Cluster
+		numFeasibleClusters int
+		numEvaluatedClusters int
+		SuggestedCluster core.UID
+		err error
 	}{
 		{
 			name:  "test one job and one cluster",
 			cache: internalcache.New(time.Minute),
 			job:   core.NewJob("test", testNamespace),
-			clusters: []core.Cluster{core.NewCluster(
-				"test-cluster", testNamespace,
-				core.ClusterSpec{},
-				core.ClusterStatus{},
-			)},
+			numFeasibleClusters: 1,
+			numEvaluatedClusters: 1,
+			clusters: []core.Cluster{cl1},
+			SuggestedCluster: cl1.UID,
 		},
 	}
 
@@ -39,10 +46,17 @@ func TestGenericScheduler(t *testing.T) {
 				scheduler := NewGenericScheduler(test.cache, new(internalcache.Snapshot), 0)
 				ctx := context.Background()
 				got, err := scheduler.Schedule(ctx, &test.job)
-				t.Logf("got %v, err %v", got, err)
-
-				if err != nil {
-					t.Error("Unexpected non-error")
+				if got.EvaluatedClusters != test.numEvaluatedClusters {
+					t.Errorf("Expects %v got %v EvaluatedClusters", test.numEvaluatedClusters, got.EvaluatedClusters)
+				}
+				if got.SuggestedCluster != test.SuggestedCluster {
+					t.Errorf("Expects %v got %v SuggestedCluster", test.SuggestedCluster, got.SuggestedCluster)
+				}
+				if got.FeasibleClusters != test.numFeasibleClusters {
+					t.Errorf("Expects %v got %v FeasibleClusters", test.numFeasibleClusters, got.FeasibleClusters)
+				}
+				if err != test.err {
+					t.Errorf("Unexpected error %v != %v ", err, test.err)
 				}
 				for _, cl := range test.clusters {
 					_ = test.cache.RemoveCluster(&cl)
