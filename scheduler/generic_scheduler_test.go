@@ -17,18 +17,20 @@ func TestGenericScheduler(t *testing.T) {
 		testNamespace,
 		core.ClusterSpec{},
 		core.ClusterStatus{},
+		"test-cluster",
 	)
 	cl2 := core.NewCluster(
 		"other--test-cluster",
 		otherNamespace,
 		core.ClusterSpec{},
 		core.ClusterStatus{},
+		"other--test-cluster",
 	)
 	tests := []struct {
 		name                 string
 		cache                internalcache.Cache
 		job                  core.Job
-		clusters             []*core.Cluster
+		clusters             []core.Cluster
 		numFeasibleClusters  int
 		numEvaluatedClusters int
 		SuggestedCluster     core.UID
@@ -40,7 +42,7 @@ func TestGenericScheduler(t *testing.T) {
 			job:                  core.NewJob("test", testNamespace),
 			numFeasibleClusters:  1,
 			numEvaluatedClusters: 1,
-			clusters:             []*core.Cluster{&cl1},
+			clusters:             []core.Cluster{cl1},
 			SuggestedCluster:     cl1.UID,
 		},
 		{
@@ -49,7 +51,7 @@ func TestGenericScheduler(t *testing.T) {
 			job:                  core.NewJob("test1", testNamespace),
 			numFeasibleClusters:  1,
 			numEvaluatedClusters: 1,
-			clusters:             []*core.Cluster{&cl1, &cl2},
+			clusters:             []core.Cluster{cl1, cl2},
 			SuggestedCluster:     cl1.UID,
 		},
 	}
@@ -57,7 +59,7 @@ func TestGenericScheduler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			for _, cl := range test.clusters {
-				_ = test.cache.AddCluster(cl)
+				_ = test.cache.AddCluster(&cl)
 			}
 
 			scheduler := NewGenericScheduler(test.cache, new(internalcache.Snapshot), 0)
@@ -75,8 +77,6 @@ func TestGenericScheduler(t *testing.T) {
 			if err != test.err {
 				t.Errorf("Unexpected error %v != %v ", err, test.err)
 			}
-
-			//}
 		})
 	}
 }

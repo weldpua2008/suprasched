@@ -1,9 +1,5 @@
 package core
 
-import (
-	"github.com/google/uuid"
-)
-
 // Cluster is a worker cluster in Kubernetes
 // The name of the cluster according to etcd is in ObjectMeta.Name.
 type Cluster struct {
@@ -70,14 +66,14 @@ type ClusterStatus struct {
 }
 
 // NewCluster returns a new cluster
-func NewCluster(name string, ns Namespace, spec ClusterSpec, status ClusterStatus) Cluster {
+func NewCluster(name string, ns Namespace, spec ClusterSpec, status ClusterStatus, uid UID) Cluster {
 	return Cluster{
 		Status: status,
 		Spec:   spec,
 		ObjectMeta: ObjectMeta{
 			Name:      name,
 			Namespace: ns,
-			UID:       UID(uuid.New().String()),
+			UID:       uid,
 		},
 		TypeMeta: TypeMeta{
 			Kind:       "cluster",
