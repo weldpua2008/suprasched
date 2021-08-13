@@ -37,24 +37,13 @@ func TestGenericScheduler(t *testing.T) {
 					_ = test.cache.AddCluster(&cl)
 				}
 				scheduler := NewGenericScheduler(test.cache, new(internalcache.Snapshot), 0)
-
 				ctx := context.Background()
-				//scheduler.snapshot()
 				got, err := scheduler.Schedule(ctx, &test.job)
 				t.Logf("got %v, err %v", got, err)
-				//got, err := scheduler.selectHost(test.list)
-				//if test.expectsErr {
+
 				if err != nil {
 					t.Error("Unexpected non-error")
 				}
-				//} else {
-				//	if err != nil {
-				//		t.Errorf("Unexpected error: %v", err)
-				//	}
-				//	if !test.possibleHosts.Has(got) {
-				//		t.Errorf("got %s is not in the possible map %v", got, test.possibleHosts)
-				//	}
-				//}
 				for _, cl := range test.clusters {
 					_ = test.cache.RemoveCluster(&cl)
 				}
