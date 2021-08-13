@@ -102,8 +102,12 @@ func (g *genericScheduler) Schedule(ctx context.Context, job *core.Job) (result 
 // Filters the clusters to find the ones that fit the job
 func (g *genericScheduler) findClustersThatFitJob(ctx context.Context, job *core.Job) ([]*core.Cluster, error) {
 	for _, cl := range g.currentSnapshot.GetClustersFromNs(job.Namespace) {
+		fmt.Println(job.Namespace)
+		fmt.Println(cl.Name)
+
 		return []*core.Cluster{&cl}, nil
 	}
+
 	return nil, ErrNoClusterAvailable
 }
 

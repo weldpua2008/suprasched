@@ -146,9 +146,9 @@ func (cache *schedulerCache) UpdateSnapshot(currSnapshot *Snapshot) error {
 		for e := clustersList.Front(); e != nil; e = e.Next() {
 			val := e.Value
 			if cl, ok := val.(core.Cluster); ok {
-				snapshotClusters.PushBack(cl)
+				snapshotClusters.PushBack(&cl)
 			} else if cl, ok := val.(*core.Cluster); ok {
-				snapshotClusters.PushBack(*cl)
+				snapshotClusters.PushBack(cl)
 			}
 		}
 

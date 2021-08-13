@@ -28,8 +28,12 @@ func (s *Snapshot) GetClustersFromNs(ns core.Namespace) (ret []core.Cluster) {
 	}
 	if val, ok := s.clusters[ns]; ok {
 		for e := val.Front(); e != nil; e = e.Next() {
-			cl := e.Value.(core.Cluster)
-			ret = append(ret, cl)
+			val := e.Value
+			if cl, ok := val.(core.Cluster); ok {
+				ret = append(ret, cl)
+			} else if cl, ok := val.(*core.Cluster); ok {
+				ret = append(ret, *cl)
+			}
 		}
 	}
 	return ret
