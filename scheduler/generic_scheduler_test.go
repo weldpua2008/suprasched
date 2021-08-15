@@ -60,7 +60,7 @@ func TestGenericScheduler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.cache = internalcache.New(time.Minute)
 			scheduler := NewGenericScheduler(&test.cache, new(internalcache.Snapshot), 0)
-			for i, _ := range test.clusters {
+			for i := range test.clusters {
 				cl := test.clusters[i]
 				t.Logf("Adding %v => %v res: %v", cl.Name, cl.Namespace, test.cache.AddCluster(&cl))
 			}
