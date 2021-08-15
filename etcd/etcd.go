@@ -2,11 +2,13 @@ package etcd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"go.etcd.io/etcd/client/v3"
 	"log"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -15,13 +17,10 @@ var (
 	requestTimeout = 10 * time.Second
 )
 
+func PutKV_v2(obj interface{}) {
 
-func PutKV_v2(obj interface{}){
-
-
-	fmt.Printf("obj: %v\n",obj)
+	fmt.Printf("obj: %v\n", obj)
 	fmt.Println(obj)
-
 
 	obj_type := CheckStructType(obj)
 	fmt.Println(obj_type)
@@ -32,7 +31,7 @@ func PutKV_v2(obj interface{}){
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints: []string{"127.0.0.1:2379"},
+		Endpoints:   []string{"127.0.0.1:2379"},
 	})
 
 	if etcdClientErr != nil {
@@ -49,17 +48,17 @@ func PutKV_v2(obj interface{}){
 	// releases resources if slowOperation completes before timeout elapses
 	defer cancel()
 
-
 	// ---------------------------------------------------------------------------------------------------------
 
 	etcdClient.Delete(ctx, "", clientv3.WithPrefix()) // Temp!!!!
-	_, putErr := etcdClient.Put(ctx, "tempKeyValue/" + obj_type + "/2693", string(json_data))
+	_, putErr := etcdClient.Put(ctx, "tempKeyValue/"+obj_type+"/2693", string(json_data))
 	if putErr != nil {
 		log.Fatalf("Put Function: Cannot put key & value, got %s", putErr)
 	}
+}
 
-
-func GetKV_v2(key string) { // Get function with JSON
+func GetKV_v2(key string) {
+	// Get function with JSON
 
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
@@ -99,7 +98,7 @@ func GetKV_v2(key string) { // Get function with JSON
 	var dat_two string
 	var key_name []string
 	for _, ev := range getResponse.Kvs {
-		fmt.Println("Key:", string(ev.Key), ",Value:" ,string(ev.Value))
+		fmt.Println("Key:", string(ev.Key), ",Value:", string(ev.Value))
 		dat_two = string(ev.Value)
 		key_name = strings.Split(string(ev.Key), "/")
 	}
@@ -117,7 +116,7 @@ func GetKV_v2(key string) { // Get function with JSON
 	fmt.Println(myStruct)
 }
 
-func CheckGetStructType(struct_type string){
+func CheckGetStructType(struct_type string) {
 	switch struct_type {
 	case "Job":
 		myStruct = new(Job)
@@ -129,7 +128,7 @@ func CheckGetStructType(struct_type string){
 	}
 }
 
-func CheckStructType(x interface{}) string{
+func CheckStructType(x interface{}) string {
 	switch x.(type) {
 	case *Job, Job:
 		fmt.Println("Object type: Job")
