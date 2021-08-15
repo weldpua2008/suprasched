@@ -28,9 +28,9 @@ var (
 	tempObj UniversalObject
 )
 
-func PutKV_v2(obj UniversalObject, key string, endpoint string){
+func PutKV_v2(obj UniversalObject, key string, endpoint string) {
 
-	obj_type := CheckStructType(obj) // Checking the type of struct we received
+	obj_type := CheckStructType(obj)  // Checking the type of struct we received
 	json_data, _ := json.Marshal(obj) // Converts the object to a json file as one long string
 
 	// ---------------------------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ func PutKV_v2(obj UniversalObject, key string, endpoint string){
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints: []string{endpoint},
+		Endpoints:   []string{endpoint},
 	})
 
 	if etcdClientErr != nil {
@@ -58,7 +58,7 @@ func PutKV_v2(obj UniversalObject, key string, endpoint string){
 	// ---------------------------------------------------------------------------------------------------------
 
 	etcdClient.Delete(ctx, "", clientv3.WithPrefix())
-	_, putErr := etcdClient.Put(ctx, key + "/" + obj_type + "/" + obj.ObjID(), string(json_data)) // put the obj id
+	_, putErr := etcdClient.Put(ctx, key+"/"+obj_type+"/"+obj.ObjID(), string(json_data)) // put the obj id
 	if putErr != nil {
 		log.Fatalf("Put Function: Cannot put key & value, got %s", putErr)
 	}
@@ -69,7 +69,7 @@ func GetKV_v2(key string, endpoint string) interface{} { // Get function with JS
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints: []string{endpoint},
+		Endpoints:   []string{endpoint},
 	})
 
 	if etcdClientErr != nil {
@@ -119,7 +119,7 @@ func GetKV_v2(key string, endpoint string) interface{} { // Get function with JS
 	return tempObj
 }
 
-func CheckGetStructType(obj_type string){
+func CheckGetStructType(obj_type string) {
 	switch obj_type {
 	case "Job":
 		tempObj = new(Job)
@@ -135,7 +135,7 @@ func CheckGetStructType(obj_type string){
 	}
 }
 
-func CheckStructType(obj interface{}) string{
+func CheckStructType(obj interface{}) string {
 	switch obj.(type) {
 	case *Job, Job:
 		return "Job"
