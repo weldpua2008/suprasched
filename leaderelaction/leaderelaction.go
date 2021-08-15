@@ -5,21 +5,20 @@ import (
 	"fmt"
 	//"github.com/weldpua2008/suprasched/cmd"
 	//etcd "github.com/weldpua2008/suprasched/etcd"
-	"os"
 	"context"
-	"log"
-	"time"
 	"go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/concurrency"
-
+	"log"
+	"os"
+	"time"
 )
 
-func leaderElaction()  {
+func leaderElaction() {
 
 	getCmd := flag.NewFlagSet("new", flag.ExitOnError) //exit on error
 
-	getEndpoint := getCmd.String("endpoint","", "endpoint URL usually localhost:22379")
-	getPrefixKey := getCmd.String("pfx","", "prefix key for leader") // "/leader-election/"
+	getEndpoint := getCmd.String("endpoint", "", "endpoint URL usually localhost:22379")
+	getPrefixKey := getCmd.String("pfx", "", "prefix key for leader") // "/leader-election/"
 	getID := getCmd.String("id", "", "id or name for the object")
 
 	if len(os.Args) < 2 {
@@ -36,26 +35,26 @@ func leaderElaction()  {
 
 }
 
-func HandleNew(getCmd *flag.FlagSet, endpoint *string, prefixkey *string, id *string){
+func HandleNew(getCmd *flag.FlagSet, endpoint *string, prefixkey *string, id *string) {
 	getCmd.Parse(os.Args[2:])
-	if *endpoint =="" || *prefixkey =="" {
+	if *endpoint == "" || *prefixkey == "" {
 		fmt.Println("endpoint and prefixKey are required to get values")
 		getCmd.PrintDefaults()
 		os.Exit(1)
 	}
 	if *endpoint != "" && *prefixkey != "" && *id == "" {
 		*id = "random"
-		newElection(endpoint, prefixkey, id )
+		newElection(endpoint, prefixkey, id)
 
 	}
 	if *endpoint != "" && *prefixkey != "" && *id != "" {
-		newElection(endpoint, prefixkey, id )
+		newElection(endpoint, prefixkey, id)
 
 	}
 
 }
 
-func newElection(endpoint *string, prefixkey *string, id *string)  {
+func newElection(endpoint *string, prefixkey *string, id *string) {
 
 	//create a etcd client
 	cli, err := clientv3.New(clientv3.Config{Endpoints: []string{*endpoint}})
@@ -76,7 +75,7 @@ func newElection(endpoint *string, prefixkey *string, id *string)  {
 	ctx := context.Background()
 
 	// Elect a leader (or wait that the leader resign)
-	if err := e.Campaign(ctx, "e"); err != nil{
+	if err := e.Campaign(ctx, "e"); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("leader election for ", *id)
