@@ -71,12 +71,18 @@ func (cache *schedulerCache) IsAssumedJob(job *core.Job) (bool, error) {
 func (cache *schedulerCache) AddCluster(cluster *core.Cluster) error {
 	cache.mu.Lock()
 	defer cache.mu.Unlock()
-	logrus.Tracef("Adding Cluster %v to ns %v", cluster.Name, cluster.Namespace)
+	logrus.Tracef("Adding Cluster %v to ns %v [%p]", cluster.Name, cluster.Namespace, cluster)
 	_, ok := cache.clusters[cluster.Namespace]
 	if !ok {
+		logrus.Tracef("Adding Namespace %v", cluster.Namespace)
 		cache.clusters[cluster.Namespace] = map[core.UID]*core.Cluster{cluster.UID: cluster}
 	}
 	cache.clusters[cluster.Namespace][cluster.UID] = cluster
+	for _, val := range cache.clusters {
+		for _, val1 := range val {
+			logrus.Tracef(" ==> cached %v => %v, %p", val1.Namespace, val1.Name, val1)
+		}
+	}
 	/* else {
 		if _, ok1:= l[cluster.UID]; !ok1 {
 			l[cluster.UID] = cluster
@@ -152,19 +158,15 @@ func (cache *schedulerCache) UpdateSnapshot(currSnapshot *Snapshot) error {
 	currSnapshot.clusters = make(map[core.Namespace]map[core.UID]*core.Cluster, 0)
 	//}
 	for _, clustersList := range cache.clusters {
-		//if len(clustersList) == 0 {
-		//	continue
-		//}
 		for _, cl := range clustersList {
-			logrus.Tracef("==> ns %v adding %v", cl.Namespace, cl.Name)
-
+			logrus.Tracef("==> %p ns %v adding %v", cl, cl.Namespace, cl.Name)
 			if _, ok := currSnapshot.clusters[cl.Namespace]; !ok {
 				currSnapshot.clusters[cl.Namespace] = make(map[core.UID]*core.Cluster, 1)
 			}
 			// TODO: Add check revision
 			//if _, ok1 := currSnapshot.clusters[ns][cl.UID]; !ok1 {
 			currSnapshot.clusters[cl.Namespace][cl.UID] = cl
-			logrus.Tracef("Snapshot ns %v adding %v", cl.Namespace, cl.Name)
+			logrus.Tracef("Snapshot ns %v adding %v %p ", cl.Namespace, cl.Name, currSnapshot.clusters[cl.Namespace][cl.UID])
 			//}
 
 			//

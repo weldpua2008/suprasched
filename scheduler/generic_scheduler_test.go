@@ -30,7 +30,7 @@ func TestGenericScheduler(t *testing.T) {
 		name                 string
 		cache                internalcache.Cache
 		job                  core.Job
-		clusters             []*core.Cluster
+		clusters             []core.Cluster
 		numFeasibleClusters  int
 		numEvaluatedClusters int
 		SuggestedCluster     core.UID
@@ -49,8 +49,8 @@ func TestGenericScheduler(t *testing.T) {
 			job:                  core.NewJob("test1", testNamespace, "test-uid"),
 			numFeasibleClusters:  1,
 			numEvaluatedClusters: 1,
-			clusters: []*core.Cluster{
-				&cl1, &cl2,
+			clusters: []core.Cluster{
+				cl1, cl2,
 			},
 			SuggestedCluster: cl1.UID,
 		},
@@ -60,8 +60,9 @@ func TestGenericScheduler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			test.cache = internalcache.New(time.Minute)
 			scheduler := NewGenericScheduler(&test.cache, new(internalcache.Snapshot), 0)
-			for _, cl := range test.clusters {
-				t.Logf("Adding %v => %v res: %v", cl.Name, cl.Namespace, test.cache.AddCluster(cl))
+			for i, _ := range test.clusters {
+				cl := test.clusters[i]
+				t.Logf("Adding %v => %v res: %v", cl.Name, cl.Namespace, test.cache.AddCluster(&cl))
 			}
 			ctx := context.Background()
 			got, err := scheduler.Schedule(ctx, &test.job)
