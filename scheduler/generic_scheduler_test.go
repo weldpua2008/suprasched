@@ -41,7 +41,7 @@ func TestGenericScheduler(t *testing.T) {
 			job:                  core.NewJob("test", testNamespace, "test-uid"),
 			numFeasibleClusters:  1,
 			numEvaluatedClusters: 1,
-			clusters:             []*core.Cluster{&cl1},
+			clusters:             []core.Cluster{cl1},
 			SuggestedCluster:     cl1.UID,
 		},
 		{
