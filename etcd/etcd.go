@@ -6,32 +6,39 @@ import (
 	"fmt"
 	"go.etcd.io/etcd/client/v3"
 	"log"
-	"reflect"
-	"strconv"
+	//"reflect"
+	//"strconv"
 	"strings"
 	"time"
 )
 
+type UniversalObject interface {
+	//Data interface{}
+	ObjID() string
+}
+
+//func (job Job) ObjID() string {
+//	return job.Id
+//}
+
 var (
-	dialTimeout    = 2 * time.Second
+	dialTimeout    = 5 * time.Second
 	requestTimeout = 10 * time.Second
+	//waitTimeout    = 2 * time.Second
+	tempObj UniversalObject
 )
 
-func PutKV_v2(obj interface{}) {
+func PutKV_v2(obj UniversalObject, key string, endpoint string){
 
-	fmt.Printf("obj: %v\n", obj)
-	fmt.Println(obj)
-
-	obj_type := CheckStructType(obj)
-	fmt.Println(obj_type)
-	json_data, _ := json.Marshal(obj)
+	obj_type := CheckStructType(obj) // Checking the type of struct we received
+	json_data, _ := json.Marshal(obj) // Converts the object to a json file as one long string
 
 	// ---------------------------------------------------------------------------------------------------------
 
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints:   []string{"127.0.0.1:2379"},
+		Endpoints: []string{endpoint},
 	})
 
 	if etcdClientErr != nil {
@@ -50,25 +57,24 @@ func PutKV_v2(obj interface{}) {
 
 	// ---------------------------------------------------------------------------------------------------------
 
-	etcdClient.Delete(ctx, "", clientv3.WithPrefix()) // Temp!!!!
-	_, putErr := etcdClient.Put(ctx, "tempKeyValue/"+obj_type+"/2693", string(json_data))
+	etcdClient.Delete(ctx, "", clientv3.WithPrefix())
+	_, putErr := etcdClient.Put(ctx, key + "/" + obj_type + "/" + obj.ObjID(), string(json_data)) // put the obj id
 	if putErr != nil {
 		log.Fatalf("Put Function: Cannot put key & value, got %s", putErr)
 	}
 }
 
-func GetKV_v2(key string) {
-	// Get function with JSON
+func GetKV_v2(key string, endpoint string) interface{} { // Get function with JSON
 
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints:   []string{endpoint},
+		Endpoints: []string{endpoint},
 	})
 
 	if etcdClientErr != nil {
 		log.Fatalf("Cannot start etcd client, got %s", etcdClientErr)
-		return
+		return nil
 	}
 
 	// The defer call is guaranteed to be used at the end of the function and ensures all etcd resources are released
@@ -98,7 +104,6 @@ func GetKV_v2(key string) {
 	var dat_two string
 	var key_name []string
 	for _, ev := range getResponse.Kvs {
-		fmt.Println("Key:", string(ev.Key), ",Value:", string(ev.Value))
 		dat_two = string(ev.Value)
 		key_name = strings.Split(string(ev.Key), "/")
 	}
@@ -106,37 +111,45 @@ func GetKV_v2(key string) {
 	// ---------------------------------------------------------------------------------------------------------
 
 	CheckGetStructType(key_name[1])
-	fmt.Println("myStruct.MyID")
-	//fmt.Println(myStruct.MyID())
-	err := json.Unmarshal([]byte(dat_two), &myStruct)
-	if err != nil {
-		fmt.Println(err)
+	unmarshal_err := json.Unmarshal([]byte(dat_two), &tempObj)
+	if unmarshal_err != nil {
+		fmt.Printf("json.Unmarshal Function: Cannot do unmarshal, got %s\n", unmarshal_err)
 	}
-	fmt.Println(myStruct.MyID())
-	fmt.Println(myStruct)
+
+	return tempObj
 }
 
-func CheckGetStructType(struct_type string) {
-	switch struct_type {
+func CheckGetStructType(obj_type string){
+	switch obj_type {
 	case "Job":
-		myStruct = new(Job)
-	//case "MyKVtwo":
-	//	myStruct =  UniversalDTO{MyKVtwo{}}
+		tempObj = new(Job)
+	//case "Cluster":
+	//	myStruct = new(Cluster)
+	//case "ClusterRegistry":
+	//	myStruct = new(ClusterRegistry)
+	//case "Registry":
+	//	myStruct = new(Registry)
 	default:
-		fmt.Println("Error interface")
+		fmt.Println("Error unidentified object from json string in get function")
 		return
 	}
 }
 
-func CheckStructType(x interface{}) string {
-	switch x.(type) {
+func CheckStructType(obj interface{}) string{
+	switch obj.(type) {
 	case *Job, Job:
-		fmt.Println("Object type: Job")
 		return "Job"
-	//case MyKVtwo:
-	//	fmt.Println("MyKVtwo type")
+	//case *Cluster, Cluster:
+	//	fmt.Println("Object type: Cluster")
+	//	return "Cluster"
+	//case *ClusterRegistry, ClusterRegistry:
+	//	fmt.Println("Object type: ClusterRegistry")
+	//	return "ClusterRegistry"
+	//case *Registry, Registry:
+	//	fmt.Println("Object type: Registry")
+	//	return "Registry"
 	default:
-		fmt.Println("Error")
+		fmt.Println("Error unidentified struct")
 		return ""
 	}
 }
