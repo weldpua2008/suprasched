@@ -43,8 +43,11 @@ to quickly create a Cobra application.`,
 			fmt.Println("Fatal error config file: defualt \n", err)
 			os.Exit(1)
 		}
-		path := viper.GetString("env.path")
-		fmt.Println(path)
+		path1 := viper.GetString("env")
+		fmt.Println(path1)
+		path := "env"
+		path2 := viper.GetString(path)
+		fmt.Println(path2)
 
 	},
 }

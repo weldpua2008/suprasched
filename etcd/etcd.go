@@ -15,6 +15,7 @@ var (
 	requestTimeout = 10 * time.Second
 )
 
+
 func PutKV_v2(obj interface{}){
 
 
@@ -48,6 +49,7 @@ func PutKV_v2(obj interface{}){
 	// releases resources if slowOperation completes before timeout elapses
 	defer cancel()
 
+
 	// ---------------------------------------------------------------------------------------------------------
 
 	etcdClient.Delete(ctx, "", clientv3.WithPrefix()) // Temp!!!!
@@ -55,14 +57,14 @@ func PutKV_v2(obj interface{}){
 	if putErr != nil {
 		log.Fatalf("Put Function: Cannot put key & value, got %s", putErr)
 	}
-}
+
 
 func GetKV_v2(key string) { // Get function with JSON
 
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints: []string{"127.0.0.1:2379"},
+		Endpoints:   []string{endpoint},
 	})
 
 	if etcdClientErr != nil {
