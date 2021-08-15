@@ -1,5 +1,7 @@
 package core
 
+import "time"
+
 // UID is a type that holds unique ID values, including UUIDs.
 type UID string
 
@@ -157,4 +159,19 @@ type Affinity struct {
 	// Describes job anti-affinity scheduling rules (e.g. avoid putting this job in the same cluster, zone, etc. as some other job(s)).
 	// +optional
 	JobAntiAffinity *JobAntiAffinity
+}
+
+// JobStatus represents information about the status of a job. Status may trail the actual
+// state of a system.
+type JobStatus struct {
+	// Current condition of the job.
+	// +optional
+	Phase JobPhase `json:"phase,omitempty" protobuf:"bytes,1,opt,name=phase"`
+	// A human readable message indicating details about why the job is in this condition.
+	// +optional
+	Message string `json:"message,omitempty" protobuf:"bytes,2,opt,name=message"`
+
+	// time at which the object was acknowledged by the Joblet.
+	// +optional
+	StartTime time.Time `json:"startTime,omitempty" protobuf:"bytes,3,opt,name=startTime"`
 }

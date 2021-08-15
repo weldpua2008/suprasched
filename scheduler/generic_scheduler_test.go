@@ -9,7 +9,7 @@ import (
 )
 
 var testNamespace core.Namespace = "testNamespace"
-var otherNamespace core.Namespace = "othertNamespace"
+var otherNamespace core.Namespace = "otherNamespace"
 
 func TestGenericScheduler(t *testing.T) {
 	cl1 := core.NewCluster(
@@ -30,7 +30,7 @@ func TestGenericScheduler(t *testing.T) {
 		name                 string
 		cache                internalcache.Cache
 		job                  core.Job
-		clusters             []core.Cluster
+		clusters             []*core.Cluster
 		numFeasibleClusters  int
 		numEvaluatedClusters int
 		SuggestedCluster     core.UID
@@ -38,31 +38,31 @@ func TestGenericScheduler(t *testing.T) {
 	}{
 		{
 			name:                 "test one job and one cluster",
-			cache:                internalcache.New(time.Minute),
-			job:                  core.NewJob("test", testNamespace),
+			job:                  core.NewJob("test", testNamespace, "test-uid"),
 			numFeasibleClusters:  1,
 			numEvaluatedClusters: 1,
-			clusters:             []core.Cluster{cl1},
+			clusters:             []*core.Cluster{&cl1},
 			SuggestedCluster:     cl1.UID,
 		},
 		{
 			name:                 "test one job and two clusters",
-			cache:                internalcache.New(time.Minute),
-			job:                  core.NewJob("test1", testNamespace),
+			job:                  core.NewJob("test1", testNamespace, "test-uid"),
 			numFeasibleClusters:  1,
 			numEvaluatedClusters: 1,
-			clusters:             []core.Cluster{cl1, cl2},
-			SuggestedCluster:     cl1.UID,
+			clusters: []*core.Cluster{
+				&cl1, &cl2,
+			},
+			SuggestedCluster: cl1.UID,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			test.cache = internalcache.New(time.Minute)
+			scheduler := NewGenericScheduler(&test.cache, new(internalcache.Snapshot), 0)
 			for _, cl := range test.clusters {
-				_ = test.cache.AddCluster(&cl)
+				t.Logf("Adding %v => %v res: %v", cl.Name, cl.Namespace, test.cache.AddCluster(cl))
 			}
-
-			scheduler := NewGenericScheduler(test.cache, new(internalcache.Snapshot), 0)
 			ctx := context.Background()
 			got, err := scheduler.Schedule(ctx, &test.job)
 			if got.EvaluatedClusters != test.numEvaluatedClusters {

@@ -1,24 +1,36 @@
 package core
 
 import (
-	"github.com/google/uuid"
 	"sync"
 	"time"
 )
 
-// JobStatusType defines the condition of pod.
-type JobStatusType string
+// JobPhase defines the condition of pod.
+type JobPhase string
 
 // These are valid conditions of job.
 const (
-	JobStatusUnassigned JobStatusType = "UNASSIGNED"
+	JobUnassigned JobPhase = "UNASSIGNED"
 
-	JobStatusPending    JobStatusType = "PENDING"
-	JobStatusInProgress JobStatusType = "RUNNING"
-	JobStatusSuccess    JobStatusType = "SUCCESS"
-	JobStatusError      JobStatusType = "ERROR"
-	JobStatusCanceled   JobStatusType = "CANCELED"
-	JobStatusTimeout    JobStatusType = "TIMEOUT"
+	// JobPending means the job has been accepted by the system, but has not been started yet.
+	// This includes time before being bound to a node, as well as time spent
+	// pulling images onto the host.
+	JobPending JobPhase = "PENDING"
+
+	// JobRunning means the job has been bound to a cluster and has been started.
+	// At least one container is still running or is in the process of being restarted.
+	JobRunning JobPhase = "RUNNING"
+
+	// JobSucceeded means that the job voluntarily terminated
+	// with an exit code of 0.
+	JobSucceeded JobPhase = "SUCCEEDED"
+
+	// JobFailed means that the jobs has terminated in a failure
+	// (exited with a non-zero exit code or was stopped by the system).
+	JobFailed JobPhase = "FAILED"
+
+	JobCanceled JobPhase = "CANCELED"
+	JobTimeout  JobPhase = "TIMEOUT"
 )
 
 // Job is a description of a job
@@ -31,12 +43,12 @@ type Job struct {
 	// Priority for a Job. The higher the value, the higher the priority.
 	// +optional
 	Priority       int64
-	CreateAt       time.Time     // When Job was created
-	StartAt        time.Time     // When command started
-	LastActivityAt time.Time     // When job metadata last changed
-	Status         JobStatusType // Current status
-	TTR            uint64        // Time-to-run in Millisecond
-	ClusterId      string        // Identification for ClusterId
+	CreateAt       time.Time // When Job was created
+	StartAt        time.Time // When command started
+	LastActivityAt time.Time // When job metadata last changed
+	Status         JobStatus // Represents information about the status
+	TTR            uint64    // Time-to-run in Millisecond
+	ClusterId      string    // Identification for ClusterId
 	mu             sync.RWMutex
 	// Note that this is calculated from dead Jobs. But those jobs are subject to
 	// garbage collection.  This value will get capped at 5 by GC.
@@ -46,14 +58,16 @@ type Job struct {
 }
 
 // NewJob returns a new job
-func NewJob(name string, ns Namespace) Job {
+func NewJob(name string, ns Namespace, uid string) Job {
 	return Job{
-		Status:   JobStatusUnassigned,
+		Status: JobStatus{
+			Phase: JobUnassigned,
+		},
 		CreateAt: time.Now(),
 		ObjectMeta: ObjectMeta{
 			Name:      name,
 			Namespace: ns,
-			UID:       UID(uuid.New().String()),
+			UID:       UID(uid),
 		},
 		TypeMeta: TypeMeta{
 			Kind:       "job",

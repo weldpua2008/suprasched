@@ -8,6 +8,10 @@ import (
 	internalcache "github.com/weldpua2008/suprasched/scheduler/internal"
 )
 
+func init() {
+	logrus.SetLevel(logrus.TraceLevel)
+}
+
 const (
 	// minFeasibleClustersToFind is the minimum number of cluster that would be
 	// scored in each scheduling cycle. This is a semi-arbitrary value to ensure
@@ -43,7 +47,7 @@ type ScheduleAlgorithm interface {
 }
 
 type genericScheduler struct {
-	cache                       internalcache.Cache
+	cache                       *internalcache.Cache
 	currentSnapshot             *internalcache.Snapshot
 	percentageOfClustersToScore int32
 	nextStartClusterIndex       int
@@ -55,8 +59,9 @@ func (g *genericScheduler) snapshot() error {
 	if g.cache == nil {
 		return fmt.Errorf("Cache is nil")
 	}
+	c := *g.cache
 	// Used for all fit and priority funcs.
-	return g.cache.UpdateSnapshot(g.currentSnapshot)
+	return c.UpdateSnapshot(g.currentSnapshot)
 }
 
 // Schedule tries to schedule the given job to one of the clusters in the cluster list.
@@ -114,7 +119,7 @@ func (g *genericScheduler) findClustersThatFitJob(ctx context.Context, job *core
 
 // NewGenericScheduler creates a genericScheduler object.
 func NewGenericScheduler(
-	cache internalcache.Cache,
+	cache *internalcache.Cache,
 	currentSnapshot *internalcache.Snapshot,
 	percentageOfClustersToScore int32) ScheduleAlgorithm {
 	return &genericScheduler{
