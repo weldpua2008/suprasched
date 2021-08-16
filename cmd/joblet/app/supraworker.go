@@ -11,6 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 package app
+
 import (
 	"errors"
 	"fmt"
@@ -22,7 +23,6 @@ import (
 	"sync/atomic"
 	"time"
 )
-
 
 // Worker run goroutine for executing commands and reporting to apiserver and/or syncyng with etcd
 // Note that a WaitGroup must be passed to functions by

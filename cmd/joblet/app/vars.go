@@ -22,8 +22,8 @@ var (
 	NumActiveJobs int64
 	// Number of processed jobs
 	NumProcessedJobs int64
-logFields        = logrus.Fields{"package": "joblet"}
-log              = logrus.WithFields(logFields)
+	logFields        = logrus.Fields{"package": "joblet"}
+	log              = logrus.WithFields(logFields)
 )
 
 const TimeoutJobsAfter5MinInTerminalState = 5 * time.Minute
