@@ -2,69 +2,36 @@ package etcd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/weldpua2008/suprasched/core"
 	"go.etcd.io/etcd/client/v3"
 	"log"
-	"reflect"
-	"strconv"
+	"strings"
 	"time"
 )
 
-var (
-	dialTimeout    = 2 * time.Second
-	requestTimeout = 10 * time.Second
-)
-
-func GetKV(key string, endpoint string) map[string]string { // do "defer client.Close()" and "defer cancel()"
-
-	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
-	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
-		DialTimeout: dialTimeout,
-		Endpoints:   []string{endpoint},
-	})
-
-	if etcdClientErr != nil {
-		log.Fatalf("Cannot start etcd client, got %s", etcdClientErr)
-		return nil
-	}
-
-	// The defer call is guaranteed to be used at the end of the function and ensures all etcd resources are released
-	defer etcdClient.Close()
-
-	// context = Go feature that allows code across a goroutine to access shared information in a safe manner and cancel operations
-	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
-
-	// releases resources if slowOperation completes before timeout elapses
-	defer cancel()
-
-	opts := []clientv3.OpOption{ // clientv3.OpOption = configures Operations like Get, Put, Delete.
-		clientv3.WithPrefix(), // WithPrefix = requests to operate on the keys with matching prefix.
-		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend),
-	}
-
-	getResponse, getErr := etcdClient.Get(ctx, key, opts...) // Get = return the value for "key" with option
-
-	if getErr != nil {
-		log.Fatalf("Get Function: Cannot get value, got %s", getErr)
-	}
-
-	dataMap := make(map[string]string)
-
-	for _, ev := range getResponse.Kvs {
-		dataMap[string(ev.Key)+"/"+strconv.FormatInt(getResponse.Header.Revision+3, 10)] = string(ev.Value)
-	}
-
-	fmt.Println("Data written to map")
-
-	return dataMap
+type UniversalObject interface {
+	GetObjId() string
 }
 
-func ptuKV(key string, endpoint string, clusterID string, retry string) {
+var (
+	dialTimeout    = 5 * time.Second
+	requestTimeout = 10 * time.Second
+	tempObj UniversalObject
+)
+
+func PutKV_v2(obj UniversalObject, key string, endpoint string){
+
+	obj_type := CheckStructType(obj) // Checking the type of struct we received
+	json_data, _ := json.Marshal(obj) // Converts the object to a json file as one long string
+
+	// ---------------------------------------------------------------------------------------------------------
 
 	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
 	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
-		Endpoints:   []string{endpoint},
+		Endpoints: []string{endpoint},
 	})
 
 	if etcdClientErr != nil {
@@ -81,14 +48,97 @@ func ptuKV(key string, endpoint string, clusterID string, retry string) {
 	// releases resources if slowOperation completes before timeout elapses
 	defer cancel()
 
-	//etcdClient.Delete(ctx, "", clientv3.WithPrefix()) // Temp!!!!
+	// ---------------------------------------------------------------------------------------------------------
 
-	dataMap := map[string]string{"Cluster_ID": clusterID, "Object_ID": key, "Retry": retry, "Revision": ""}
-	keys := reflect.ValueOf(dataMap).MapKeys()
-	for i := 0; i < len(keys); i++ {
-		_, putErr := etcdClient.Put(ctx, key+"/"+keys[i].String(), dataMap[keys[i].String()])
-		if putErr != nil {
-			log.Fatalf("Put Function: Cannot put key & value, got %s", putErr)
-		}
+	etcdClient.Delete(ctx, "", clientv3.WithPrefix())
+	_, putErr := etcdClient.Put(ctx, key + "/" + obj_type + "/" + obj.GetObjId(), string(json_data)) // put the obj id
+	if putErr != nil {
+		log.Fatalf("Put Function: Cannot put key & value, got %s", putErr)
+	}
+}
+
+func GetKV_v2(key string, endpoint string) interface{} { // Get function with JSON
+
+	// The etcd client object is instantiated, configured with the dial time and the endpoint to the local etcd server
+	etcdClient, etcdClientErr := clientv3.New(clientv3.Config{
+		DialTimeout: dialTimeout,
+		Endpoints: []string{endpoint},
+	})
+
+	if etcdClientErr != nil {
+		log.Fatalf("Cannot start etcd client, got %s", etcdClientErr)
+		return nil
+	}
+
+	// The defer call is guaranteed to be used at the end of the function and ensures all etcd resources are released
+	defer etcdClient.Close()
+
+	// context = Go feature that allows code across a goroutine to access shared information in a safe manner and cancel operations
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+
+	// releases resources if slowOperation completes before timeout elapses
+	defer cancel()
+
+	// ---------------------------------------------------------------------------------------------------------
+
+	opts := []clientv3.OpOption{ // clientv3.OpOption = configures Operations like Get, Put, Delete.
+		clientv3.WithPrefix(), // WithPrefix = requests to operate on the keys with matching prefix.
+		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend),
+	}
+
+	getResponse, getErr := etcdClient.Get(ctx, key, opts...) // Get = return the value for "key" with option
+
+	if getErr != nil {
+		log.Fatalf("Get Function: Cannot get value, got %s", getErr)
+	}
+
+	// ---------------------------------------------------------------------------------------------------------
+
+	var dat_two string
+	var key_name []string
+	for _, ev := range getResponse.Kvs {
+		dat_two = string(ev.Value)
+		key_name = strings.Split(string(ev.Key), "/")
+	}
+
+	// ---------------------------------------------------------------------------------------------------------
+
+	CheckGetStructType(key_name[1])
+	unmarshal_err := json.Unmarshal([]byte(dat_two), &tempObj)
+	if unmarshal_err != nil {
+		fmt.Printf("json.Unmarshal Function: Cannot do unmarshal, got %s\n", unmarshal_err)
+	}
+
+	return tempObj
+}
+
+func CheckGetStructType(obj_type string){
+	switch obj_type {
+	case "Job":
+		tempObj = new(core.Job)
+	case "Cluster":
+		tempObj = new(core.Cluster)
+	default:
+		fmt.Println("Error unidentified object from json string in get function")
+		return
+	}
+}
+
+func CheckStructType(obj interface{}) string{
+	switch obj.(type) {
+	case *core.Job, core.Job:
+		return "Job"
+	//case *Cluster, Cluster:
+	//	fmt.Println("Object type: Cluster")
+	//	return "Cluster"
+	//case *ClusterRegistry, ClusterRegistry:
+	//	fmt.Println("Object type: ClusterRegistry")
+	//	return "ClusterRegistry"
+	//case *Registry, Registry:
+	//	fmt.Println("Object type: Registry")
+	//	return "Registry"
+	default:
+		fmt.Println("Error unidentified struct")
+		return ""
 	}
 }
