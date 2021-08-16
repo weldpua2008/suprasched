@@ -57,6 +57,10 @@ type Job struct {
 	ExitCode int // Exit code
 }
 
+func (j Job) GetObjID() string {
+	return string(j.UID)
+}
+
 // NewJob returns a new job
 func NewJob(name string, ns Namespace, uid string) Job {
 	return Job{

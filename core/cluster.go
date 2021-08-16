@@ -16,6 +16,10 @@ type Cluster struct {
 	Status ClusterStatus
 }
 
+func (c Cluster) GetObjID() string {
+	return string(c.UID)
+}
+
 // ClusterSpec describes the attributes that a cluster is created with.
 type ClusterSpec struct {
 	// ID of the cluster assigned by the cloud provider in the format: <ProviderName>://<ProviderSpecificNodeID>
