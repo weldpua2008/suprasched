@@ -55,6 +55,7 @@ type Job struct {
 	RestartCount int32
 	//exitError               error
 	ExitCode int // Exit code
+	JobSteps []JobStep
 }
 
 // NewJob returns a new job

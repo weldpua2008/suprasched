@@ -15,10 +15,12 @@ package app
 import (
 	"errors"
 	"fmt"
+	"github.com/weldpua2008/suprasched/core"
 	"github.com/weldpua2008/supraworker/metrics"
 	"github.com/weldpua2008/supraworker/model"
 	"github.com/weldpua2008/supraworker/utils"
 	"runtime"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -33,7 +35,7 @@ import (
 //	3). Cancelled by Job's Registry because of Cleanup process (TTR) [Cancel]
 //	4). Cancelled when we fetch external API (cancellation information) [Cancel]
 
-func Worker(id int, jobs <-chan *model.Job, wg *sync.WaitGroup) {
+func Worker(id int, jobs <-chan *core.Job, wg *sync.WaitGroup) {
 	workerId := fmt.Sprintf("worker-%d", id)
 	logWorker := log.WithField("worker", workerId)
 	// On return, notify the WaitGroup that we're done.
@@ -42,43 +44,58 @@ func Worker(id int, jobs <-chan *model.Job, wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 	logWorker.Info("Starting joblet worker")
-	for j := range jobs {
-		j.AddToContext(utils.CtxWorkerIdKey, workerId)
-		logJob := j.GetLogger()
-		logJob.Tracef("New Job with TTR %v", time.Duration(j.TTR)*time.Millisecond)
-		atomic.AddInt64(&NumActiveJobs, 1)
-		errJobRun := j.Run()
-		logJob.Tracef("Run() Finished")
-		dur := time.Since(j.StartAt)
-		switch {
-		// Execution stopped by TTR
-		case errors.Is(errJobRun, model.ErrJobTimeout):
-			if errTimeout := j.TimeoutWithCancel(TimeoutJobsAfter5MinInTerminalState); errTimeout != nil {
-				logJob.Tracef("[Timeout()] got: %v ", errTimeout)
-			}
-			metrics.JobsTimeout.Inc()
-		case errors.Is(errJobRun, model.ErrJobCancelled):
-			if errTimeout := j.Cancel(); errTimeout != nil {
-				logJob.Tracef("[Cancel()] got: %v ", errTimeout)
-			}
-			metrics.JobsTimeout.Inc()
-		case errJobRun == nil:
-			if err := j.Finish(); err != nil {
-				logJob.Debugf("finished in %v got %v", dur, err)
-			} else {
-				logJob.Debugf("finished in %v", dur)
+	for job := range jobs {
+		sort.Sort(core.JobStepsSorter(job.JobSteps))
+		for i, step := range job.JobSteps {
+			j := model.NewJob(
+				fmt.Sprintf("%s-%d", job.Name, i),
+				step.CMD,
+			)
+			j.CmdENV = step.CmdEnv
+			j.RunAs = step.RunAs
+			j.TTR = step.TTR
+			j.UseSHELL = step.UseSHELL
+			j.AddToContext(utils.CtxWorkerIdKey, workerId)
+			logJob := j.GetLogger()
+			logJob.Tracef("New Job with TTR %v", time.Duration(j.TTR)*time.Millisecond)
+			atomic.AddInt64(&NumActiveJobs, 1)
+			errJobRun := j.Run()
+			logJob.Tracef("Run() Finished")
+			dur := time.Since(j.StartAt)
+			switch {
+			case step.IgnoreExitCode == true:
+				if err := j.Finish(); err != nil {
+					logJob.Debugf("finished in %v got %v", dur, err)
+				} else {
+					logJob.Debugf("finished in %v", dur)
+				}
+			// Execution stopped by TTR
+			case errors.Is(errJobRun, model.ErrJobTimeout):
+				if errTimeout := j.TimeoutWithCancel(TimeoutJobsAfter5MinInTerminalState); errTimeout != nil {
+					logJob.Tracef("[Timeout()] got: %v ", errTimeout)
+				}
+				metrics.JobsTimeout.Inc()
+			case errors.Is(errJobRun, model.ErrJobCancelled):
+				if errTimeout := j.Cancel(); errTimeout != nil {
+					logJob.Tracef("[Cancel()] got: %v ", errTimeout)
+				}
+				metrics.JobsTimeout.Inc()
+			case errJobRun == nil:
+				if err := j.Finish(); err != nil {
+					logJob.Debugf("finished in %v got %v", dur, err)
+				} else {
+					logJob.Debugf("finished in %v", dur)
+				}
+			default:
+				if errFail := j.Failed(); errFail != nil {
+					logJob.Tracef("[Failed()] got: %v ", errFail)
+				}
+				logJob.Infof("Failed with %s", errJobRun)
 			}
 
-		default:
-			if errFail := j.Failed(); errFail != nil {
-				logJob.Tracef("[Failed()] got: %v ", errFail)
-			}
-			logJob.Infof("Failed with %s", errJobRun)
+			atomic.AddInt64(&NumActiveJobs, -1)
+			atomic.AddInt64(&NumProcessedJobs, 1)
+			runtime.Gosched()
 		}
-
-		atomic.AddInt64(&NumActiveJobs, -1)
-		atomic.AddInt64(&NumProcessedJobs, 1)
-		runtime.Gosched()
-
 	}
 }
