@@ -58,6 +58,10 @@ type Job struct {
 	JobSteps []JobStep
 }
 
+func (j Job) GetObjId() string {
+	return string(j.UID)
+}
+
 // NewJob returns a new job
 func NewJob(name string, ns Namespace, uid string) Job {
 	return Job{
