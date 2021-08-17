@@ -15,8 +15,21 @@ limitations under the License.
 */
 package main
 
+<<<<<<< Updated upstream
 import "suprasched/cmd"
 
 func main() {
 	cmd.Execute()
 }
+=======
+import (
+	"github.com/weldpua2008/suprasched/cmd"
+)
+
+func main() {
+	cmd.Execute()
+
+
+}
+
+>>>>>>> Stashed changes
