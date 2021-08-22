@@ -18,8 +18,8 @@ func main() {
 	//getAll := getCmd.Bool("all", false, "Get all keys and values")
 	getKey := getCmd.String("key", "", "key values")
 	getEtcdIP := getCmd.String("ip", "", "etcd IP")
-	putClusterID := putCmd.String("clusterid","", "ClusterId value")
-	putRetry := putCmd.String("retry","", "retry count value as string")
+	putClusterID := putCmd.String("clusterid", "", "ClusterId value")
+	putRetry := putCmd.String("retry", "", "retry count value as string")
 	getRevision := getCmd.String("revision", "", "Revision value as string")
 
 	//check if the user past a subcommand
@@ -62,7 +62,7 @@ func HandleGet(getCmd *flag.FlagSet, key *string, ip *string, revision *string) 
 
 }
 
-func HandlePut(putCmd *flag.FlagSet, key *string, ip *string, clusterId *string, retry *string)  {
+func HandlePut(putCmd *flag.FlagSet, key *string, ip *string, clusterId *string, retry *string) {
 
 	putCmd.Parse(os.Args[2:])
 
@@ -71,9 +71,8 @@ func HandlePut(putCmd *flag.FlagSet, key *string, ip *string, clusterId *string,
 		putCmd.PrintDefaults()
 		os.Exit(1)
 	}
-	if *key != "" || *ip != "" || *clusterId != "" || *retry != ""{
+	if *key != "" || *ip != "" || *clusterId != "" || *retry != "" {
 		//etcd.ptuKV(*key, *ip, *clusterId, *retry)
 	}
-
 
 }

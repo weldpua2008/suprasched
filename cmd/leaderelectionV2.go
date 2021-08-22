@@ -51,9 +51,9 @@ to quickly create a Cobra application.`,
 }
 
 var newLeader = &cobra.Command{
-	Use: "newElection",
+	Use:   "newElection",
 	Short: "start a new election",
-	Long: "with key and ip for endpoint newElection connect to a client(etcd) and start leader election",
+	Long:  "with key and ip for endpoint newElection connect to a client(etcd) and start leader election",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		HandleNewV2(endpoint, prefixkey)
@@ -62,8 +62,6 @@ var newLeader = &cobra.Command{
 }
 
 var prefixkey, endpoint string
-
-
 
 func init() {
 	rootCmd.AddCommand(leaderelectionV2Cmd)
@@ -83,20 +81,19 @@ func init() {
 	// leaderelectionV2Cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func HandleNewV2(endpoint string, prefixkey string){
+func HandleNewV2(endpoint string, prefixkey string) {
 	if endpoint == "" || prefixkey == "" {
 		fmt.Println("endpoint and prefixKey are required to get values")
 		os.Exit(1)
 	}
-	if endpoint != "" && prefixkey != ""{
+	if endpoint != "" && prefixkey != "" {
 		newElectionV2(endpoint, prefixkey)
 
 	}
 
-
 }
 
-func newElectionV2(endpoint string, prefixkey string)  {
+func newElectionV2(endpoint string, prefixkey string) {
 
 	//create a etcd client
 	cli, err := clientv3.New(clientv3.Config{Endpoints: []string{endpoint}})
@@ -129,6 +126,5 @@ func newElectionV2(endpoint string, prefixkey string)  {
 		log.Fatal(err)
 	}
 	fmt.Println("resign ", prefixkey)
-
 
 }

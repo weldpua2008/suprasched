@@ -21,15 +21,14 @@ import (
 	etcd "github.com/weldpua2008/suprasched/etcd"
 	"os"
 )
+
 var get, put string
 
-func init()  {
+func init() {
 	etcdV2Cmd.PersistentFlags().StringVar(&get, "get", "", "get subcommand")
 	etcdV2Cmd.PersistentFlags().StringVar(&put, "put", "", "put subcommand")
 
-
 }
-
 
 // etcdV2Cmd represents the etcdV2 command
 var etcdV2Cmd = &cobra.Command{
@@ -50,9 +49,9 @@ to quickly create a Cobra application.`,
 }
 
 var makeGet = &cobra.Command{
-	Use: "makeGet",
+	Use:   "makeGet",
 	Short: "make a get command",
-	Long: "By puting key and ip you get the value of the key from the etcd server",
+	Long:  "By puting key and ip you get the value of the key from the etcd server",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		HandleGetV2(getKey, getEtcdIP)
@@ -61,17 +60,18 @@ var makeGet = &cobra.Command{
 }
 
 var makePut = &cobra.Command{
-	Use: "makePut",
+	Use:   "makePut",
 	Short: "make a put command",
-	Long: "By puting key and ip you get the value of the key from the etcd server",
+	Long:  "By puting key and ip you get the value of the key from the etcd server",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		//HandlePut(key string, ip string, clusterId string, retry string)
 
 	},
 }
+
 //add commands
-func addCommands()  {
+func addCommands() {
 	etcdV2Cmd.AddCommand(makeGet)
 	etcdV2Cmd.AddCommand(makePut)
 
@@ -94,7 +94,7 @@ func init() {
 
 }
 
-func HandleGetV2(key string, ip string)  {
+func HandleGetV2(key string, ip string) {
 	if key == "" || ip == "" {
 		fmt.Println("key and IP are required to get values")
 		os.Exit(1)
@@ -105,5 +105,4 @@ func HandleGetV2(key string, ip string)  {
 
 	}
 
-	
 }
