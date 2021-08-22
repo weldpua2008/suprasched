@@ -11,7 +11,7 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License.
+limitations under the License.  aaa
 */
 package cmd
 
@@ -36,8 +36,9 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
+	// Run: func(cmd *cobra.Command, args []string) { },
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("root called")
+		fmt.Println("Running")
 	},
 }
 
@@ -45,6 +46,7 @@ to quickly create a Cobra application.`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
+
 }
 
 func init() {
@@ -84,3 +86,4 @@ func initConfig() {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 }
+
