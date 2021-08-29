@@ -14,7 +14,7 @@ import (
 )
 
 type EtcdClient struct {
-	cfg *clientv3.Config
+	cfg    *clientv3.Config
 	client *clientv3.Client
 }
 
@@ -27,10 +27,10 @@ var (
 )
 
 type ObjectCache struct {
-	mu sync.RWMutex
-	clusters map[core.Namespace]map[core.UID]*core.Cluster // a map from namespace to a map of clusters.
+	mu               sync.RWMutex
+	clusters         map[core.Namespace]map[core.UID]*core.Cluster // a map from namespace to a map of clusters.
 	prefixesChannels map[string]clientv3.WatchChan
-	etcdClient *EtcdClient
+	etcdClient       *EtcdClient
 }
 
 type Object interface {
@@ -41,7 +41,7 @@ type Object interface {
 
 // Put, Check Object Type & Store --------------------------------------------------------------------------------------------------------------------------
 
-func Store (obj Object, etcdClient *EtcdClient, ctx context.Context, prefix string) bool {
+func Store(obj Object, etcdClient *EtcdClient, ctx context.Context, prefix string) bool {
 	jsonData, jsonDataErr := json.Marshal(&obj) // Converts the object to a json
 	if jsonDataErr != nil {
 		log.Fatal("Store function: Error converting object data to json\n")
@@ -52,10 +52,10 @@ func Store (obj Object, etcdClient *EtcdClient, ctx context.Context, prefix stri
 		log.Fatal("Store function: Error unidentified object\n")
 		return false
 	}
-	return etcdClient.Put(ctx, fmt.Sprintf("/%s/%s/%s", prefix, objType , obj.GetObjID()), base64.StdEncoding.EncodeToString(jsonData))
+	return etcdClient.Put(ctx, fmt.Sprintf("/%s/%s/%s", prefix, objType, obj.GetObjID()), base64.StdEncoding.EncodeToString(jsonData))
 }
 
-func CheckObjectType(obj interface{}) string{
+func CheckObjectType(obj interface{}) string {
 	switch obj.(type) {
 	case *core.Job, core.Job:
 		return "Job"
@@ -66,7 +66,7 @@ func CheckObjectType(obj interface{}) string{
 	}
 }
 
-func (etcdClient *EtcdClient) Put (ctx context.Context, key string, value string) bool {
+func (etcdClient *EtcdClient) Put(ctx context.Context, key string, value string) bool {
 	_, putErr := etcdClient.client.Put(ctx, key, value)
 	if putErr != nil {
 		log.Fatalf("Put Function: Cannot put key & value, got %s\n", putErr)
@@ -77,7 +77,7 @@ func (etcdClient *EtcdClient) Put (ctx context.Context, key string, value string
 
 // Get & Retrieve --------------------------------------------------------------------------------------------------------------------------
 
-func (etcdClient *EtcdClient) Retrieve (ctx context.Context, prefix string) interface{} {
+func (etcdClient *EtcdClient) Retrieve(ctx context.Context, prefix string) interface{} {
 	opts := []clientv3.OpOption{
 		clientv3.WithPrefix(), // WithPrefix = requests to operate on the keys with matching prefix.
 		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend), // WithSort = specifies the ordering in 'Get' request.
@@ -100,7 +100,7 @@ func (etcdClient *EtcdClient) Retrieve (ctx context.Context, prefix string) inte
 	return nil
 }
 
-func CreateObjType (objType string) interface{} {
+func CreateObjType(objType string) interface{} {
 	switch objType {
 	case "Job":
 		return &core.Job{}
@@ -112,7 +112,7 @@ func CreateObjType (objType string) interface{} {
 	}
 }
 
-func (etcdClient *EtcdClient)GetJob(data []byte, objType string) interface{} {
+func (etcdClient *EtcdClient) GetJob(data []byte, objType string) interface{} {
 	tempObject := CreateObjType(objType)
 	if tempObject == nil {
 		log.Fatalf("GetJob Function: Error unidentified object from json\n")
@@ -127,11 +127,11 @@ func (etcdClient *EtcdClient)GetJob(data []byte, objType string) interface{} {
 
 // Watch, Refresh & Add Prefix --------------------------------------------------------------------------------------------------------------------------
 
-func (etcdClient *EtcdClient)Watch(ctx context.Context, prefix string) clientv3.WatchChan {
+func (etcdClient *EtcdClient) Watch(ctx context.Context, prefix string) clientv3.WatchChan {
 	return etcdClient.client.Watch(ctx, prefix, clientv3.WithPrefix())
 }
 
-func (obj *ObjectCache)AddPrefix(ctx context.Context, prefix string) {
+func (obj *ObjectCache) AddPrefix(ctx context.Context, prefix string) {
 
 	obj.mu.Lock()
 	defer obj.mu.Unlock()
@@ -143,8 +143,8 @@ func (obj *ObjectCache)AddPrefix(ctx context.Context, prefix string) {
 	}
 }
 
-func (obj *ObjectCache)Refresh(ctx context.Context, stopChannel chan bool) {
-	var result chan *core.Cluster // This is a channel of type core.Cluster with size 1 -> need channel size ?!?
+func (obj *ObjectCache) Refresh(ctx context.Context, stopChannel chan bool) {
+	var result chan *core.Cluster                       // This is a channel of type core.Cluster with size 1 -> need channel size ?!?
 	for _, watchChannel := range obj.prefixesChannels { // This for loop takes channel from the obj.prefixesChannels map and put it in a var called "watchChannel"
 		go func() {
 			for true {
@@ -170,7 +170,7 @@ func (obj *ObjectCache)Refresh(ctx context.Context, stopChannel chan bool) {
 
 	time.Sleep(time.Second)
 
-	for clusterToCache := range result{
+	for clusterToCache := range result {
 		obj.mu.Lock()
 		obj.clusters = make(map[core.Namespace]map[core.UID]*core.Cluster)
 		obj.clusters[clusterToCache.Namespace][clusterToCache.UID] = clusterToCache
